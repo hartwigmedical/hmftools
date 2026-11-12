@@ -170,6 +170,13 @@ public final class MosaicRoutines
                 continue;
 
             GenotypeFragments referenceFragData = variant.referenceFragmentData();
+
+            if(referenceFragData == null)
+            {
+                CT_LOGGER.debug("sampleId({}) without reference ID skipping mosaic routine", sampleId);
+                continue;
+            }
+
             int referenceDp = referenceFragData.Depth;
 
             double dualDepthRatio = sampleFragData.UmiCounts.TotalDual / (double)sampleFragData.Depth;

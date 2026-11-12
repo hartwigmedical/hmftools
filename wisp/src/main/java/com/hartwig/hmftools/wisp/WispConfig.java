@@ -89,6 +89,7 @@ public class WispConfig
     public final boolean WriteAllSummaryMethods;
     public final boolean AllowMissingSamples;
     public final boolean DisableDualFragments;
+    public final boolean InferVcfReferenceId;
     public final int Threads;
 
     public static boolean RunMosaicLogic = false;
@@ -115,6 +116,7 @@ public class WispConfig
     private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
     private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
     private static final String EXCLUDED_SOMATICS_FILE = "excluded_somatics";
+    private static final String INFER_VCF_REFERENCE_ID = "infer_vcf_reference_id";
 
     private static final String RUN_MOSAICS = "run_mosaics";
 
@@ -184,6 +186,7 @@ public class WispConfig
         ApplyRefVariantFilters = configBuilder.hasFlag(APPLY_REF_VARIANT_FILTERS);
         AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
         DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
+        InferVcfReferenceId = configBuilder.hasFlag(INFER_VCF_REFERENCE_ID);
 
         RunMosaicLogic = configBuilder.hasFlag(RUN_MOSAICS);
 
@@ -377,6 +380,7 @@ public class WispConfig
         configBuilder.addFlag(APPLY_REF_VARIANT_FILTERS, "For externally validated variants, only apply qual-per-AD and chip filteres");
         configBuilder.addFlag(DISABLE_DUAL_FRAGS, "Disable use of dual fragments in purity calcs");
         configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
+        configBuilder.addFlag(INFER_VCF_REFERENCE_ID, "Infer reference ID from VCF's first entry if not specified");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,
@@ -437,5 +441,6 @@ public class WispConfig
         WriteAllSummaryMethods = false;
         Threads = 0;
         ExcludedSomatics = Collections.emptyList();
+        InferVcfReferenceId = false;
     }
 }

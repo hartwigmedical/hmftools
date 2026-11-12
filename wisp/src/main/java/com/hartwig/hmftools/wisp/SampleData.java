@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.BATCH_CONTROL_TAG;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,33 +23,42 @@ public class SampleData
 {
     public final String PatientId;
     public final String TumorId;
-    public final String ReferenceId;
     public final String AmberExtraTumorId;
     public final List<String> SampleIds;
     public final String VcfTag;
     public final boolean IsPanel;
 
+    private final String mReferenceId;
+    private String mInferredReferenceId;
+
     public SampleData(
-            final String patientId, final String tumorId, final String referenceId, final List<String> sampleIds, final String vcfTag, final boolean isPanel,
-            final String amberExtraTumorId)
+            final String patientId, final String tumorId, final String referenceId, final List<String> sampleIds, final String vcfTag,
+            final boolean isPanel, final String amberExtraTumorId)
     {
         PatientId = patientId;
         TumorId = tumorId;
-        ReferenceId = referenceId;
+        mReferenceId = referenceId;
         SampleIds = sampleIds;
         VcfTag = vcfTag;
         IsPanel = isPanel;
         AmberExtraTumorId = amberExtraTumorId;
+        mInferredReferenceId = null;
     }
 
-    public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
-    public boolean hasReference() { return ReferenceId != null && !ReferenceId.isEmpty(); }
+    public boolean hasReference() { return (mReferenceId != null && !mReferenceId.isEmpty()) || mInferredReferenceId != null; }
+
+    public void setInferredReferenceId(final String referenceId)
+    {
+        mInferredReferenceId = referenceId;
+    }
+
+    public String referenceId() { return mInferredReferenceId != null ? mInferredReferenceId : mReferenceId; }
 
     public String toString()
     {
         StringJoiner sj = new StringJoiner(", ");
         SampleIds.forEach(x -> sj.add(x));
-        return format("patient(%s) tumor(%s) samples(%s)", PatientId, TumorId, sj);
+        return format("patient(%s) tumor(%s) reference(%s) samples(%s)", PatientId, TumorId, referenceId(), sj);
     }
 
     public static List<String> sampleIdsFromStr(final String sampleIds)

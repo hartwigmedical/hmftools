@@ -130,13 +130,6 @@ public class SomaticVariants
 
         CT_LOGGER.debug("loading somatic variant VCF: {}", somaticVcf);
 
-        List<String> targetSampleIds = Lists.newArrayList(mSample.TumorId);
-
-        if(mSample.hasReference())
-            targetSampleIds.add(mSample.ReferenceId);
-
-        mSample.SampleIds.forEach(x -> targetSampleIds.add(x));
-
         VcfFileReader vcfFileReader = new VcfFileReader(somaticVcf);
 
         if(!vcfFileReader.fileValid())
@@ -162,6 +155,26 @@ public class SomaticVariants
         {
             mSageQualPerAdThreshold = MIN_QUAL_PER_AD_SAGE_V5;
         }
+
+        if(mConfig.InferVcfReferenceId && !mSample.hasReference())
+        {
+            // take the first non-tumor sample ID from the genotype names as the reference ID
+            List<String> sampleNames = vcfHeader.getGenotypeSamples();
+
+            if(sampleNames.size() >= 3 && !sampleNames.get(0).equals(mSample.TumorId))
+            {
+                String referenceId = sampleNames.get(0);
+                CT_LOGGER.debug("patient({}) inferring referenceId({}) from VCF", mSample.PatientId, referenceId);
+                mSample.setInferredReferenceId(referenceId);
+            }
+        }
+
+        List<String> targetSampleIds = Lists.newArrayList(mSample.TumorId);
+
+        if(mSample.hasReference())
+            targetSampleIds.add(mSample.referenceId());
+
+        mSample.SampleIds.forEach(x -> targetSampleIds.add(x));
 
         for(String sampleId : targetSampleIds)
         {
@@ -253,7 +266,7 @@ public class SomaticVariants
                 continue;
 
             boolean checkZeroedUmis = genotype.getSampleName().equals(mSample.TumorId)
-                    || genotype.getSampleName().equals(mSample.ReferenceId);
+                    || genotype.getSampleName().equals(mSample.referenceId());
 
             GenotypeFragments genotypeFragments = buildFragments(genotype, mConfig.DisableDualFragments, checkZeroedUmis);
 
@@ -261,7 +274,7 @@ public class SomaticVariants
             {
                 somaticVariant.setTumorFragmentData(genotypeFragments);
             }
-            else if(genotype.getSampleName().equals(mSample.ReferenceId))
+            else if(genotype.getSampleName().equals(mSample.referenceId()))
             {
                 somaticVariant.setReferenceFragmentData(genotypeFragments);
             }
@@ -363,7 +376,7 @@ public class SomaticVariants
 
         if(mSample.hasReference())
         {
-            Genotype refGenotype = variant.context().getGenotype(mSample.ReferenceId);
+            Genotype refGenotype = variant.context().getGenotype(mSample.referenceId());
 
             AllelicDepth refAllelicDepth = AllelicDepth.fromGenotype(refGenotype);
             double germlineAF = refAllelicDepth.alleleFrequency();
