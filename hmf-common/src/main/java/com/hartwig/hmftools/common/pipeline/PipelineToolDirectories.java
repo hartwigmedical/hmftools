@@ -35,6 +35,7 @@ public record PipelineToolDirectories(
         String tumorFlagstatDir,
         String tumorMetricsDir,
         String vChordDir,
+        String viridianDir,
         String virusBreakendDir,
         String virusInterpreterDir,
         String qseeDir)
@@ -75,6 +76,7 @@ public record PipelineToolDirectories(
             "bamtools/*_bamtools",
             "bamtools/*_bamtools",
             "vchord",  // not yet implemented in this version
+            "viridian",
             "virusbreakend",
             "virusinterpreter",
             ""
@@ -106,6 +108,7 @@ public record PipelineToolDirectories(
             "bamtools/*_bamtools",
             "bamtools/*_bamtools",
             "vchord",  // not yet implemented in this version
+            "viridian",
             "virusbreakend",
             "virusinterpreter",
             "qsee");
@@ -138,6 +141,7 @@ public record PipelineToolDirectories(
             "bamtools/*",
             "bamtools/*",
             "vchord",  // not yet implemented in this version
+            "viridian",
             "virusbreakend",
             "virusinterpreter",
             "qsee");
@@ -168,6 +172,7 @@ public record PipelineToolDirectories(
             "*/bam_metrics",
             "*/bam_metrics",
             "vchord",
+            "viridian",
             "virusbreakend",
             "virusintrprtr",
             "qsee");
@@ -198,6 +203,7 @@ public record PipelineToolDirectories(
             "bamtools/*_bamtools",
             "bamtools/*_bamtools",
             "vchord",  // not yet implemented in this version
+            "viridian",
             "virusbreakend",
             "virusinterpreter",
             "qsee");
@@ -296,6 +302,7 @@ public record PipelineToolDirectories(
                 convertWildcardSamplePath(tumorFlagstatDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(tumorMetricsDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(vChordDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(viridianDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(virusBreakendDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(virusInterpreterDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(qseeDir, tumorSampleId, normalSampleId)

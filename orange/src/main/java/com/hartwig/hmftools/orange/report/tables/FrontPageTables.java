@@ -41,9 +41,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.viridian.ViridianRecord;
+import com.hartwig.hmftools.datamodel.viridian.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.viridian.VirusReport;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -279,9 +279,9 @@ public class FrontPageTables
 
         addCellEntry(table, cells, "Fusion drivers:", fusionsString(report.linx()));
 
-        if(report.virusInterpreter() != null)
+        if(report.viridian() != null)
         {
-            addCellEntry(table, cells, "Viral presence:", virusesString(report.virusInterpreter()));
+            addCellEntry(table, cells, "Viral presence:", virusesString(report.viridian()));
         }
 
         addCellEntry(table, cells, "Whole genome duplicated:", wgdString(report.purple()));
@@ -358,15 +358,15 @@ public class FrontPageTables
         return reportableEventString(purpleRecord.somaticVariants().size(), highDriverGenes);
     }
 
-    private static String virusesString(final VirusInterpreterData virusData)
+    private static String virusesString(final ViridianRecord viridian)
     {
-        if(virusData.reportableViruses().isEmpty())
+        if(viridian.reportableViruses().isEmpty())
         {
             return NONE;
         }
 
         Set<String> viruses = Sets.newHashSet();
-        for(VirusInterpreterEntry virus : virusData.reportableViruses())
+        for(VirusReport virus : viridian.reportableViruses())
         {
             VirusInterpretation interpretation = virus.interpretation();
             if(interpretation != null)
@@ -379,7 +379,7 @@ public class FrontPageTables
             }
         }
 
-        return reportableEventString(virusData.reportableViruses().size(), viruses);
+        return reportableEventString(viridian.reportableViruses().size(), viruses);
     }
 
     private static Set<String> findHighDriverAmpDelGenes(final List<PurpleGainDeletion> ampDels)

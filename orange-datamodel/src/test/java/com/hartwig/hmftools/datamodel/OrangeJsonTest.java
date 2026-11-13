@@ -45,10 +45,11 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.viridian.ClonalityStatus;
+import com.hartwig.hmftools.datamodel.viridian.ReportQcStatus;
+import com.hartwig.hmftools.datamodel.viridian.ViridianRecord;
+import com.hartwig.hmftools.datamodel.viridian.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.viridian.VirusReport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -90,7 +91,7 @@ public class OrangeJsonTest
         assertLinx(record.linx());
         assertPeach(record.peach());
         assertCuppa(record.cuppa());
-        assertVirusInterpreter(record.virusInterpreter());
+        assertViridian(record.viridian());
         assertLilac(record.lilac());
         assertChord(record.chord());
         assertPlots(record.plots());
@@ -305,32 +306,34 @@ public class OrangeJsonTest
         assertNull(prediction.expressionPairwiseClassifier());
     }
 
-    private static void assertVirusInterpreter(final VirusInterpreterData virusInterpreter)
+    private static void assertViridian(final ViridianRecord viridian)
     {
-        assertEquals(2, virusInterpreter.allViruses().size());
-        VirusInterpreterEntry virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
+        assertEquals(2, viridian.allViruses().size());
+        VirusReport virus1 = findVirusByName(viridian.allViruses(), "Human papillomavirus type 16");
+        assertEquals("Human papillomavirus", virus1.virusGroup());
         assertTrue(virus1.reported());
-        assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus1.qcStatus());
+        assertEquals(ReportQcStatus.NO_ABNORMALITIES, virus1.qcStatus());
         assertEquals(VirusInterpretation.HPV, virus1.interpretation());
         assertEquals(1, virus1.integrations());
-        assertEquals(DriverInterpretation.HIGH, virus1.driverInterpretation());
-        assertEquals(0.9, virus1.percentageCovered(), EPSILON);
+        assertEquals(90, virus1.percentageCovered(), EPSILON);
+        assertEquals(20, virus1.meanCoverage(), EPSILON);
+        assertEquals(ClonalityStatus.CLONAL, virus1.clonalityStatus());
+        assertEquals(2.5, virus1.copiesPerTumorCell(), EPSILON);
 
-        VirusInterpreterEntry virus2 = findVirusByName(virusInterpreter.allViruses(), "Human betaherpesvirus 6B");
+        VirusReport virus2 = findVirusByName(viridian.allViruses(), "JC polyomavirus");
         assertFalse(virus2.reported());
-        assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus2.qcStatus());
         assertNull(virus2.interpretation());
         assertEquals(0, virus2.integrations());
-        assertEquals(DriverInterpretation.LOW, virus2.driverInterpretation());
-        assertEquals(0.4, virus2.percentageCovered(), EPSILON);
+        assertEquals(ClonalityStatus.PURPLE_FAIL_NO_TUMOR, virus2.clonalityStatus());
+        assertNull(virus2.copiesPerTumorCell());
 
-        assertEquals(1, virusInterpreter.reportableViruses().size());
-        assertEquals(virus1, virusInterpreter.reportableViruses().iterator().next());
+        assertEquals(1, viridian.reportableViruses().size());
+        assertEquals(virus1, viridian.reportableViruses().iterator().next());
     }
 
-    private static VirusInterpreterEntry findVirusByName(final Iterable<VirusInterpreterEntry> entries, final String nameToFind)
+    private static VirusReport findVirusByName(final Iterable<VirusReport> entries, final String nameToFind)
     {
-        for(VirusInterpreterEntry entry : entries)
+        for(VirusReport entry : entries)
         {
             if(entry.name().equals(nameToFind))
             {

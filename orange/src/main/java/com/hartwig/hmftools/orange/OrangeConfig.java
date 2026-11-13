@@ -43,8 +43,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -111,7 +111,7 @@ public class OrangeConfig
     public final String CuppaDir;
     public final String PeachDir;
     public final String SigsDir;
-    public final String VirusDir;
+    public final String ViridianDir;
     public final String IsofoxDir;
 
     public final boolean AddDisclaimer;
@@ -224,7 +224,7 @@ public class OrangeConfig
         CuppaDir = pathResolver.resolveOptionalToolDirectory(CUPPA_DIR_CFG, defaultToolDirectories.cuppaDir());
         PeachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, defaultToolDirectories.peachDir());
         SigsDir = pathResolver.resolveOptionalToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
-        VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
+        ViridianDir = pathResolver.resolveOptionalToolDirectory(VIRIDIAN_DIR_CFG, defaultToolDirectories.viridianDir());
 
         // RNA data can be in the appended Sage VCF and/or from Isofox
 
@@ -314,7 +314,7 @@ public class OrangeConfig
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC); // consider deprecating
 
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
+        configBuilder.addPath(VIRIDIAN_DIR_CFG, false, VIRIDIAN_DIR_DESC);
         configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
         configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
         configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
@@ -400,7 +400,7 @@ public class OrangeConfig
             final String doidJsonFile, final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
             final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
             final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir, final String sigsDir,
-            final String virusDir, final String isofoxDir, final boolean addDisclaimer)
+            final String viridianDir, final String isofoxDir, final boolean addDisclaimer)
     {
         RunType = runType;
         TumorId = tumorId;
@@ -427,7 +427,7 @@ public class OrangeConfig
         CuppaDir = cuppaDir;
         PeachDir = peachDir;
         SigsDir = sigsDir;
-        VirusDir = virusDir;
+        ViridianDir = viridianDir;
         IsofoxDir = isofoxDir;
         AddDisclaimer = addDisclaimer;
         DisplaySampleId = tumorId;
