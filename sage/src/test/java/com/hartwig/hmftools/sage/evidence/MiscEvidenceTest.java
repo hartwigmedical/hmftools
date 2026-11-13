@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
@@ -7,6 +8,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.common.ReadContextMatcher.isSimpleAltMatch;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
@@ -34,9 +36,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.ReadMatchInfo;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -422,5 +427,44 @@ public class MiscEvidenceTest
 
         assertTrue(var1.nearIndel());
         assertTrue(var2.nearIndel());
+    }
+
+    @Test
+    public void testNumberOfEvents()
+    {
+        // the ref sequence is only has a subset (100-150) of the full sequence
+        RefSequence refSequence = new RefSequence(100, REF_BASES_200.substring(100, 150).getBytes());
+
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200);
+
+        String readBases = REF_BASES_200.substring(120, 140);
+        String cigar = "20M";
+        String readId = "READ_001";
+        SAMRecord read = createSamRecord(readId, CHR_1, 120, readBases, cigar, 0);
+
+        int nm = NumberEvents.calcAdjustedNumMutations(read, refSequence, null); // reads from attribute
+        assertEquals(0, nm);
+
+        // now test using the ref genome when outside the ref sequence
+        read = createSamRecord(readId, CHR_1, 120, readBases, cigar, null);
+
+        nm = NumberEvents.calcAdjustedNumMutations(read, refSequence, refGenome); // computes from read vs ref bases
+        assertEquals(0, nm);
+
+        // 2 mismatches
+        readBases = "C" + REF_BASES_200.substring(121, 139) + "C";
+        read = createSamRecord(readId, CHR_1, 120, readBases, cigar, null);
+
+        nm = NumberEvents.calcAdjustedNumMutations(read, refSequence, refGenome);
+        assertEquals(2, nm);
+
+        // a RNA read outside the sequence bounds due to N-splits
+        cigar = "10M60N10M40N10M";
+        readBases = REF_BASES_200.substring(50, 60) + REF_BASES_200.substring(120, 130) + REF_BASES_200.substring(170, 180);
+        read = createSamRecord(readId, CHR_1, 50, readBases, cigar, null);
+
+        nm = NumberEvents.calcAdjustedNumMutations(read, refSequence, refGenome);
+        assertEquals(0, nm);
     }
 }

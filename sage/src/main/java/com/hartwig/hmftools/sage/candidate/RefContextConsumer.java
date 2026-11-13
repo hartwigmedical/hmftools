@@ -248,7 +248,7 @@ public class RefContextConsumer
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = calcAdjustedNumMutations(record, mRefSequence);
+            readInfo.NumberOfEvents = calcAdjustedNumMutations(record, mRefSequence, null);
         }
 
         return readInfo;
