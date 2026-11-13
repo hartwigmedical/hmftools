@@ -358,15 +358,15 @@ public class FrontPageTables
         return reportableEventString(purpleRecord.somaticVariants().size(), highDriverGenes);
     }
 
-    private static String virusesString(final ViridianRecord virusData)
+    private static String virusesString(final ViridianRecord viridian)
     {
-        if(virusData.reportableViruses().isEmpty())
+        if(viridian.reportableViruses().isEmpty())
         {
             return NONE;
         }
 
         Set<String> viruses = Sets.newHashSet();
-        for(VirusReport virus : virusData.reportableViruses())
+        for(VirusReport virus : viridian.reportableViruses())
         {
             VirusInterpretation interpretation = virus.interpretation();
             if(interpretation != null)
@@ -379,7 +379,7 @@ public class FrontPageTables
             }
         }
 
-        return reportableEventString(virusData.reportableViruses().size(), viruses);
+        return reportableEventString(viridian.reportableViruses().size(), viruses);
     }
 
     private static Set<String> findHighDriverAmpDelGenes(final List<PurpleGainDeletion> ampDels)
