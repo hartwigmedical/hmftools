@@ -6,17 +6,16 @@ import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMAT
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,41 +36,80 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class DriverComparer implements ItemComparer
+public class DriverComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
     private final Map<SourceType,List<DriverCatalog>> mDrivers;
     private final Map<SourceType,PurplePurity> mPurities;
     private final Map<SourceType,List<GeneCopyNumber>> mGeneCopyNumbers;
 
-    public DriverComparer(final ComparConfig config)
+    private boolean mPurpleSomaticDriversLoaded;
+    private boolean mPurpleGermlineDriversLoaded;
+    private boolean mLinxSomaticDriversLoaded;
+    private boolean mLinxGermlineDriversLoaded;
+
+    protected enum Fields
     {
-        mConfig = config;
+        LikelihoodMethod,
+        Likelihood,
+        MinCopyNumber,
+        MaxCopyNumber,
+        Chromosome,
+        ChromosomeBand,
+        Purity,
+        Ploidy;
+    }
+
+    public DriverComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.LikelihoodMethod.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.LikelihoodMethod.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Likelihood.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Likelihood.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MinCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MinCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MaxCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MaxCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Chromosome.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Chromosome.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ChromosomeBand.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.ChromosomeBand.toString()), null));
+
+        mFields.add(FieldInfo.displayOnly(Fields.Purity.toString(), "%.2f"));
+        mFields.add(FieldInfo.displayOnly(Fields.Ploidy.toString(), "%.2f"));
 
         mDrivers = Maps.newHashMap();
         mPurities = Maps.newHashMap();
         mGeneCopyNumbers = Maps.newHashMap();
+
+        mPurpleSomaticDriversLoaded = false;
+        mPurpleGermlineDriversLoaded = false;
+        mLinxSomaticDriversLoaded = false;
+        mLinxGermlineDriversLoaded = false;
     }
 
     @Override
     public CategoryType category() { return DRIVER; }
-
-    @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-        thresholds.addFieldThreshold(FLD_LIKELIHOOD, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_MIN_COPY_NUMBER, 0.3, 0.15);
-        thresholds.addFieldThreshold(FLD_MAX_COPY_NUMBER, 0.3, 0.15);
-    }
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -81,14 +119,9 @@ public class DriverComparer implements ItemComparer
         {
             String sourceSampleId = mConfig.sourceSampleId(sourceData.Type, sampleId);
 
-            if(sourceData.Database != null)
-            {
-                loadData(sourceSampleId, sourceData.Database, sourceData.Type);
-            }
-            else
-            {
-                loadData(sourceSampleId, sourceData.Files, sourceData.Type);
-            }
+            String sourceReferenceId = mConfig.sourceReferenceId(sourceData.Type, sampleId);
+            PipelineSourcePaths sampleFileSources = PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId);
+            loadData(sourceSampleId, sampleFileSources, sourceData.Type);
         }
 
         boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches);
@@ -99,50 +132,46 @@ public class DriverComparer implements ItemComparer
         return valid;
     }
 
-    private void loadData(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        mDrivers.put(sourceType, Lists.newArrayList(dbAccess.readDriverCatalog(sampleId)));
-    }
-
-    private void loadData(final String sampleId, final FileSources fileSources, final SourceType sourceType)
+    private void loadData(final String sampleId, final PipelineSourcePaths fileSources, final SourceType sourceType)
     {
         try
         {
-            // use Linx if present, otherwise Purple drivers
-            String linxDriverFile = LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true);
-            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
-
             List<DriverCatalog> drivers = Lists.newArrayList();
             mDrivers.put(sourceType, drivers);
 
-            if(Files.exists(Paths.get(linxDriverFile)))
+            String linxSomaticDriverFile = generateLinxSomaticDriverFilename(sampleId, fileSources);
+            if(Files.exists(Paths.get(linxSomaticDriverFile)))
             {
-                drivers.addAll(DriverCatalogFile.read(linxDriverFile)
+                drivers.addAll(DriverCatalogFile.read(linxSomaticDriverFile)
                         .stream()
                         .filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver()))
                         .collect(Collectors.toList()));
+                mLinxSomaticDriversLoaded = true;
             }
 
-            if(Files.exists(Paths.get(purpleDriverFile)))
+            String purpleSomaticDriverFile = generatePurpleSomaticDriverFilename(sampleId, fileSources);
+            if(Files.exists(Paths.get(purpleSomaticDriverFile)))
             {
-                drivers.addAll(DriverCatalogFile.read(purpleDriverFile));
+                drivers.addAll(DriverCatalogFile.read(purpleSomaticDriverFile));
+                mPurpleSomaticDriversLoaded = true;
             }
 
             // add germline as well if present
-            String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
-            String linxGermlineDriverFile = LinxDriver.generateCatalogFilename(fileSources.LinxGermline, sampleId, false);
-
+            String purpleGermlineDriverFile = generatePurpleGermlineDriverFilename(sampleId, fileSources);
             if(Files.exists(Paths.get(purpleGermlineDriverFile)))
             {
                 drivers.addAll(DriverCatalogFile.read(purpleGermlineDriverFile));
+                mPurpleGermlineDriversLoaded = true;
             }
 
+            String linxGermlineDriverFile = generateLinxGermlineDriverFilename(sampleId, fileSources);
             if(Files.exists(Paths.get(linxGermlineDriverFile)))
             {
                 drivers.addAll(DriverCatalogFile.read(linxGermlineDriverFile)
                         .stream()
                         .filter(x -> DRIVERS_LINX_GERMLINE.contains(x.driver()))
                         .collect(Collectors.toList()));
+                mLinxGermlineDriversLoaded = true;
             }
 
             PurplePurity purity = PurplePurity.read(PurplePurity.generateFilename(fileSources.Purple, sampleId));
@@ -158,9 +187,9 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     private List<ComparableItem> createDriverItems(final SourceType sourceType)
@@ -174,7 +203,7 @@ public class DriverComparer implements ItemComparer
 
         for(DriverCatalog driverCatalog : drivers)
         {
-            items.add(createDriverData(driverCatalog, mPurities.get(sourceType)));
+            items.add(createDriverData(driverCatalog, mPurities.get(sourceType), true));
         }
 
         // create non-reportable CN driver events if present in the other source
@@ -203,28 +232,89 @@ public class DriverComparer implements ItemComparer
             builder.driverLikelihood(0);
             builder.reportedStatus(ReportedStatus.NOT_REPORTED);
 
-            items.add(createDriverData(builder.build(), mPurities.get(sourceType)));
+            items.add(createDriverData(builder.build(), mPurities.get(sourceType), false));
         }
 
         return items;
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        return createDriverItems(sourceType);
+        Set<CategoryType> categories = mConfig.Categories;
+
+        boolean missingCatalogFile = false;
+        if(!mPurpleSomaticDriversLoaded && hasOverlap(categories, CategoryType.purpleSomaticOnlyCategories()))
+        {
+            CMP_LOGGER.warn(
+                    "sample({}) failed to find and load Purple somatic driver catalog file: {}", sampleId,
+                    generatePurpleSomaticDriverFilename(sampleId, fileSources));
+            missingCatalogFile = true;
+        }
+
+        if(!mLinxSomaticDriversLoaded && hasOverlap(categories, CategoryType.linxSomaticOnlyCategories()))
+        {
+            CMP_LOGGER.warn(
+                    "sample({}) failed to find and load Linx somatic driver catalog file: {}", sampleId,
+                    generateLinxSomaticDriverFilename(sampleId, fileSources));
+            missingCatalogFile = true;
+        }
+
+        if(!mPurpleGermlineDriversLoaded && hasOverlap(categories, CategoryType.purpleGermlineOnlyCategories()))
+        {
+            CMP_LOGGER.warn(
+                    "sample({}) failed to find and load Purple germline driver catalog file: {}", sampleId,
+                    generatePurpleGermlineDriverFilename(sampleId, fileSources));
+            missingCatalogFile = true;
+        }
+
+        if(!mLinxGermlineDriversLoaded && hasOverlap(categories, CategoryType.linxGermlineOnlyCategories()))
+        {
+            CMP_LOGGER.warn(
+                    "sample({}) failed to find and load Linx germline driver catalog file: {}", sampleId,
+                    generateLinxGermlineDriverFilename(sampleId, fileSources));
+            missingCatalogFile = true;
+        }
+
+        if(missingCatalogFile)
+        {
+            return null;
+        }
+        else
+        {
+            return createDriverItems(fileSources.Source);
+        }
     }
 
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
-    {
-        return createDriverItems(fileSources.Source);
-    }
-
-    private DriverData createDriverData(final DriverCatalog driver, final PurplePurity purity)
+    private DriverData createDriverData(final DriverCatalog driver, final PurplePurity purity, final boolean isPass)
     {
         boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
         String comparisonChromosome = determineComparisonChromosome(driver.chromosome(), mConfig.RequiresLiftover);
-        return new DriverData(driver, purity, comparisonChromosome, checkTranscript);
+        return new DriverData(driver, purity, comparisonChromosome, checkTranscript, isPass, mFields);
+    }
+
+    private static String generatePurpleSomaticDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
+    {
+        return DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
+    }
+
+    private static String generateLinxSomaticDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
+    {
+        return LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true);
+    }
+
+    private static String generatePurpleGermlineDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
+    {
+        return DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
+    }
+
+    private static String generateLinxGermlineDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
+    {
+        return LinxDriver.generateCatalogFilename(fileSources.LinxGermline, sampleId, false);
+    }
+
+    private static boolean hasOverlap(final Set<CategoryType> set1, final Set<CategoryType> set2)
+    {
+        return !Sets.intersection(set1, set2).isEmpty();
     }
 }

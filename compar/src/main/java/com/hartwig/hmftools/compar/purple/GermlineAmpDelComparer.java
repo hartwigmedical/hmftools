@@ -1,75 +1,96 @@
 package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_AMP_DEL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GermlineAmpDelComparer implements ItemComparer
+public class GermlineAmpDelComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public GermlineAmpDelComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Reported,
+        GermlineStatus,
+        TumorStatus,
+        GermlineCopyNumber,
+        TumorCopyNumber;
+    }
+
+    public GermlineAmpDelComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.GermlineStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.TumorStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TumorStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.GermlineCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.TumorCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TumorCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
+                "%.2f"));
     }
 
     @Override
     public CategoryType category() { return GERMLINE_AMP_DEL; }
 
+    /*
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_GERMLINE_CN, 0.2, 0.1);
-        thresholds.addFieldThreshold(FLD_TUMOR_CN, 0.2, 0.1);
+        return List.of(
+                new StringField(FLD_REPORTED, i -> ((GermlineAmpDelData) i).AmpDelData.Reported.toString(), true),
+                new StringField(FLD_GERMLINE_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.NormalStatus.toString(),
+                        true),
+                new StringField(FLD_TUMOR_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.TumorStatus.toString(),
+                        true),
+                new DoubleField(FLD_GERMLINE_CN, i -> ((GermlineAmpDelData) i).AmpDelData.GermlineCopyNumber,
+                        true, 0.2, 0.1, "%.2f"),
+                new DoubleField(FLD_TUMOR_CN, i -> ((GermlineAmpDelData) i).AmpDelData.TumorCopyNumber,
+                        true, 0.2, 0.1, "%.2f"),
+                new StringField(FLD_CHROMOSOME, i -> ((GermlineAmpDelData) i).mComparisonChromosome,
+                        true),
+                new StringField(FLD_CHROMOSOME_BAND, i -> ((GermlineAmpDelData) i).AmpDelData.ChromosomeBand, true)
+        );
+    }
+    */
+
+    @Override
+    public List<String> displayFieldNames()
+    {
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-    }
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(
-                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        final List<GermlineAmpDel> germlineAmpDels = dbAccess.readGermlineCopyNumbers(sampleId);
-        List<ComparableItem> items = Lists.newArrayList();
-        germlineAmpDels.forEach(x -> items.add(createGermlineAmpDelData(x)));
-        return items;
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
@@ -84,7 +105,7 @@ public class GermlineAmpDelComparer implements ItemComparer
             }
 
             List<GermlineAmpDel> germlineAmpDels = GermlineAmpDel.read(germlineAmpDelFile);
-            germlineAmpDels.forEach(x -> comparableItems.add(createGermlineAmpDelData(x)));
+            germlineAmpDels.forEach(x -> comparableItems.add(new GermlineAmpDelData(x, mFields)));
         }
         catch(IOException e)
         {
@@ -93,11 +114,5 @@ public class GermlineAmpDelComparer implements ItemComparer
         }
 
         return comparableItems;
-    }
-
-    private GermlineAmpDelData createGermlineAmpDelData(final GermlineAmpDel deletion)
-    {
-        String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
-        return new GermlineAmpDelData(deletion, comparisonChromosome);
     }
 }

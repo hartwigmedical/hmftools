@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.linx;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -24,6 +25,8 @@ public class TestDisruptionDataBuilder
 
     private DisruptionData build()
     {
-        return new DisruptionData(subCategory, geneName, breakends);
+        return new DisruptionData(
+                subCategory, geneName, breakends,
+                new DisruptionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

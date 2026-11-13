@@ -3,28 +3,48 @@ package com.hartwig.hmftools.compar.common;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jetbrains.annotations.Nullable;
 
 public class SourceData
 {
     public final SourceType Type;
-    public final DatabaseAccess Database;
-    public final FileSources Files;
+
+    @Nullable
+    public final PipelineSourcePaths PipelinePaths;
+
+    @Nullable
+    public final ExpectedCache Expected;
+
+    @Nullable
+    public final String Label;
 
     public final Map<String,String> SampleIdMapping; // maps from the common tumor SampleId to the tumor Sample Id for this source
     public final Map<String,String> ReferenceSampleIdMapping; // as above for the reference Id
 
-    public SourceData(final SourceType type, final DatabaseAccess database, final FileSources files)
+    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths, final ExpectedCache expected, final String label)
     {
         Type = type;
-        Database = database;
-        Files = files;
+        PipelinePaths = pipelinePaths;
+        Expected = expected;
+        Label = label;
 
         SampleIdMapping = Maps.newHashMap();
         ReferenceSampleIdMapping = Maps.newHashMap();
     }
 
-    public String configName() { return Type.toString().toLowerCase(); }
+    public boolean isPipelineSourced() { return PipelinePaths != null; }
+    public boolean isExpectedSourced() { return Expected != null; }
+
+    public static SourceData fromPipelineSource(final SourceType type, PipelineSourcePaths pipelinePaths, final String label)
+    {
+        return new SourceData(type, pipelinePaths, null, label);
+    }
+
+    public static SourceData fromExpectedSource(final SourceType type, final ExpectedCache expected, final String label)
+    {
+        return new SourceData(type, null, expected, label);
+    }
 
     public String toString() { return Type.toString(); }
 }

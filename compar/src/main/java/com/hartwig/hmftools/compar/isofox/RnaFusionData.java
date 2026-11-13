@@ -2,28 +2,140 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.formFusionName;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
+import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp, BasePosition ComparisonPositionDown)
-        implements ComparableItem
+public class RnaFusionData extends ComparableItem
 {
-    public static final String FLD_KNOWN_TYPE = "KnownFusionType";
-    public static final String FLD_SPLIT_FRAGS = "SplitFrags";
-    public static final String FLD_JUNC_TYPE_UP = "JuncTypeUp";
-    public static final String FLD_JUNC_TYPE_DOWN = "JuncTypeDown";
+    public final String Name;
+    public final String ChromosomeUp;
+    public final String ChromosomeDown;
+    public final int PositionUp;
+    public final int PositionDown;
+    public final KnownFusionType KnownType;
+    public final String JunctionTypeUp;
+    public final String JunctionTypeDown;
+    public final int SplitFragments;
+    public final String Filter;
+    public final boolean HasCoordinates;
+
+    public RnaFusionData(
+            final String name, final String chromosomeUp, final String chromosomeDown, final int positionUp,
+            final int positionDown, final KnownFusionType knownType,
+            final String junctionTypeUp, final String junctionTypeDown, final int splitFragments, final String filter)
+    {
+        Name = name;
+        ChromosomeUp = chromosomeUp;
+        ChromosomeDown = chromosomeDown;
+        PositionUp = positionUp;
+        PositionDown = positionDown;
+        KnownType = knownType;
+        JunctionTypeUp = junctionTypeUp;
+        JunctionTypeDown = junctionTypeDown;
+        SplitFragments = splitFragments;
+        Filter = filter;
+        HasCoordinates = !chromosomeUp.isEmpty();
+    }
+
+    public static RnaFusionData from(final RnaFusion rnaFusion, final List<FieldInfo> fields)
+    {
+        RnaFusionData fusionData = new RnaFusionData(
+                rnaFusion.name(), rnaFusion.chromosomeUp(), rnaFusion.chromosomeDown(), rnaFusion.positionUp(), rnaFusion.positionDown(),
+                rnaFusion.knownType(), rnaFusion.junctionTypeUp(), rnaFusion.junctionTypeDown(), rnaFusion.splitFragments(),
+                rnaFusion.filter());
+
+        fusionData.addAllValues(fields);
+        return fusionData;
+    }
+
+    private void addAllValues(final List<FieldInfo> fields)
+    {
+        addStringValue(RnaFusionComparer.Fields.KnownType.toString(), KnownType.toString(), fields);
+        addStringValue(RnaFusionComparer.Fields.JuncTypeUp.toString(), JunctionTypeUp, fields);
+        addStringValue(RnaFusionComparer.Fields.JuncTypeDown.toString(), JunctionTypeDown, fields);
+        addIntValue(RnaFusionComparer.Fields.SplitFrags.toString(), SplitFragments, fields);
+        addStringValue(RnaFusionComparer.Fields.Filter.toString(), Filter, fields);
+    }
+
+    public static RnaFusionData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
+    {
+        String key = expectedValues.get(0).Key;
+        String[] keyParts = key.split(":", 6);
+
+        if(keyParts.length != 2 && keyParts.length != 6)
+            throw new IllegalArgumentException(format("invalid RNA fusion expected key(%s)", key));
+
+        String geneUp = keyParts[0];
+        String geneDown = keyParts[1];
+        String name = formFusionName(geneUp, geneDown);
+
+        if(keyParts.length == 2)
+        {
+            RnaFusionData fusionData = new RnaFusionData(name, "", "", 0, 0, KnownFusionType.NONE, "", "", 0, PASS_FILTER);
+
+            if(!expectedValues.get(0).RequireAbsent)
+                fusionData.addExpectedValues(Collections.emptyList(), fields);
+
+            return fusionData;
+        }
+
+        String chromosomeUp = keyParts[2];
+        int positionUp = Integer.parseInt(keyParts[3]);
+        String chromosomeDown = keyParts[4];
+        int positionDown = Integer.parseInt(keyParts[5]);
+
+        KnownFusionType knownType = KnownFusionType.NONE;
+        String junctionTypeUp = "";
+        String junctionTypeDown = "";
+        int splitFragments = 0;
+
+        for(ExpectedValue expectedValue : expectedValues)
+        {
+            if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.KnownType.toString()))
+                knownType = KnownFusionType.valueOf(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.SplitFrags.toString()))
+                splitFragments = Integer.parseInt(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeUp.toString()))
+                junctionTypeUp = expectedValue.Value;
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
+                junctionTypeDown = expectedValue.Value;
+        }
+
+        RnaFusionData fusionData = new RnaFusionData(
+                name, chromosomeUp, chromosomeDown, positionUp, positionDown, knownType, junctionTypeUp, junctionTypeDown, splitFragments,
+                PASS_FILTER);
+
+        fusionData.addExpectedValues(expectedValues, fields);
+
+        return fusionData;
+    }
+
+    private void addExpectedValues(List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
+    {
+        for(ExpectedValue expectedValue : expectedValues)
+        {
+            if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.KnownType.toString()))
+                addStringValue(RnaFusionComparer.Fields.KnownType.toString(), KnownType.toString(), fields);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.SplitFrags.toString()))
+                addIntValue(RnaFusionComparer.Fields.SplitFrags.toString(), SplitFragments, fields);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeUp.toString()))
+                addStringValue(RnaFusionComparer.Fields.JuncTypeUp.toString(), JunctionTypeUp, fields);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
+                addStringValue(RnaFusionComparer.Fields.JuncTypeDown.toString(), JunctionTypeDown, fields);
+        }
+
+        addStringValue(RnaFusionComparer.Fields.Filter.toString(), Filter, fields);
+    }
 
     @Override
     public CategoryType category()
@@ -34,82 +146,42 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     @Override
     public String key()
     {
-        String key = String.format("%s %s:%d-%s:%d", RnaFusion.name(), RnaFusion.chromosomeUp(),
-                RnaFusion.positionUp(), RnaFusion.chromosomeDown(), RnaFusion.positionDown());
+        if(!HasCoordinates)
+            return Name;
 
-        boolean upLifted = ComparisonPositionUp.Position != RnaFusion.positionUp()
-                || !ComparisonPositionUp.Chromosome.equals(RnaFusion.chromosomeUp());
-
-        boolean downLifted = ComparisonPositionDown.Position != RnaFusion.positionDown()
-                || !ComparisonPositionDown.Chromosome.equals(RnaFusion.chromosomeDown());
-
-        if(upLifted || downLifted)
-            key += String.format(" liftover(%s-%s)", ComparisonPositionUp, ComparisonPositionDown);
-
-        return key;
-    }
-
-    @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", RnaFusion.knownType()));
-        values.add(format("%s", RnaFusion.junctionTypeUp()));
-        values.add(format("%s", RnaFusion.junctionTypeDown()));
-        values.add(format("%d", RnaFusion.splitFragments()));
-
-        return values;
+        return format("%s %s:%d-%s:%d", Name, ChromosomeUp, PositionUp, ChromosomeDown, PositionDown);
     }
 
     @Override
     public boolean reportable()
     {
-        return RnaFusion.knownType() != KnownFusionType.NONE;
-    }
-
-    @Override
-    public boolean isPass()
-    {
-        return true;
+        return KnownType != KnownFusionType.NONE;
     }
 
     @Override
     public boolean matches(final ComparableItem other)
     {
         final RnaFusionData otherData = (RnaFusionData)other;
-
-        if(!otherData.RnaFusion.name().equals(RnaFusion.name())){
-            return false;
-        }
-        if(!otherData.RnaFusion.chromosomeUp().equals(ComparisonPositionUp.Chromosome))
-        {
-            return false;
-        }
-        if(!otherData.RnaFusion.chromosomeDown().equals(ComparisonPositionDown.Chromosome))
-        {
-            return false;
-        }
-        if(otherData.RnaFusion.positionUp() != ComparisonPositionUp.Position)
-        {
-            return false;
-        }
-        return otherData.RnaFusion.positionDown() == ComparisonPositionDown.Position;
+        return isMatched(otherData);
     }
 
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+    public boolean isMatched(final RnaFusionData otherData)
     {
-        final RnaFusion ref = RnaFusion;
-        final RnaFusion otherData = ((RnaFusionData) other).RnaFusion;
+        if(!otherData.Name.equals(Name))
+            return false;
 
-        final List<String> diffs = Lists.newArrayList();
+        if(!HasCoordinates || !otherData.HasCoordinates)
+            return true;
 
-        checkDiff(diffs, FLD_KNOWN_TYPE, ref.knownType().toString(), otherData.knownType().toString());
-        checkDiff(diffs, FLD_JUNC_TYPE_UP, ref.junctionTypeUp(), otherData.junctionTypeUp());
-        checkDiff(diffs, FLD_JUNC_TYPE_DOWN, ref.junctionTypeDown(), otherData.junctionTypeDown());
-        checkDiff(diffs, FLD_SPLIT_FRAGS, ref.splitFragments(), otherData.splitFragments(), thresholds);
+        if(!otherData.ChromosomeUp.equals(ChromosomeUp))
+            return false;
 
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+        if(!otherData.ChromosomeDown.equals(ChromosomeDown))
+            return false;
+
+        if(otherData.PositionUp != PositionUp)
+            return false;
+
+        return otherData.PositionDown == PositionDown;
     }
 }

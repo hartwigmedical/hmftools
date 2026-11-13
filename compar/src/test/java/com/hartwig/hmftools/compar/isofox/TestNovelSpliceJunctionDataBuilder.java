@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
@@ -19,10 +19,6 @@ public class TestNovelSpliceJunctionDataBuilder
     public int fragmentCount = 1000;
     public AltSpliceJunctionContext regionStart = AltSpliceJunctionContext.SPLICE_JUNC;
     public AltSpliceJunctionContext regionEnd = AltSpliceJunctionContext.SPLICE_JUNC;
-    public String comparisonChromosomeStart = "9";
-    public int comparisonPositionStart = 1000;
-    public String comparisonChromosomeEnd = "9";
-    public int comparisonPositionEnd = 2000;
 
     private static final Consumer<TestNovelSpliceJunctionDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -34,16 +30,12 @@ public class TestNovelSpliceJunctionDataBuilder
         b.fragmentCount = 500;
         b.regionStart = AltSpliceJunctionContext.EXONIC;
         b.regionEnd = AltSpliceJunctionContext.INTRONIC;
-        b.comparisonChromosomeStart = "7";
-        b.comparisonPositionStart = 3000;
-        b.comparisonChromosomeEnd = "7";
-        b.comparisonPositionEnd = 4000;
     };
 
-    public static final TestComparableItemBuilder<TestNovelSpliceJunctionDataBuilder, NovelSpliceJunctionData> BUILDER =
+    public static final TestComparableItemBuilder<TestNovelSpliceJunctionDataBuilder, RnaNovelSpliceJunctionData> BUILDER =
             new TestComparableItemBuilder<>(TestNovelSpliceJunctionDataBuilder::new, TestNovelSpliceJunctionDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private NovelSpliceJunctionData build()
+    private RnaNovelSpliceJunctionData build()
     {
         final NovelSpliceJunction junction = ImmutableNovelSpliceJunction.builder()
                 .geneName(geneName)
@@ -65,6 +57,8 @@ public class TestNovelSpliceJunctionDataBuilder
                 .cohortFrequency(-1)
                 .build();
 
-        return new NovelSpliceJunctionData(junction, new BasePosition(comparisonChromosomeStart, comparisonPositionStart), new BasePosition(comparisonChromosomeEnd, comparisonPositionEnd));
+        return RnaNovelSpliceJunctionData.from(
+                junction,
+                new RnaNovelSpliceJunctionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

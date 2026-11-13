@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -65,6 +66,7 @@ public class TestPurityDataBuilder
     private PurityData build()
     {
         FittedPurity bestFit = new FittedPurity(purity, -1, ploidy, -1, -1, -1);
+
         PurpleQC qc = ImmutablePurpleQC.builder()
                 .status(qcStatus)
                 .method(fitMethod)
@@ -80,6 +82,7 @@ public class TestPurityDataBuilder
                 .amberMeanDepth(-1)
                 .lohPercent(-1)
                 .build();
+
         FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(-1)
                 .maxPurity(-1)
@@ -88,6 +91,9 @@ public class TestPurityDataBuilder
                 .minDiploidProportion(-1)
                 .maxDiploidProportion(-1)
                 .build();
+
+        PurityComparer purityComparer = new PurityComparer(null, Collections.emptyMap());
+
         return new PurityData(
                 ImmutablePurityContext.builder()
                         .gender(gender)
@@ -106,7 +112,8 @@ public class TestPurityDataBuilder
                         .score(score)
                         .polyClonalProportion(-1)
                         .wholeGenomeDuplication(false)
-                        .build()
+                        .build(),
+                purityComparer.fieldsList()
         );
     }
 }

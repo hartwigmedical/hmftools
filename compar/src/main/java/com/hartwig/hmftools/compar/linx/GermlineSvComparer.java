@@ -3,14 +3,15 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_SV;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -19,59 +20,51 @@ import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GermlineSvComparer implements ItemComparer
+public class GermlineSvComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public GermlineSvComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Reported,
+        BreakendInfo;
+    }
+
+    public GermlineSvComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.BreakendInfo.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendInfo.toString()), null));
     }
 
     @Override
     public CategoryType category() { return GERMLINE_SV; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds) {}
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public List<String> displayFieldNames()
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Lists.newArrayList();
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         List<ComparableItem> items = Lists.newArrayList();
 
         Map<String,List<BreakendData>> geneBreakendMap = Maps.newHashMap();
 
-        MatchLevel matchLevel = mConfig.Categories.getOrDefault(GERMLINE_SV, MatchLevel.REPORTABLE);
+        MatchLevel matchLevel = mConfig.MatchingLevel;
 
         try
         {
@@ -113,8 +106,14 @@ public class GermlineSvComparer implements ItemComparer
                 String chromosome = usesStart ? var.ChromosomeStart : var.ChromosomeEnd;
                 int position = usesStart ? var.PositionStart : var.PositionEnd;
 
-                BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                if(mConfig.RequiresLiftover && fileSources.Source == SourceType.OLD)
+                {
+                    BasePosition comparisonPosition = determineComparisonGenomePosition(
+                            chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+                    position = comparisonPosition.Position;
+                    chromosome = comparisonPosition.Chromosome;
+                }
 
                 int frags = var.GermlineFragments;
                 int depth = (usesStart ? var.GermlineReferenceFragmentsStart : var.GermlineReferenceFragmentsEnd) + frags;
@@ -122,8 +121,7 @@ public class GermlineSvComparer implements ItemComparer
 
                 BreakendData breakendData = new BreakendData(
                         breakend, var.VcfId, var.Type, chromosome, position,
-                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets, depth, frags, qual,
-                        comparisonPosition.Chromosome, comparisonPosition.Position);
+                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets, depth, frags, qual);
 
                 geneBreakends.add(breakendData);
             }
@@ -133,7 +131,7 @@ public class GermlineSvComparer implements ItemComparer
                 String geneName = entry.getKey();
                 List<BreakendData> geneBreakends = entry.getValue();
 
-                DisruptionData disruptionData = new DisruptionData(GERMLINE_SV, geneName, geneBreakends);
+                DisruptionData disruptionData = new DisruptionData(GERMLINE_SV, geneName, geneBreakends, mFields);
                 items.add(disruptionData);
             }
         }

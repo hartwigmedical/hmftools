@@ -24,10 +24,16 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 public final class RnaFusionFile
 {
     public static final String PASS_FUSION_FILE_ID = "pass_fusions.tsv";
+    public static final String UNFILTERED_FUSION_FILE_ID = "fusions.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + PASS_FUSION_FILE_ID;
+    }
+
+    public static String generateUnfilteredFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + UNFILTERED_FUSION_FILE_ID;
     }
 
     private enum Columns
@@ -144,7 +150,8 @@ public final class RnaFusionFile
             Integer transcriptDownIndex = fieldsIndexMap.get(Columns.TranscriptDown.toString());
             Integer exonUpIndex = fieldsIndexMap.get(Columns.ExonUp.toString());
             Integer exonDownIndex = fieldsIndexMap.get(Columns.ExonDown.toString());
-            Integer knownTypeIndex = fieldsIndexMap.get(Columns.KnownType.toString());
+            Integer knownTypeIndex = fieldsIndexMap.getOrDefault(Columns.KnownType.toString(), fieldsIndexMap.get("KnownFusionType"));
+            Integer filterIndex = fieldsIndexMap.get("Filter");
 
             for(String line : lines.subList(1, lines.size()))
             {
@@ -168,7 +175,7 @@ public final class RnaFusionFile
 
                 KnownFusionType knownFusionType = knownTypeIndex != null ? parseKnownType(values[knownTypeIndex]) : KnownFusionType.NONE;
 
-                fusions.add(ImmutableRnaFusion.builder()
+                ImmutableRnaFusion.Builder builder = ImmutableRnaFusion.builder()
                         .name(fusionName)
                         .knownType(knownFusionType)
                         .chromosomeUp(values[chrUpIndex])
@@ -191,8 +198,12 @@ public final class RnaFusionFile
                         .depthDown(Integer.parseInt(values[depthDownIndex]))
                         .maxAnchorLengthUp(Integer.parseInt(values[fieldsIndexMap.get(Columns.MaxAnchorLengthUp.toString())]))
                         .maxAnchorLengthDown(Integer.parseInt(values[fieldsIndexMap.get(Columns.MaxAnchorLengthDown.toString())]))
-                        .cohortFrequency(Integer.parseInt(values[cohortIndex]))
-                        .build());
+                        .cohortFrequency(Integer.parseInt(values[cohortIndex]));
+
+                if(filterIndex != null)
+                    builder.filter(values[filterIndex]);
+
+                fusions.add(builder.build());
             }
 
             return fusions;
