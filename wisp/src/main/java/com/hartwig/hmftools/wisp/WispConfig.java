@@ -89,6 +89,7 @@ public class WispConfig
     public final boolean WriteAllSummaryMethods;
     public final boolean AllowMissingSamples;
     public final boolean DisableDualFragments;
+    public final boolean SkipReferenceId;
     public final boolean InferVcfReferenceId;
     public final int Threads;
 
@@ -117,6 +118,7 @@ public class WispConfig
     private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
     private static final String EXCLUDED_SOMATICS_FILE = "excluded_somatics";
     private static final String INFER_VCF_REFERENCE_ID = "infer_vcf_reference_id";
+    private static final String SKIP_REFERENCE_ID = "skip_reference_id";
 
     private static final String RUN_MOSAICS = "run_mosaics";
 
@@ -130,6 +132,9 @@ public class WispConfig
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
+
+        InferVcfReferenceId = configBuilder.hasFlag(INFER_VCF_REFERENCE_ID);
+        SkipReferenceId = configBuilder.hasFlag(SKIP_REFERENCE_ID);
 
         Samples = Lists.newArrayList();
         loadSampleData(configBuilder);
@@ -186,7 +191,6 @@ public class WispConfig
         ApplyRefVariantFilters = configBuilder.hasFlag(APPLY_REF_VARIANT_FILTERS);
         AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
         DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
-        InferVcfReferenceId = configBuilder.hasFlag(INFER_VCF_REFERENCE_ID);
 
         RunMosaicLogic = configBuilder.hasFlag(RUN_MOSAICS);
 
@@ -289,12 +293,33 @@ public class WispConfig
                 filename = SampleDataDir + filename;
 
             Samples.addAll(SampleData.loadSampleDataFile(filename));
+
+            if(!SkipReferenceId && !InferVcfReferenceId)
+            {
+                for(SampleData sampleData : Samples)
+                {
+                    if(!sampleData.hasReference())
+                    {
+                        CT_LOGGER.info("patient({}) missing required reference ID", sampleData.PatientId);
+                        System.exit(1);
+                    }
+                }
+            }
         }
         else
         {
             String patientId = configBuilder.getValue(PATIENT, configBuilder.getValue(PATIENT_ID_OLD_CFG));
             String referenceId = configBuilder.getValue(REFERENCE, configBuilder.getValue(REFERENCE_ID_OLD_CFG));
             String tumorId = configBuilder.getValue(TUMOR, configBuilder.getValue(TUMOR_ID_OLD_CFG));
+
+            if(referenceId == null)
+            {
+                if(!SkipReferenceId && !InferVcfReferenceId)
+                {
+                    CT_LOGGER.info("patient({}) missing required reference ID", patientId);
+                    System.exit(1);
+                }
+            }
 
             Samples.add(new SampleData(
                     patientId, tumorId, referenceId,
@@ -381,6 +406,7 @@ public class WispConfig
         configBuilder.addFlag(DISABLE_DUAL_FRAGS, "Disable use of dual fragments in purity calcs");
         configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
         configBuilder.addFlag(INFER_VCF_REFERENCE_ID, "Infer reference ID from VCF's first entry if not specified");
+        configBuilder.addFlag(SKIP_REFERENCE_ID, "Set to intentionally not supply a reference ID");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,
@@ -442,5 +468,6 @@ public class WispConfig
         Threads = 0;
         ExcludedSomatics = Collections.emptyList();
         InferVcfReferenceId = false;
+        SkipReferenceId = false;
     }
 }

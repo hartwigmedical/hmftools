@@ -242,13 +242,13 @@ public final class MosaicRoutines
                 //
                 // since one prob is based on random sampling of germlineDP and the other is random sampling of ctDNA sampleDP,
                 // they are largely orthogonal and can be multiplied in this way. Call this expectedFrags
-                double expectedMosaicFags = expectedAd * zeroGermlineADProb * notOutlierFilteredProb;
+                double expectedMosaicFrags = expectedAd * zeroGermlineADProb * notOutlierFilteredProb;
 
                 // the expected number of dual mosaic frags for that variant is expectedFrags * siteDualRatio, unless dual-filtered
-                double expectedDualMosaicFags = !sampleFragData.isDualFiltered() ? expectedMosaicFags * dualDepthRatio : 0;
+                double expectedDualMosaicFrags = !sampleFragData.isDualFiltered() ? expectedMosaicFrags * dualDepthRatio : 0;
 
-                totalExpectedMosaicFrags += expectedMosaicFags;
-                totalExpectedDualMosaicFrags += expectedDualMosaicFags;
+                totalExpectedMosaicFrags += expectedMosaicFrags;
+                totalExpectedDualMosaicFrags += expectedDualMosaicFrags;
 
                 ++cellGeneration;
             }
