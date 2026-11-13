@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.Read;
 
 public class ChimericReadGroup
@@ -18,11 +19,9 @@ public class ChimericReadGroup
         mComplete = readGroupComplete();
     }
 
-    public ChimericReadGroup(final Read read1, final Read read2)
+    public ChimericReadGroup(final Fragment fragment)
     {
-        mReads = Lists.newArrayListWithCapacity(2);
-        mReads.add(read1);
-        mReads.add(read2);
+        mReads = Lists.newArrayList(fragment.reads());
         mComplete = readGroupComplete();
     }
 

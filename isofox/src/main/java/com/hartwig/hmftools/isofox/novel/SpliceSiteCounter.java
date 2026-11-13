@@ -16,7 +16,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 public class SpliceSiteCounter
@@ -38,13 +40,15 @@ public class SpliceSiteCounter
     public void clear() { mSiteCounts.clear(); }
 
     public void registerSpliceSiteSupport(
-            final List<BaseRegion> readMappedCoords1, final List<BaseRegion> readMappedCoords2, final List<RegionReadData> allRegions)
+            final Fragment fragment, final List<RegionReadData> allRegions)
     {
         final Set<Integer> traversedSites = Sets.newHashSet();
         final Set<Integer> supportedSites = Sets.newHashSet();
 
-        registerSpliceSiteSupport(readMappedCoords1, allRegions, traversedSites, supportedSites);
-        registerSpliceSiteSupport(readMappedCoords2, allRegions, traversedSites, supportedSites);
+        for(Read read : fragment.reads())
+        {
+            registerSpliceSiteSupport(read.getMappedRegionCoords(), allRegions, traversedSites, supportedSites);
+        }
 
         traversedSites.forEach(x -> addCount(x, SPLICE_SITE_TRAVERSED));
         supportedSites.forEach(x -> addCount(x, SPLICE_SITE_SUPPORT));

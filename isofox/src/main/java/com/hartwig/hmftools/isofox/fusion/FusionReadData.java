@@ -462,6 +462,19 @@ public class FusionReadData
 
         int impliedFragmentLength = fragment.reads().get(0).ReadBaseLength * 2;
 
+        boolean isDelDupFragment = true;
+
+        if(fragment.reads().size() >= 2)
+        {
+            FusionRead read1 = fragment.reads().get(0);
+            FusionRead read2 = fragment.reads().get(1);
+
+            if(!read1.Chromosome.equals(read2.Chromosome) || read1.Orientation == read2.Orientation)
+            {
+                isDelDupFragment = false;
+            }
+        }
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final List<FusionTransExon> fragmentRefs = fragment.getTransExonRefs()[se];
@@ -495,11 +508,14 @@ public class FusionReadData
             int fragmentPosition = read.getCoordsBoundary(switchIndex(se));
 
             // cannot be on the wrong side of the junction
-            if((mJunctionOrientations[se] == 1) == (fragmentPosition > mJunctionPositions[se]))
+            if((mJunctionOrientations[se] == ORIENT_FWD) == (fragmentPosition > mJunctionPositions[se]))
             {
-                // check if a mis-mapping explains the over-hang
-                if(!softClippedReadSupportsJunction(read, se))
-                    return false;
+                if(isDelDupFragment || read.isSoftClipped(se))
+                {
+                    // check if a mis-mapping explains the over-hang
+                    if(!softClippedReadSupportsJunction(read, se))
+                        return false;
+                }
             }
 
             // of the fusion is unspliced or the fragment is intronic, then measure the genomic distance vs permitted fragment length
@@ -512,7 +528,7 @@ public class FusionReadData
             }
         }
 
-        if(impliedFragmentLength > maxFragmentDistance)
+        if(isDelDupFragment && impliedFragmentLength > maxFragmentDistance)
             return false;
 
         return true;

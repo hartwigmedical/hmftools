@@ -29,7 +29,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
@@ -72,7 +71,6 @@ import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
-import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -172,10 +170,7 @@ public class ResultsWriter
 
         if(mConfig.writeType(READ))
         {
-            if(mConfig.runFunction(READ_COUNTS))
-                mReadDataWriter = BamReadCounter.createReadDataWriter(mConfig);
-            else
-                mReadDataWriter = createReadDataWriter(mConfig);
+            mReadDataWriter = createReadDataWriter(mConfig);
         }
 
         if(mConfig.writeType(SPLICE_SITE))

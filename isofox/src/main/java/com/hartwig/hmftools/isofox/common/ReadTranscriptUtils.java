@@ -347,25 +347,6 @@ public final class ReadTranscriptUtils
                 readPositionBoundary - clipLength >= transcriptBoundary : readPositionBoundary + clipLength <= transcriptBoundary;
     }
 
-    public static List<RegionReadData> getUniqueValidRegion(final Read read1, final Read read2)
-    {
-        List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
-                .filter(x -> validExonMatch(x.getValue()))
-                .map(x -> x.getKey()).collect(Collectors.toList());
-
-        List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
-                .filter(x -> validExonMatch(x.getValue()))
-                .map(x -> x.getKey()).collect(Collectors.toList());
-
-        for(RegionReadData region : regions2)
-        {
-            if(!regions.contains(region))
-                regions.add(region);
-        }
-
-        return regions;
-    }
-
     public static boolean validTranscriptType(TransMatchType transType)
     {
         return transType == EXONIC || transType == SPLICE_JUNCTION;
@@ -446,13 +427,6 @@ public final class ReadTranscriptUtils
                 ++regionBaseDepth[j];
             }
         }
-    }
-
-    public static int calcFragmentLength(final TranscriptData transData, final Read read1, final Read read2)
-    {
-        int minReadPos = min(read1.alignmentStart(), read2.alignmentStart());
-        int maxReadPos = max(read1.alignmentEnd(), read2.alignmentEnd());
-        return calcFragmentLength(transData, minReadPos, maxReadPos);
     }
 
     public static int calcFragmentLength(final TranscriptData transData, final int minReadPos, final int maxReadPos)
