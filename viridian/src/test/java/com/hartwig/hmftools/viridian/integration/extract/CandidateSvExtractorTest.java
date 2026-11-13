@@ -151,6 +151,18 @@ public class CandidateSvExtractorTest
         assertThrows(UserInputError.class, () -> extract(header, records));
     }
 
+    @Test
+    public void testExtractTumorOnly()
+    {
+        String header = HEADER.replace("NORMAL\tTUMOR", "TUMOR");
+        String records = String.join(
+                "\t", "chr1", "1000", "sgl_1", "A", "A" + INSERT_AT_MIN_LENGTH + ".", "100", "PASS", "SVTYPE=SGL",
+                FORMAT, "12:40:20:0.25") + "\n";
+
+        List<CandidateSv> candidates = extract(header, records);
+        assertEquals(new BreakendSupport(12, 60, 0.25, null, null), candidates.get(0).startBreakend().support());
+    }
+
     private static String singleBreakend(String chromosome, int position, String id, String insertSequence)
     {
         return record(
