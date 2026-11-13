@@ -83,6 +83,26 @@ public class MissedGeneVariantPrepTest
         assertFeaturesEqual(expectedFeatures, actualFeatures);
     }
 
+    @Test
+    public void canCalcLimitOfDetectionVAF()
+    {
+        Map<DepthRange,Integer> depthCounts = Map.of(
+                new DepthRange(20, 20), 10,
+                new DepthRange(100, 100), 90
+        );
+        double actualVAF = MissedGeneVariantPrep.calcLimitOfDetectionVAF(depthCounts);
+        double expectedVAF = 0.244766;
+        assertEquals(expectedVAF, actualVAF, 1e-6);
+
+        Map<DepthRange,Integer> lowDepthCounts = Map.of(
+                new DepthRange(2, 2), 10,
+                new DepthRange(100, 100), 90
+        );
+        double actualLowDepthVAF = MissedGeneVariantPrep.calcLimitOfDetectionVAF(lowDepthCounts);
+        double expectedLowDepthVAF = Double.POSITIVE_INFINITY;
+        assertEquals(expectedLowDepthVAF, actualLowDepthVAF, 0);
+    }
+
     private static void assertFeaturesEqual(List<Feature> expectedFeatures, List<Feature> actualFeatures)
     {
         assertEquals(expectedFeatures.size(), actualFeatures.size());

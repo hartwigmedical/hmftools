@@ -36,6 +36,9 @@ public class MissedGeneVariantPrep implements CategoryPrep
     private static final int MIN_VARIANT_ALLELE_DEPTH = 3;
     private static final double REF_SAMPLE_PURITY = 1;  // Assume no contamination from other samples
 
+    private static final int LOD_VAF_BISECTION_ITERATIONS = 20; // VAF precision 1 / 2^20 = ~1e-6
+    private static final double LOD_TARGET_MISSED_VARIANT_LIKELIHOOD = 0.01;
+
     public MissedGeneVariantPrep(QseePrepConfig config)
     {
         mConfig = config;
@@ -110,6 +113,32 @@ public class MissedGeneVariantPrep implements CategoryPrep
 
         // 'Likelihood' is a misnomer (should be 'probability'), but will leave as is because renaming is non-trivial
         return missedVariantLikelihood;
+    }
+
+    @VisibleForTesting
+    static double calcLimitOfDetectionVAF(Map<DepthRange,Integer> depthCounts)
+    {
+        // As VAF (x) increases, missed variant likelihood (y) monotonically decreases (i.e. downward slope)
+        // We can therefore use a binary search approach (i.e. bisection) to quickly find 'x' given 'y'
+
+        double minAchievableMissedVariantLikelihood = calcMissedVariantLikelihood(depthCounts, 1);
+        if(minAchievableMissedVariantLikelihood > LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
+            return Double.POSITIVE_INFINITY;
+
+        double lowerVAF = 0;
+        double upperVAF = 1;
+
+        for(int iteration = 0; iteration < LOD_VAF_BISECTION_ITERATIONS; ++iteration)
+        {
+            double midVAF = (lowerVAF + upperVAF) / 2;
+
+            if(calcMissedVariantLikelihood(depthCounts, midVAF) <= LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
+                upperVAF = midVAF;
+            else
+                lowerVAF = midVAF;
+        }
+
+        return upperVAF;
     }
 
     @VisibleForTesting
