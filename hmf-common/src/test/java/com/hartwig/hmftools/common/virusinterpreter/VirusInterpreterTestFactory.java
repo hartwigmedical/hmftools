@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.virusinterpreter;
 
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 
 import org.apache.logging.log4j.util.Strings;

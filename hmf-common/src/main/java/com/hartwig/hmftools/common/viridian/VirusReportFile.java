@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.common.virus.VirusType;
 
 import org.jetbrains.annotations.Nullable;
 

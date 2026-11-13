@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;

@@ -14,7 +14,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 
 import org.jetbrains.annotations.NotNull;

@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestVirusDataBuilder

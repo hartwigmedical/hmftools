@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterTestFactory;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 
 import org.junit.Test;

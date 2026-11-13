@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.viridian;
+package com.hartwig.hmftools.common.virus;
 
 import org.jetbrains.annotations.NotNull;
 

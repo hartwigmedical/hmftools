@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.viridian;
 
+import com.hartwig.hmftools.common.virus.VirusType;
+
 import org.jetbrains.annotations.Nullable;
 
 // The reporting verdict for one virus group, plus supporting data.

@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.virus.VirusType;
+
 import org.junit.Test;
 
 public class VirusReportFileTest

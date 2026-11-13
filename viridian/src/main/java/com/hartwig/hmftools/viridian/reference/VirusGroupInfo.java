@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 
 import org.jetbrains.annotations.Nullable;

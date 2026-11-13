@@ -17,7 +17,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.viridian.ClonalityStatus;
 import com.hartwig.hmftools.common.viridian.ReportQcStatus;
 import com.hartwig.hmftools.common.viridian.VirusReport;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;

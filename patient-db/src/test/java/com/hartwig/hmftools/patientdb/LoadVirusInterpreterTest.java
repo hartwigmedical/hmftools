@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
 import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
-import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.VirusannotationRecord;
 
