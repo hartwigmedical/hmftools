@@ -19,7 +19,7 @@ java -jar compar.jar \
 The key configuration values to set are:
 - the sample(s) to compare
 - the categories to compare - each of these will map to specific pipeline output files
-- the source of data - pipeline output files, or expected findings files in place of either the old or new source
+- the source of data - pipeline output files, or expected findings files in place of the old source
  
 ### Required configuration
 
@@ -69,8 +69,8 @@ sample_id_mappings.csv
 SampleId,OldSampleId,NewSampleId
 COLO829T,COLO829_Old,COLO829T_New
 ```
-Keep `SampleId` the same between comparisons; it is written to the curation file and used for history lookup.
-`OldSampleId` and `NewSampleId` identify the source files, not separate cache identities. See [Curation Cache](#curation-cache).
+`SampleId` is written to the curation file and history is looked up by it. `OldSampleId` and `NewSampleId` only identify the source
+files. See [Curation Cache](#curation-cache).
 
 The same can be done for germline sample IDs.
 ```
@@ -135,10 +135,126 @@ The `pipeline_format_old` and/or `pipeline_format_new` arguments can be set to a
 Alternatively, this format can be set in a config file such as [this](../hmf-common/src/test/resources/pipeline/completeToolDirectoryConfig.tsv) or [this](../hmf-common/src/test/resources/pipeline/partialToolDirectoryConfig.tsv)
 by using the `pipeline_format_file_old` and/or `pipeline_format_file_new` arguments.
 
+> [!NOTE]
+> Compar supports output comparison from OncoAnalyser v3.0 onwards.
+
 ### Output Files
 Output files are named the same for one sample or many: `compar.tsv` for all categories, or one `compar.<category>.tsv`
 per category with `write_detailed`. When set, `output_id` follows `compar`, e.g.
 `compar.compar-2026-10-01T10-35-26.somatic_variant.tsv`. Every row starts with its `SampleId`.
+
+### Expected Findings Files
+Set `expected_findings_files_old` in place of the old sample directory to compare a run with expected values. Separate files with ';'.
+
+Columns:
+
+| Column       | Use      | Description                                                                                |
+|--------------|----------|--------------------------------------------------------------------------------------------|
+| SampleId     | Optional | If no row has one, every row applies to every sample                                       |
+| Category     | Required | A category from the table below                                                            |
+| Key          | Required | The item's key, in a form from the table below                                             |
+| Status       | Optional | `Present` or `Absent`. Left blank, it defaults to `Present`. Any other value stops the run |
+| FieldValues  | Optional | `Field=Value` pairs separated by ';', empty for none                                       |
+| *Field name* | Optional | One column per field, e.g. `MinCopyNumber`                                                 |
+| Remark       | Optional | Free text, copied to the output and not compared                                           |
+
+> [!NOTE]
+> Give the values to compare either in a `FieldValues` column, as `Field=Value` pairs separated by ';', so one file can hold every
+> category, or in one column per field, with one file per category.
+
+Use `N/A` in a field column for a value that should not be compared.
+
+| Category                  | Key                                                                   |
+|---------------------------|-----------------------------------------------------------------------|
+| PURITY                    | `PURITY`                                                              |
+| SOMATIC_VARIANT           | `Chromosome:Position:Ref:Alt`                                         |
+| SOMATIC_VARIANT           | `GeneName:HgvsProtein`, e.g. `BRAF:p.V600E`                           |
+| SOMATIC_VARIANT           | `GeneName`, for an `Absent` row only                                  |
+| GENE_COPY_NUMBER          | `GeneName`, e.g. `ERBB2`                                              |
+| GENE_COPY_NUMBER          | `GeneName:TranscriptId`, e.g. `CDKN2A:ENST00000579755`                |
+| RNA_NOVEL_SPLICE_JUNCTION | `GeneName:Chromosome:JunctionStart:JunctionEnd`                       |
+| RNA_FUSION                | `GeneUp:GeneDown:ChromosomeUp:PositionUp:ChromosomeDown:PositionDown` |
+| RNA_FUSION                | `GeneUp:GeneDown`                                                     |
+
+- Field names are in [Data Categories, Fields and Thresholds](#data-categories-fields-and-thresholds).
+- Every row counts as passing, and a row with no matching pipeline row is `OLD_ONLY` at REPORTABLE too. To compare reported status,
+  give `Reported=true` (SOMATIC_VARIANT only).
+
+#### Absent rows
+An `Absent` row means the run must not find that item. Its field values are not compared.
+
+- Only SOMATIC_VARIANT and RNA_FUSION take `Absent` rows, and the key can't have coordinates. Breaking either rule stops the run.
+- A SOMATIC_VARIANT gene key, e.g. `KRAS`, matches every pipeline row in that gene. Any other key matches what a `Present` row with
+  that key would.
+- Only pipeline rows that no `Present` row matches are checked: reported rows at REPORTABLE, passing rows at DETAILED.
+
+| When                            | Output row                                         |
+|---------------------------------|----------------------------------------------------|
+| A checked pipeline row matches  | `ABSENT_FOUND`, keyed by the pipeline row          |
+| No checked pipeline row matches | `ABSENT_CONFIRMED`, even without `include_matches` |
+
+#### By category
+
+##### Purity
+There is one record per sample. A sample with no expected findings row is not compared, and a sample with expected findings but no
+pipeline output gives `INVALID_NEW`.
+
+```tsv
+SampleId	Category	Key	FieldValues	Remark
+DEMO_001	PURITY	PURITY	Purity=0.65;Ploidy=3.1;MsStatus=MSS	
+```
+
+##### Somatic variants
+- `GeneName:HgvsProtein` matches a call in that gene with the same canonical protein change, independent of the reference genome.
+  PAVE's notation and single-letter amino acids are both accepted. A variant with no protein change, such as `p.?`, needs a genomic key.
+- A variant the run filtered is `OLD_ONLY`, with a `Filter(PASS/PON)` difference when Compar finds its VCF record.
+
+```tsv
+SampleId	Category	Key	Status	FieldValues	Remark
+DEMO_001	SOMATIC_VARIANT	chr7:140753336:A:T		AF=0.30	
+DEMO_001	SOMATIC_VARIANT	EGFR:p.L858R		AF=0.25	
+DEMO_001	SOMATIC_VARIANT	KRAS	Absent		wild type by ddPCR
+```
+
+##### Gene copy numbers
+The key is the gene name. `MinCopyNumber`, `MaxCopyNumber` and `DriverType` are compared. `DriverType` is Purple's call, such as `AMP`,
+`DEL` or `HET_DEL`, and `UNKNOWN` when it made none. The run only loads `driver_gene_panel` genes, so a listed gene outside the panel is
+`OLD_ONLY`, and unlisted panel genes are not compared.
+
+```tsv
+SampleId	Category	Key	MinCopyNumber	MaxCopyNumber	DriverType	Remark
+DEMO_001	GENE_COPY_NUMBER	ERBB2	N/A	N/A	AMP	amplified by FISH
+DEMO_001	GENE_COPY_NUMBER	CDKN2A	0	N/A	DEL	
+```
+
+> [!NOTE]
+> Providing a transcript ID with the gene name, as `GeneName:TranscriptId` (e.g. `CDKN2A:ENST00000579755`), compares that
+> transcript's copy number only. Use one kind of key per gene.
+
+##### RNA novel splice junctions
+- The key is `GeneName:Chromosome:JunctionStart:JunctionEnd`, in the run's reference genome. A pipeline row must match all four.
+- `Type` is the junction type as Isofox writes it, such as `SKIPPED_EXONS` or `NOVEL_EXON`. See
+  [Isofox novel splice junctions](../isofox/README.md#7-counting-and-characterisation-of-novel-splice-junctions) for what each means.
+- Every junction in the run that the file doesn't list is `NEW_ONLY`.
+
+```tsv
+SampleId	Category	Key	Type	FragmentCount	Remark
+DEMO_001	RNA_NOVEL_SPLICE_JUNCTION	MET:chr7:1000:2000	SKIPPED_EXONS	40	confirmed by RT-PCR
+DEMO_001	RNA_NOVEL_SPLICE_JUNCTION	TP53:chr17:3000:4000	NOVEL_EXON	N/A	
+```
+
+##### RNA fusions
+- `GeneUp:GeneDown` needs any passing fusion between those genes, and its field values are not compared. If none passed, the row shows
+  the filter of the unfiltered fusion with the most split fragments.
+- An Absent `GeneUp:GeneDown` key counts every passing fusion between those genes, one `ABSENT_FOUND` row per breakend.
+- A fusion with both a gene-pair key and a coordinate key is not compared, and RNA_FUSION is `INVALID_ERROR` for that sample.
+
+```tsv
+SampleId	Category	Key	Status	FieldValues	Remark
+DEMO_001	RNA_FUSION	EML4:ALK:chr2:3000:chr2:4000		KnownType=KNOWN_PAIR;SplitFrags=12	confirmed by RT-PCR
+DEMO_002	RNA_FUSION	TMPRSS2:ERG			
+DEMO_002	RNA_FUSION	BCR:ABL1	Absent		negative by FISH
+```
 
 
 ## Data Categories, Fields and Thresholds
@@ -175,8 +291,8 @@ the comparison later with the same settings.
 
 ### Curation Cache
 
-Compar reads a maintained TSV per pipeline of previously acknowledged differences and flags them in future comparisons.
-The cache file is tightly controlled; Compar never writes to it.
+The curation cache is a TSV of reviewed differences, one per pipeline. Compar reads it to mark matching output rows and never writes
+to it.
 
 ```bash
 -source_label_old v34 -source_label_new v35
@@ -185,8 +301,8 @@ The cache file is tightly controlled; Compar never writes to it.
 #### Source labels
 
 Source labels identify each OLD/NEW comparison in the curation cache and appear in previous comparison details.
-Use semicolon-separated `key=value` fields in this order: `kind`, `version`, optional `reference`, optional `config`.
-For example: `kind=pipeline;version=v34;reference=GRCh38;config=standard`. If a label does not fit this form, Compar keeps it as plain text.
+A label is semicolon-separated `key=value` fields in this order: `kind`, `version`, optional `reference`, optional `config`, e.g.
+`kind=pipeline;version=v34;reference=GRCh38;config=standard`. A label in any other form is kept as plain text.
 Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output.
 
 #### Cache columns
@@ -218,8 +334,7 @@ date (`2026-10-20`) or an ISO timestamp (`2026-10-20T03:15:42Z`). A blank or mal
 
 #### Curation status
 
-Every output row is looked up in the cache, whatever its `MismatchType`, and keeps that `MismatchType`. `CurationStatus` is
-`ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
+Every output row is looked up in the cache and keeps its own `MismatchType`. `CurationStatus` is `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
 
 | CurationStatus | Meaning |
 |----------------|---------|
@@ -253,10 +368,10 @@ For the next comparison, use these options alongside the source directories and 
 -curation_cache /comparisons/pipeline_curation.tsv
 ```
 
-Suppose the v34 vs v37 comparison reports two MYC changes: `MinCopyNumber` 6 to 12 & `MaxCopyNumber` 10 to 12. Compar writes both in 1 row:
+If the v34 vs v37 comparison finds two MYC changes, `MinCopyNumber` 6 to 12 and `MaxCopyNumber` 10 to 12, both go in one row:
 
-- `Prev*` shows the latest cache row for the item, and `CurationStatus` compares the run's row with that same row. Keep older cache
-    rows first.
+- `Prev*` shows the latest cache row for the item, which is the last one in the file, and `CurationStatus` compares the run's row with
+  that row.
 - A blank `CurationStatus` means the cache has no row for the item. Otherwise, it shows `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
 - Cache entries absent from the current comparison are not output.
 
@@ -625,7 +740,7 @@ Data key: SampleId, Chromosome, StartPosition, EndPosition
 | Method                | Exact                   |
 
 ### Gene Copy Number
-Only runs in DETAILED mode.
+At REPORTABLE, only genes that Purple reports are compared.
 
 Data key: SampleId, Gene
 
@@ -633,3 +748,6 @@ Data key: SampleId, Gene
 |---------------|-------------------------|
 | MinCopyNumber | Threshold [0.5, 15%]    |
 | MaxCopyNumber | Threshold [0.5, 15%]    |
+| DriverType    | Exact                   |
+
+`MinRegionStart`, `MinRegionEnd`, `TranscriptId` and `IsCanonical` are shown in `OldValues` and `NewValues` but not compared.
