@@ -81,14 +81,14 @@ public class MissedGeneVariantPrep implements CategoryPrep
     @VisibleForTesting
     static double calcMissedVariantLikelihood(Map<DepthRange,Integer> depthCounts, double expectedVAF)
     {
-        int totalBaseCount = depthCounts.values().stream().mapToInt(Integer::intValue).sum();
+        int numBasesInRegion = depthCounts.values().stream().mapToInt(Integer::intValue).sum();
         double missedVariantLikelihood = 0;
 
         for(DepthRange depthRange : depthCounts.keySet())
         {
-            int baseCount = depthCounts.get(depthRange);
+            int numBasesWithDepth = depthCounts.get(depthRange);
 
-            if(baseCount == 0)
+            if(numBasesWithDepth == 0)
                 continue;
 
             int numReads = depthRange.midpoint();
@@ -104,8 +104,8 @@ public class MissedGeneVariantPrep implements CategoryPrep
                 probMutationNotObserved = 1;
             }
 
-            double baseProportion = (double) baseCount / totalBaseCount;
-            missedVariantLikelihood += baseProportion * probMutationNotObserved;
+            double propBasesWithDepth = (double) numBasesWithDepth / numBasesInRegion;
+            missedVariantLikelihood += propBasesWithDepth * probMutationNotObserved;
         }
 
         // 'Likelihood' is a misnomer (should be 'probability'), but will leave as is because renaming is non-trivial
