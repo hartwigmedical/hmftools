@@ -8,6 +8,7 @@ import static org.junit.Assert.assertThrows;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.common.UserInputError;
+import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadSource;
 
 import org.junit.Test;
 
@@ -33,5 +34,21 @@ public class ViridianConfigTest
         assertThrows(UserInputError.class, () -> parseExtraVirusDecoyContigs("chrHPV16;;chrHBV"));
         assertThrows(UserInputError.class, () -> parseExtraVirusDecoyContigs("chrHPV16;"));
         assertThrows(UserInputError.class, () -> parseExtraVirusDecoyContigs("chrHPV16; "));
+    }
+
+    @Test
+    public void testConstructorCounts()
+    {
+        config(1, 1);
+        assertThrows(UserInputError.class, () -> config(0, 1));
+        assertThrows(UserInputError.class, () -> config(1, 0));
+    }
+
+    private static ViridianConfig config(int alignmentBatchSize, int threads)
+    {
+        return new ViridianConfig(
+                "sample", "tumor.bam", "ref.fasta", "virus.fasta", "virus_genomes.tsv", "virus.fasta.img",
+                "virus_groups.tsv", null, "esvee.vcf.gz", "purple", "bam_metrics", alignmentBatchSize, threads, "output/", null,
+                CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, Set.of(), false);
     }
 }

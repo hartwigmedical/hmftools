@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_CFG;
@@ -77,6 +78,19 @@ public record ViridianConfig(
     private static final String DESC_EXTRA_VIRUS_DECOY_CONTIGS = "Additional host reference genome contigs to treat as virus decoy contigs";
     static final String CFG_KMER_FILTER = "kmer_filter";
     private static final String DESC_KMER_FILTER = "Filter candidate viral reads with a kmer index";
+
+    public ViridianConfig
+    {
+        if(alignmentBatchSize < 1)
+        {
+            throw new UserInputError(
+                    format("Invalid %s: %d, must be >= 1", CFG_ALIGNMENT_BATCH_SIZE, alignmentBatchSize));
+        }
+        if(threads < 1)
+        {
+            throw new UserInputError(format("Invalid %s: %d, must be >= 1", THREADS, threads));
+        }
+    }
 
     public static ViridianConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
