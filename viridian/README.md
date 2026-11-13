@@ -243,6 +243,7 @@ Informational/visualisation/debugging outputs:
 - Observed possibility that sometimes ESVEE doesn't call a viral integration junction supported by only two fragments.
 - REDUX doesn't mark duplicate fragments where the mates align to different homologous regions in `chrEBV`.
 - Purple QC failure means viruses cannot be reported from clonality alone, even if the virus genome depth is high in absolute numbers.
+- Since read profiling and integration calling are done separately, a read participating in an integration sort of counts twice. It's assumed that the proportion of integration reads is not high enough to affect reporting outcome.
 
 ## References
 
