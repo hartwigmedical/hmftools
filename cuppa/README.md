@@ -96,7 +96,7 @@ Source  Category       Key  Value
 
 ### Multi sample example
 For multiple samples, the input files are likely located in separate dirs. We can  provide input paths to `-purple_dir`, `-linx_dir`, 
-`-virus_dir`, and `-isofox_dir` using with wildcards (`*`) which are converted to sample ids as specified in the `-sample_id_file`. 
+`-viridian_dir`, and `-isofox_dir` using with wildcards (`*`) which are converted to sample ids as specified in the `-sample_id_file`. 
 **NOTE: Paths containing wildcards must be surrounded by double quotes (`"`)!**
 
 The below command will extract the DNA and RNA features for multiple samples:
@@ -108,7 +108,7 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -ref_genome_version V37 \
   -purple_dir "/data/datasets/*/purple/" \
   -linx_dir "/data/datasets/*/linx/" \
-  -virus_dir "/data/datasets/*/viridian/" \
+  -viridian_dir "/data/datasets/*/viridian/" \
   -isofox_dir "/data/rna/*/" \
   -output_dir /path/to/output/dir/ \
   -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz \
@@ -197,7 +197,7 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 | `-sample_data_dir`    |                                       | [Required <sup>2</sup>] Directory containing all input files                                                                                                                       |
 | `-purple_dir`         | "/data/datasets/*/purple/"            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                                                      |
 | `-linx_dir`           | "/data/datasets/*/linx/"              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                                                        |
-| `-virus_dir`          | "/data/datasets/*/viridian/"          | [Required <sup>2</sup>] Directory containing the Viridian files                                                                                                                    |
+| `-viridian_dir`       | "/data/datasets/*/viridian/"          | [Required <sup>2</sup>] Directory containing the Viridian files                                                                                                                    |
 | `-isofox_dir`         | "/data/rna/*/"                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                                                      |
 | `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz           | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd                                      |
 | `-categories`         | DNA                                   | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                                                                  |
@@ -210,7 +210,7 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 
 Conditional requirements:
 1. Either `sample` or `sample_id_file` is required
-2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files. Wildcards (`*`) are replaced with sample names 
+2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-viridian_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files. Wildcards (`*`) are replaced with sample names 
 3. `-ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL).
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).

@@ -27,7 +27,7 @@ public class PrepConfigTest
                 "-sample_data_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*",
                 "-purple_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/purple/",
                 "-linx_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/linx/",
-                "-virus_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/viridian/",
+                "-viridian_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/viridian/",
 
                 "-isofox_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/isofox/",
                 "-ref_alt_sj_sites", TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES,
@@ -55,9 +55,9 @@ public class PrepConfigTest
         String actualLinxDir = prepConfig.getLinxDataDir(selectedSampleId);
         assertEquals(expectedLinxDir, actualLinxDir);
 
-        String expectedVirusDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/viridian/";
-        String actualVirusDir = prepConfig.getVirusDataDir(selectedSampleId);
-        assertEquals(expectedVirusDir, actualVirusDir);
+        String expectedViridianDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/viridian/";
+        String actualViridianDir = prepConfig.getViridianDataDir(selectedSampleId);
+        assertEquals(expectedViridianDir, actualViridianDir);
 
         String expectedIsofoxDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/isofox/";
         String actualIsofoxDir = prepConfig.getIsofoxDataDir(selectedSampleId);
