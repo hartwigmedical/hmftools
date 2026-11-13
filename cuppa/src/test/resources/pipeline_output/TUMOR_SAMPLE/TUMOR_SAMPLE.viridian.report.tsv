@@ -1,0 +1,3 @@
+name	qcStatus	integrations	interpretation	percentageCovered	meanCoverage	reported	clonality_status	copies_per_tumor_cell	virus_group
+Merkel cell polyomavirus	NO_ABNORMALITIES	2	MCV	99.4251	97.5443	true	CLONAL	2.4037	Merkel cell polyomavirus
+Human papillomavirus type 16	NO_ABNORMALITIES	0	HPV	12.3456	0.4321	false	NOT_CLONAL	0.0107	Human papillomavirus
