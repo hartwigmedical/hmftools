@@ -15,7 +15,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
@@ -58,7 +59,7 @@ public class PrepConfig
     public final String SampleDataDir;
     public final String LinxDir;
     public final String PurpleDir;
-    public final String VirusDir;
+    public final String ViridianDir;
     public final String IsofoxDir;
     public final String SomaticVariantsDir;
 
@@ -104,7 +105,7 @@ public class PrepConfig
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
         LinxDir = configBuilder.getValue(LINX_DIR_CFG, SampleDataDir);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
-        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, SampleDataDir);
+        ViridianDir = configBuilder.getValue(VIRIDIAN_DIR_CFG, SampleDataDir);
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
         SomaticVariantsDir = configBuilder.getValue(SOMATIC_VARIANTS_DIR_CFG, SampleDataDir);
 
@@ -128,7 +129,7 @@ public class PrepConfig
 
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
+        configBuilder.addPath(VIRIDIAN_DIR_CFG, false, VIRIDIAN_DIR_DESC);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
         configBuilder.addPath(SOMATIC_VARIANTS_DIR_CFG, false, SOMATIC_VARIANTS_DIR_DESC);
 
@@ -151,7 +152,7 @@ public class PrepConfig
     // Generate input file paths by sample id
     public String getLinxDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(LinxDir, sampleId); }
     public String getPurpleDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(PurpleDir, sampleId); }
-    public String getVirusDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(VirusDir, sampleId); }
+    public String getViridianDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(ViridianDir, sampleId); }
     public String getIsofoxDataDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(IsofoxDir, sampleId); }
     public String getSomaticVariantsDir(final String sampleId) { return ConfigUtils.convertWildcardSamplePath(SomaticVariantsDir, sampleId); }
 
@@ -163,7 +164,7 @@ public class PrepConfig
     public String linxDriverCatalogFile(final String sampleId) { return LinxDriver.generateCatalogFilename(getLinxDataDir(sampleId), sampleId, true); }
     public String linxClusterFile(final String sampleId) { return LinxCluster.generateFilename(getLinxDataDir(sampleId), sampleId, false); }
     public String linxFusionFile(final String sampleId) { return LinxFusion.generateFilename(getLinxDataDir(sampleId), sampleId); }
-    public String virusReportFile(final String sampleId) { return VirusReportFile.generateFilename(getVirusDataDir(sampleId), sampleId); }
+    public String virusReportFile(final String sampleId) { return VirusReportFile.generateFilename(getViridianDataDir(sampleId), sampleId); }
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
 
     public String altSpliceJunctionFile(final String sampleId)
@@ -216,7 +217,7 @@ public class PrepConfig
             final String sampleDataDir,
             final String linxDir,
             final String purpleDir,
-            final String virusDir,
+            final String viridianDir,
             final String isofoxDir,
             final String somaticVariantsDir,
             final String altSpliceJunctionSites
@@ -233,7 +234,7 @@ public class PrepConfig
         SampleDataDir = sampleDataDir;
         LinxDir = linxDir;
         PurpleDir = purpleDir;
-        VirusDir = virusDir;
+        ViridianDir = viridianDir;
         IsofoxDir = isofoxDir;
         SomaticVariantsDir = somaticVariantsDir;
         AltSpliceJunctionSites = altSpliceJunctionSites;
