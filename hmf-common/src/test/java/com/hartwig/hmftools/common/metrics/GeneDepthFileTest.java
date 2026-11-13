@@ -23,7 +23,7 @@ public class GeneDepthFileTest
         GeneDepth geneDepth = new GeneDepth("GENE_1", "1", 100, 200, DEPTH_COUNTS);
 
         File newFormatFile = createTempFile();
-        GeneDepthFile.write(newFormatFile.getAbsolutePath(), Lists.newArrayList(geneDepth));
+        GeneDepthFile.writeGeneCoverage(newFormatFile.getAbsolutePath(), Lists.newArrayList(geneDepth));
 
         List<String> expectedNewFormatLines = List.of(
                 "GeneName\tChromosome\tPosStart\tPosEnd\tDR_29\tDR_30_39\tDR_100_149\tDR_10000",
@@ -40,9 +40,30 @@ public class GeneDepthFileTest
 
         for(File file : List.of(newFormatFile, oldFormatFile))
         {
-            List<GeneDepth> geneDepths = GeneDepthFile.read(file.getAbsolutePath());
+            List<GeneDepth> geneDepths = GeneDepthFile.readGeneCoverage(file.getAbsolutePath());
             assertEquals(DEPTH_COUNTS, geneDepths.get(0).DepthCounts);
         }
+    }
+
+    @Test
+    public void canWriteAndReadExonDepths() throws IOException
+    {
+        ExonDepth exonDepth = new ExonDepth("GENE_1", "1", 100, 200, 1, 10, 9.5, DEPTH_COUNTS);
+
+        File exonFile = createTempFile();
+        GeneDepthFile.writeExonCoverage(exonFile.getAbsolutePath(), Lists.newArrayList(exonDepth));
+
+        List<String> expectedLines = List.of(
+                "GeneName\tChromosome\tPosStart\tPosEnd\tExonRank\tMedianDepth\tMeanDepth\tDR_29\tDR_30_39\tDR_100_149\tDR_10000",
+                "GENE_1\t1\t100\t200\t1\t10\t9.50\t10\t20\t30\t40"
+        );
+        assertEquals(expectedLines, Files.readAllLines(exonFile.toPath()));
+
+        ExonDepth readExonDepth = GeneDepthFile.readExonCoverage(exonFile.getAbsolutePath()).get(0);
+        assertEquals(exonDepth.ExonRank, readExonDepth.ExonRank);
+        assertEquals(exonDepth.MedianDepth, readExonDepth.MedianDepth, 0);
+        assertEquals(exonDepth.MeanDepth, readExonDepth.MeanDepth, 0);
+        assertEquals(exonDepth.DepthCounts, readExonDepth.DepthCounts);
     }
 
     private static Map<DepthRange,Integer> createDepthCounts()
