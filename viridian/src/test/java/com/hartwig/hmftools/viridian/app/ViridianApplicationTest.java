@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.viridian.app.ViridianApplication.checkVirusDe
 import static org.junit.Assert.assertThrows;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.common.UserInputError;
@@ -23,21 +25,33 @@ public class ViridianApplicationTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testCheckVirusDecoyContigsInTumorBam()
+    public void testCheckVirusDecoyContigsInTumorBam() throws IOException
     {
         String bam = writeHeaderOnlyBam("chr1", "chrEBV", "chrHPV16");
 
-        checkVirusDecoyContigsInTumorBam(bam, null, Set.of());
-        checkVirusDecoyContigsInTumorBam(bam, null, Set.of("chrHPV16"));
+        String reference = writeReference();
+
+        checkVirusDecoyContigsInTumorBam(bam, reference, Set.of());
+        checkVirusDecoyContigsInTumorBam(bam, reference, Set.of("chrHPV16"));
     }
 
     @Test
-    public void testCheckVirusDecoyContigsInTumorBamMissingContigs()
+    public void testCheckVirusDecoyContigsInTumorBamMissingContigs() throws IOException
     {
         String bam = writeHeaderOnlyBam("chr1", "chrEBV");
+        String reference = writeReference();
 
         assertThrows(
-                UserInputError.class, () -> checkVirusDecoyContigsInTumorBam(bam, null, Set.of("chrEBV", "chrHPV16", "chrHBV")));
+                UserInputError.class,
+                () -> checkVirusDecoyContigsInTumorBam(bam, reference, Set.of("chrEBV", "chrHPV16", "chrHBV")));
+    }
+
+    // Read only for CRAM, but the reader opens it for BAM too.
+    private String writeReference() throws IOException
+    {
+        File fasta = new File(mTempDir.getRoot(), "ref.fasta");
+        Files.writeString(fasta.toPath(), ">chr1\nACGT\n");
+        return fasta.getPath();
     }
 
     private String writeHeaderOnlyBam(String... contigs)

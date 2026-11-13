@@ -62,7 +62,6 @@ import com.hartwig.hmftools.viridian.reporting.VirusReporter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReader;
@@ -165,13 +164,11 @@ public class ViridianApplication
         return virusDecoyContigs;
     }
 
-    static void checkVirusDecoyContigsInTumorBam(String tumorBam, @Nullable String refGenomeFile, Set<String> contigs)
+    static void checkVirusDecoyContigsInTumorBam(String tumorBam, String refGenomeFile, Set<String> contigs)
     {
-        SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
-        if(refGenomeFile != null)
-        {
-            readerFactory = readerFactory.referenceSequence(new File(refGenomeFile));
-        }
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
+                .referenceSequence(new File(refGenomeFile));
         try(SamReader reader = readerFactory.open(new File(tumorBam)))
         {
             SAMSequenceDictionary dictionary = reader.getFileHeader().getSequenceDictionary();

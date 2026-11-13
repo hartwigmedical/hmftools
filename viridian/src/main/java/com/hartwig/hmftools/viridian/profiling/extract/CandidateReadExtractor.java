@@ -35,7 +35,6 @@ import com.hartwig.hmftools.viridian.common.UserInputError;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.BAMFileSpan;
 import htsjdk.samtools.CRAMCRAIIndexer;
@@ -54,14 +53,13 @@ import htsjdk.samtools.util.FileExtensions;
 // Workers extract from disjoint regions in parallel. Each writes its own FASTA shard which is joined at the end.
 public class CandidateReadExtractor
 {
-    @Nullable
     private final String mRefGenomeFile; // required only for CRAM decode
     private final CandidateReadFilter mFilter;
     private final int mThreads;
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateReadExtractor.class);
 
-    public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter, int threads)
+    public CandidateReadExtractor(String refGenomeFile, CandidateReadFilter filter, int threads)
     {
         mRefGenomeFile = refGenomeFile;
         mFilter = filter;
@@ -70,11 +68,9 @@ public class CandidateReadExtractor
 
     public void extract(String tumorBamFile, String outputFastaFile)
     {
-        SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
-        if(mRefGenomeFile != null)
-        {
-            readerFactory = readerFactory.referenceSequence(new File(mRefGenomeFile));
-        }
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
+                .referenceSequence(new File(mRefGenomeFile));
 
         Queue<WorkerTask> tasks = scanTasks(readerFactory, tumorBamFile);
         TaskQueue<WorkerTask> queue = new TaskQueue<>(tasks, "scan tasks", 0);

@@ -78,7 +78,7 @@ public class CandidateReadExtractorTest
         {
             String fasta = new File(mTempDir.getRoot(), "candidates." + threads + ".fasta").getPath();
             CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-            new CandidateReadExtractor(null, filter, threads).extract(bam, fasta);
+            new CandidateReadExtractor(writeReference(header).getPath(), filter, threads).extract(bam, fasta);
 
             assertEquals(List.of(">clip/1\nCCCCC", ">single\nTTTTT", ">unmap/2\nGGGGG"), fastaEntries(fasta));
         }
@@ -97,7 +97,7 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "boundary.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-        new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
+        new CandidateReadExtractor(writeReference(header).getPath(), filter, 2).extract(bam, fasta);
 
         assertEquals(List.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
     }
@@ -116,7 +116,7 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "unmapped_with_mapped_mate.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-        new CandidateReadExtractor(null, filter, 1).extract(bam, fasta);
+        new CandidateReadExtractor(writeReference(header).getPath(), filter, 1).extract(bam, fasta);
 
         assertEquals(List.of(">unmappedWithMappedMate/1\nTTTTT"), fastaEntries(fasta));
     }
@@ -137,7 +137,7 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "fully_unmapped_and_decoy.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY);
-        new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
+        new CandidateReadExtractor(writeReference(header).getPath(), filter, 2).extract(bam, fasta);
 
         assertEquals(List.of(">ebv/1\nGGGGG", ">fullyUnmapped/2\nACGTA"), fastaEntries(fasta));
     }
@@ -177,7 +177,7 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-        CandidateReadExtractor extractor = new CandidateReadExtractor(null, filter, 1);
+        CandidateReadExtractor extractor = new CandidateReadExtractor(writeReference(header).getPath(), filter, 1);
 
         assertThrows(UserInputError.class, () -> extractor.extract(bam, fasta));
     }
