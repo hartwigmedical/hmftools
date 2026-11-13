@@ -102,7 +102,7 @@ public class RepresentativeReadAssigner
 
             try(SAMFileWriter writer = new SAMFileWriterFactory()
                     .setCreateIndex(true)
-                    .makeBAMWriter(header, false, new File(outputBamFile)))
+                    .makeBAMWriter(header, true, new File(outputBamFile)))
             {
                 for(SAMRecord record : reader)
                 {
