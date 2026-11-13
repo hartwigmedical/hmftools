@@ -14,11 +14,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
@@ -133,7 +133,21 @@ public final class GeneDepthFile
         return Collections.emptyList();
     }
 
-    private static String geneCoverageHeader(final Set<DepthRange> depthRanges)
+    public static final String FLD_EXON_RANK = "ExonRank";
+    public static final String FLD_MEDIAN_DEPTH = "MedianDepth";
+    public static final String FLD_MEAN_DEPTH = "MeanDepth";
+
+    public static String geneCoverageHeader(final Collection<DepthRange> depthRanges)
+    {
+        return coverageHeader(depthRanges, false);
+    }
+
+    public static String exonCoverageHeader(final Collection<DepthRange> depthRanges)
+    {
+        return coverageHeader(depthRanges, true);
+    }
+
+    private static String coverageHeader(final Collection<DepthRange> depthRanges, boolean forExons)
     {
         StringJoiner joiner = new StringJoiner(TSV_DELIM);
 
@@ -142,44 +156,23 @@ public final class GeneDepthFile
         joiner.add(FLD_POS_START);
         joiner.add(FLD_POS_END);
 
+        if(forExons)
+        {
+            joiner.add(FLD_EXON_RANK);
+            joiner.add(FLD_MEDIAN_DEPTH);
+            joiner.add(FLD_MEAN_DEPTH);
+        }
+
         for(DepthRange depthRange : depthRanges)
         {
-            if(depthRange.lower() == depthRange.upper())
-            {
-                joiner.add(format("%s%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower()));
-            }
-            else
-            {
-                joiner.add(format("%s%d_%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower(), depthRange.upper()));
-            }
+            String fieldName = depthRange.lower() == depthRange.upper()
+                    ? format("%s%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower())
+                    : format("%s%d_%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower(), depthRange.upper());
+
+            joiner.add(fieldName);
         }
 
         return joiner.toString();
-    }
-
-    public static final String FLD_EXON_RANK = "ExonRank";
-    public static final String FLD_MEDIAN_DEPTH = "MedianDepth";
-    public static final String FLD_MEAN_DEPTH = "MeanDepth";
-    public static final String FLD_PERC_ABOVE_DEPTH = "PercAboveDepth";
-
-    public static String exonCoverageHeader(final int[] exonDepthThresholds)
-    {
-        StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-        sj.add(FLD_GENE_NAME);
-        sj.add(FLD_CHROMOSOME);
-        sj.add(FLD_POS_START);
-        sj.add(FLD_POS_END);
-        sj.add(FLD_EXON_RANK);
-        sj.add(FLD_MEDIAN_DEPTH);
-        sj.add(FLD_MEAN_DEPTH);
-
-        for(int threshold : exonDepthThresholds)
-        {
-            sj.add(format("%s_%d", FLD_PERC_ABOVE_DEPTH, threshold));
-        }
-
-        return sj.toString();
     }
 
     private static String toString(final GeneDepth depth)

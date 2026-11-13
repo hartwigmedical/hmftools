@@ -41,7 +41,6 @@ public class GeneCoverage
     private static final List<DepthRange> DEPTH_RANGES = Lists.newArrayList();
     public static final int MAX_DEPTH_BUCKET = 10000;
     protected static final int GENE_COVERAGE_MIN_MAP_QUALITY = 10;
-    private final int[] EXON_DEPTH_THRESHOLDS = { 10, 20, 30, 60, 100, 250 };
 
     public GeneCoverage(final ConfigBuilder configBuilder)
     {
@@ -110,7 +109,7 @@ public class GeneCoverage
         {
             BufferedWriter writer = createBufferedWriter(exonFilename, false);
 
-            writer.write(GeneDepthFile.exonCoverageHeader(EXON_DEPTH_THRESHOLDS));
+            writer.write(GeneDepthFile.exonCoverageHeader(DEPTH_RANGES));
             writer.newLine();
 
             for(List<ExonCoverage> exonCoverageList : mChrGeneRegionsMap.values())
@@ -126,10 +125,9 @@ public class GeneCoverage
                     data.add(format("%.0f", exonCoverage.medianDepth()));
                     data.add(format("%.2f", exonCoverage.meanDepth()));
 
-                    double[] propBasesAboveDepth = exonCoverage.propBasesAboveDepth(EXON_DEPTH_THRESHOLDS);
-                    for(double value : propBasesAboveDepth)
+                    for(int count : exonDepthCounts(exonCoverage))
                     {
-                        data.add(format("%.2f", value));
+                        data.add(String.valueOf(count));
                     }
 
                     writer.write(data.toString());
@@ -253,15 +251,29 @@ public class GeneCoverage
         DEPTH_RANGES.add(new DepthRange(maxDepth, maxDepth));
     }
 
+    private static int[] exonDepthCounts(final ExonCoverage exon)
+    {
+        int[] exonDepth = new int[DEPTH_BUCKETS.size()];
+
+        for(int baseDepth : exon.coverage())
+        {
+            exonDepth[bucket(baseDepth)]++;
+        }
+
+        return exonDepth;
+    }
+
     private static int[] baseCoverageSummary(final List<ExonCoverage> exons)
     {
         int[] geneDepth = new int[DEPTH_BUCKETS.size()];
 
         for(ExonCoverage exon : exons)
         {
-            for(int baseDepth : exon.coverage())
+            int[] exonDepth = exonDepthCounts(exon);
+
+            for(int i = 0; i < geneDepth.length; ++i)
             {
-                geneDepth[bucket(baseDepth)]++;
+                geneDepth[i] += exonDepth[i];
             }
         }
 
