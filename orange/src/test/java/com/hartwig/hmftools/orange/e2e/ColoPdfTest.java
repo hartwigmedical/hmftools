@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.orange.OrangeConfig.EXPERIMENT_TYPE;
@@ -513,7 +513,7 @@ public class ColoPdfTest
         args[index++] = String.format("-%s", SIGS_DIR_CFG);
         args[index++] = String.format("%s", inputsDirStr);
 
-        args[index++] = String.format("-%s", VIRUS_DIR_CFG);
+        args[index++] = String.format("-%s", VIRIDIAN_DIR_CFG);
         args[index++] = String.format("%s", inputsDirStr);
 
         args[index++] = String.format("-%s", OUTPUT_DIR);

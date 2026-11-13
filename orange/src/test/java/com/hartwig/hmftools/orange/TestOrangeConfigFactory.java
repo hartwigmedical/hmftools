@@ -29,7 +29,7 @@ public final class TestOrangeConfigFactory
     public static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     public static final String ISOFOX_DIR = RUN_DIRECTORY + "/isofox/";
     public static final String LILAC_DIR = RUN_DIRECTORY + "/lilac/";
-    public static final String VIRUS_DIR = RUN_DIRECTORY + "/viridian/";
+    public static final String VIRIDIAN_DIR = RUN_DIRECTORY + "/viridian/";
     public static final String CHORD_DIR = RUN_DIRECTORY + "/chord/";
     public static final String CUPPA_DIR = RUN_DIRECTORY + "/cuppa/";
     public static final String PEACH_DIR = RUN_DIRECTORY + "/peach/";
@@ -42,7 +42,7 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
                 "", DOID_JSON, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
-                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false);
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRIDIAN_DIR, ISOFOX_DIR, false);
     }
 
     public static OrangeConfig createTargetedConfig()
@@ -52,7 +52,7 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
                 "", DOID_JSON, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
-                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, true);
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRIDIAN_DIR, ISOFOX_DIR, true);
     }
 
     public static OrangeConfig createWGSConfigTumorOnly()
@@ -62,7 +62,7 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
                 "", DOID_JSON, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
-                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, true);
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRIDIAN_DIR, ISOFOX_DIR, true);
     }
 
     public static OrangeConfig createWGSConfigTumorNormal()
@@ -72,7 +72,7 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
                 "", DOID_JSON, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
-                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, true);
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRIDIAN_DIR, ISOFOX_DIR, true);
     }
 
     public static OrangeConfig createWGTSConfigTumorNormal()
@@ -82,6 +82,6 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
                 "", DOID_JSON, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
-                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, true);
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRIDIAN_DIR, ISOFOX_DIR, true);
     }
 }

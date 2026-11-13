@@ -303,13 +303,13 @@ public class OrangeAlgo
     @Nullable
     private static List<VirusReport> loadVirusReports(final OrangeConfig config)
     {
-        if(config.VirusDir == null || !Files.exists(Paths.get(config.VirusDir)))
+        if(config.ViridianDir == null || !Files.exists(Paths.get(config.ViridianDir)))
         {
             LOGGER.trace("skipping Virus annotations as no input has been provided");
             return null;
         }
 
-        return VirusReportFile.read(VirusReportFile.generateFilename(config.VirusDir, config.TumorId));
+        return VirusReportFile.read(VirusReportFile.generateFilename(config.ViridianDir, config.TumorId));
     }
 
     @Nullable

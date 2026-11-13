@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_PLOT_DI
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGS_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_ID;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.VIRUS_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.VIRIDIAN_DIR;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -129,7 +129,7 @@ public class ReportGeneratorTestApplication
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
                 null, MELANOMA_DOID, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR,
-                VIRUS_DIR, ISOFOX_DIR, true);
+                VIRIDIAN_DIR, ISOFOX_DIR, true);
     }
 
     private static OrangeRecord removeUnreported(final OrangeRecord report)
