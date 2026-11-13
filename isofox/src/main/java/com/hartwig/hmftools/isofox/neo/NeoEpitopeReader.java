@@ -79,7 +79,7 @@ public class NeoEpitopeReader
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
-        String neoepitopeFile = NeoEpitopeFile.generateFilename(mConfig.NeoDir, mConfig.SampleId);
+        String neoepitopeFile = NeoEpitopeFile.generateFilename(mConfig.NeoDir, mConfig.TumorId);
         loadNeoEpitopes(neoepitopeFile);
         initialiseWriter();
     }
