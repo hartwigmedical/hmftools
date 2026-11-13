@@ -32,7 +32,8 @@ public final class CommonConfig
     public static final String REFERENCE_BAM_DESC = "Reference BAM file";
     public static final String REFERENCE_BAMS_DESC = REFERENCE_BAM_DESC + PLURALS_DESC;
 
-    public static final String RNA_SAMPLE_ID = "rna_sample";
+    public static final String RNA_SAMPLE_ID = "rna_sample"; // remove duplicate once unused
+    public static final String RNA_SAMPLE = "rna_sample";
     public static final String RNA_SAMPLE_DESC = "RNA sample ID";
 
     public static final String RNA_BAM = "rna_bam";
