@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virus;
+package com.hartwig.hmftools.common.virusbreakend;
 
 import static java.util.stream.Collectors.toList;
 

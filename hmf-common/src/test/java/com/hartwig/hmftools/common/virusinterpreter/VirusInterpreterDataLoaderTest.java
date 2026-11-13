@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virus;
+package com.hartwig.hmftools.common.virusinterpreter;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class VirusInterpreterDataLoaderTest
 {
-    private static final String SAMPLE_VIRUS_ANNOTATED_TSV = Resources.getResource("virus/sample.virus.annotated.tsv").getPath();
+    private static final String SAMPLE_VIRUS_ANNOTATED_TSV = Resources.getResource("virusinterpreter/sample.virus.annotated.tsv").getPath();
 
     @Test
     public void canLoadVirusInterpreterData() throws IOException

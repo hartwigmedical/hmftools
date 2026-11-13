@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;

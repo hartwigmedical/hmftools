@@ -2,9 +2,9 @@ package com.hartwig.hmftools.compar.virus;
 
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 

@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.virus;
+package com.hartwig.hmftools.common.viridian;
+
+import com.hartwig.hmftools.common.virus.VirusType;
 
 import org.jetbrains.annotations.Nullable;
 

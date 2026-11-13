@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.common.virus;
+package com.hartwig.hmftools.common.virusinterpreter;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
+import static com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType.UNKNOWN;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,8 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 
 import org.jetbrains.annotations.NotNull;
 

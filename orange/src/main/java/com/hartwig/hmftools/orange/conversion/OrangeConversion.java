@@ -55,7 +55,7 @@ public final class OrangeConversion
         return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
     }
 
-    public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
         return ImmutableVirusInterpreterEntry.builder()

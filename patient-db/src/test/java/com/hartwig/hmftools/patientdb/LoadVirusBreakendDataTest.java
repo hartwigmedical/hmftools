@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.virus.ImmutableVirusBreakend;
-import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.VirusbreakendRecord;
 
