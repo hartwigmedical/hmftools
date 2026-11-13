@@ -31,7 +31,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
@@ -227,7 +227,7 @@ public class OrangeConfig
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
         // RNA data can be in the appended Sage VCF and/or from Isofox
-        RnaSampleId = configBuilder.getValue(RNA_SAMPLE);
+        RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
 
         String isofoxDir = null;
 
@@ -332,7 +332,7 @@ public class OrangeConfig
 
         configBuilder.addConfigItem(DISPLAY_SAMPLE_ID, false, "Sample ID for display instead of Tumor ID for demo purposes");
         configBuilder.addConfigItem(PANEL_NAME, false, "Panel name if known");
-        configBuilder.addConfigItem(RNA_SAMPLE, false, RNA_SAMPLE_DESC);
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, RNA_SAMPLE_DESC);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
 
         configBuilder.addFlag(ADD_DISCLAIMER, "Prints a disclaimer on each page");
