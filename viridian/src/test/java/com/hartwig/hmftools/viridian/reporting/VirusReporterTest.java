@@ -2,22 +2,22 @@ package com.hartwig.hmftools.viridian.reporting;
 
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_CONTAMINATION;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
-import static com.hartwig.hmftools.common.virus.ClonalityStatus.CLONAL;
-import static com.hartwig.hmftools.common.virus.ClonalityStatus.NOT_CLONAL;
-import static com.hartwig.hmftools.common.virus.ClonalityStatus.NOT_PROFILED;
-import static com.hartwig.hmftools.common.virus.ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
-import static com.hartwig.hmftools.common.virus.ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
-import static com.hartwig.hmftools.common.virus.ReportQcStatus.AMBIGUOUS_VIRUS;
-import static com.hartwig.hmftools.common.virus.ReportQcStatus.NO_ABNORMALITIES;
+import static com.hartwig.hmftools.common.viridian.ClonalityStatus.CLONAL;
+import static com.hartwig.hmftools.common.viridian.ClonalityStatus.NOT_CLONAL;
+import static com.hartwig.hmftools.common.viridian.ClonalityStatus.NOT_PROFILED;
+import static com.hartwig.hmftools.common.viridian.ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
+import static com.hartwig.hmftools.common.viridian.ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
+import static com.hartwig.hmftools.common.viridian.ReportQcStatus.AMBIGUOUS_VIRUS;
+import static com.hartwig.hmftools.common.viridian.ReportQcStatus.NO_ABNORMALITIES;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.virus.ClonalityStatus;
-import com.hartwig.hmftools.common.virus.ReportQcStatus;
-import com.hartwig.hmftools.common.virus.VirusReport;
-import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.common.viridian.ClonalityStatus;
+import com.hartwig.hmftools.common.viridian.ReportQcStatus;
+import com.hartwig.hmftools.common.viridian.VirusReport;
+import com.hartwig.hmftools.common.viridian.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;

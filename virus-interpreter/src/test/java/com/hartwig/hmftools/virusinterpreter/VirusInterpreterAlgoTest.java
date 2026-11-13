@@ -17,12 +17,12 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.common.virus.VirusTestFactory;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
@@ -173,7 +173,7 @@ public class VirusInterpreterAlgoTest
     private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies)
     {
 
-        return VirusTestFactory.virusBreakendBuilder()
+        return VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(taxidSpecies)
@@ -187,7 +187,7 @@ public class VirusInterpreterAlgoTest
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         // This one should be added --reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -196,7 +196,7 @@ public class VirusInterpreterAlgoTest
                 .build());
 
         // This virus not present in reporting model -- not reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(1)
                 .taxidSpecies(4)
@@ -205,7 +205,7 @@ public class VirusInterpreterAlgoTest
                 .build());
         //
         // This one has a failed QC -- not reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -215,7 +215,7 @@ public class VirusInterpreterAlgoTest
                 .build());
         //
         // This one has no integrations -- reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -225,7 +225,7 @@ public class VirusInterpreterAlgoTest
                 .build());
 
         // This one has no integrations -- not reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -234,7 +234,7 @@ public class VirusInterpreterAlgoTest
                 .build());
 
         // This one has no integrations -- reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(2)
@@ -243,7 +243,7 @@ public class VirusInterpreterAlgoTest
                 .build());
 
         // This one has no integrations -- reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(2)
@@ -259,7 +259,7 @@ public class VirusInterpreterAlgoTest
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         // This one should be added --reported
-        virusBreakends.add(VirusTestFactory.virusBreakendBuilder()
+        virusBreakends.add(VirusBreakendTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)

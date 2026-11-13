@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.virusinterpreter.VirusInterpreterApplication.
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.common.viridian.VirusType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 
 import org.jetbrains.annotations.Nullable;
 

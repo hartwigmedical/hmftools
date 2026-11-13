@@ -17,9 +17,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.virus.ClonalityStatus;
-import com.hartwig.hmftools.common.virus.ReportQcStatus;
-import com.hartwig.hmftools.common.virus.VirusReport;
+import com.hartwig.hmftools.common.viridian.ClonalityStatus;
+import com.hartwig.hmftools.common.viridian.ReportQcStatus;
+import com.hartwig.hmftools.common.viridian.VirusReport;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.Virus;

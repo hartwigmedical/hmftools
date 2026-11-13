@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
-import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.common.viridian.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
@@ -55,7 +55,7 @@ public final class OrangeConversion
         return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
     }
 
-    public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
         return ImmutableVirusInterpreterEntry.builder()

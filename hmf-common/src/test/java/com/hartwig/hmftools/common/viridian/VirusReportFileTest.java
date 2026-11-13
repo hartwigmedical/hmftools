@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virus;
+package com.hartwig.hmftools.common.viridian;
 
 import static org.junit.Assert.assertEquals;
 

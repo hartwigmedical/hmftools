@@ -46,7 +46,7 @@ import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
 public class PrepConfig

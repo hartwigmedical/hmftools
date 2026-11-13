@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.viridian.VirusType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virus;
+package com.hartwig.hmftools.common.virusinterpreter;
 
 import java.io.File;
 import java.io.IOException;

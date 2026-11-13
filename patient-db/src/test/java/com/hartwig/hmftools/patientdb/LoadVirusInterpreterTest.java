@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
+import com.hartwig.hmftools.common.viridian.VirusType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.VirusannotationRecord;
 

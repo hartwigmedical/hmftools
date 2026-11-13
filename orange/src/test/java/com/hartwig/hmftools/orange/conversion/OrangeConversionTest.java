@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
-import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.common.virus.VirusType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterTestFactory;
+import com.hartwig.hmftools.common.viridian.VirusType;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 
 import org.junit.Test;
@@ -22,7 +22,7 @@ public class OrangeConversionTest
         assertNotNull(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()));
         assertNotNull(OrangeConversion.convert(BamMetricsTestFactory.createMinimalTestWGSMetrics()));
         assertNotNull(OrangeConversion.convert(DoidTestFactory.createTestDoidNode()));
-        assertNotNull(OrangeConversion.convert(VirusTestFactory.annotatedVirusBuilder().build()));
+        assertNotNull(OrangeConversion.convert(VirusInterpreterTestFactory.annotatedVirusBuilder().build()));
         assertNotNull(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()));
         assertNotNull(OrangeConversion.convert(PeachTestFactory.builder().build()));
     }
