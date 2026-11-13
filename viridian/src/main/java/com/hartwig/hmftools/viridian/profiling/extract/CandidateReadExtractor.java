@@ -271,14 +271,16 @@ public class CandidateReadExtractor
         {
             while(true)
             {
+                WorkerTask task;
                 try
                 {
-                    processTask(mTasks.removeItem());
+                    task = mTasks.removeItem();
                 }
                 catch(NoSuchElementException e)
                 {
                     break;
                 }
+                processTask(task);
             }
         }
 

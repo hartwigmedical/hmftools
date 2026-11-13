@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -139,6 +140,31 @@ public class CandidateReadExtractorTest
         new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
 
         assertEquals(List.of(">ebv/1\nGGGGG", ">fullyUnmapped/2\nACGTA"), fastaEntries(fasta));
+    }
+
+    @Test
+    public void testExtractRecordFailure() throws IOException
+    {
+        // Regression: a NoSuchElementException while processing a record was mistaken for an empty task queue, so the
+        // worker stopped silently and the remaining reads were lost.
+
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        String bam = writeIndexedBam(header, List.of(fullyUnmapped(header, "unmap", UNPAIRED, "GGGGG")));
+        String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
+
+        CandidateReadFilter failingFilter =
+                new CandidateReadFilter(CandidateReadSource.ALL, MIN_SOFT_CLIP_BASES, Set.of(), null)
+                {
+                    @Override
+                    public boolean isCandidateRecord(SAMRecord record)
+                    {
+                        throw new NoSuchElementException();
+                    }
+                };
+        String reference = writeReference(header).getPath();
+        CandidateReadExtractor extractor = new CandidateReadExtractor(reference, failingFilter, 1);
+
+        assertThrows(RuntimeException.class, () -> extractor.extract(bam, fasta));
     }
 
     @Test
