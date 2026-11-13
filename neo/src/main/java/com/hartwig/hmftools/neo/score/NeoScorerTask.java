@@ -106,7 +106,7 @@ public class NeoScorerTask implements Callable<Void>
         {
             if(mReferenceData.TranscriptExpression == null)
             {
-                NE_LOGGER.debug("sample({}) loading transcript expression", sampleId);
+                NE_LOGGER.debug("sample({}) loading transcript expression", sample.RnaSampleId);
 
                 try
                 {
