@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.SAGE_APPEND_TAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.SAGE_VERSION_TAG;
+import static com.hartwig.hmftools.common.variant.VcfFileReader.parseToolVersion;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
@@ -14,7 +15,6 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.addGenotypeHeader;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.module.ModuleDescriptor.Version;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +61,7 @@ public class SageAppendApplication
     private final IndexedFastaSequenceFile mRefGenome;
     private final FragmentLengthWriter mFragmentLengths;
 
-    private static final Version MIN_PRIOR_VERSION = Version.parse("2.8");
+    private static final double MIN_PRIOR_VERSION = 4.0;
 
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
@@ -245,11 +245,11 @@ public class SageAppendApplication
 
     private boolean validateInputHeader(VCFHeader header)
     {
-        Version version = sageVersion(header);
+        Double sageVersion = parseToolVersion(header, SAGE_VERSION_TAG);
 
-        if(version.compareTo(MIN_PRIOR_VERSION) < 0)
+        if(sageVersion == null || sageVersion < MIN_PRIOR_VERSION)
         {
-            SG_LOGGER.error("Sage VCF version({}) older than required({})", version, MIN_PRIOR_VERSION);
+            SG_LOGGER.error("Sage VCF version({}) older than required({})", sageVersion, MIN_PRIOR_VERSION);
             return false;
         }
 
@@ -281,16 +281,6 @@ public class SageAppendApplication
             header.addMetaDataLine(new VCFHeaderLine(SAGE_APPEND_TAG, version));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(LPS_APPEND_INFO, 1, VCFHeaderLineType.String, LPS_APPEND_INFO_DESC));
-    }
-
-    private static Version sageVersion(final VCFHeader header)
-    {
-        VCFHeaderLine version = header.getMetaDataLine(SAGE_VERSION_TAG);
-
-        if(version == null)
-            return Version.parse("0");
-
-        return Version.parse(version.getValue());
     }
 
     private static Set<String> existingSamples(final VCFHeader header)

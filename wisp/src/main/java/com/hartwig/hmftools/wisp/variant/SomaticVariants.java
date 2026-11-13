@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
+import static com.hartwig.hmftools.common.variant.VcfFileReader.parseToolVersion;
 import static com.hartwig.hmftools.wisp.WispConstants.MAX_GERMLINE_AF_MAX;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_QUAL_PER_AD_SAGE_V5;
@@ -149,9 +150,9 @@ public class SomaticVariants
             System.exit(1);
         }
 
-        VCFHeaderLine version = vcfHeader.getMetaDataLine(SageVcfTags.SAGE_APPEND_TAG);
+        Double sageAppendVersion = parseToolVersion(vcfHeader, SageVcfTags.SAGE_APPEND_TAG);
 
-        if(version == null || !version.getValue().startsWith(SAGE_APPEND_CURRENT_VERSION))
+        if(sageAppendVersion == null || sageAppendVersion < SAGE_APPEND_CURRENT_VERSION)
         {
             mSageQualPerAdThreshold = MIN_QUAL_PER_AD_SAGE_V5;
         }

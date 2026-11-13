@@ -22,7 +22,7 @@ public class WispConstants
     public static final double LOD_MIN_PROB_DIFF_PERC = 0.001;
 
     // somatic variants
-    public static final String SAGE_APPEND_CURRENT_VERSION = "5.1";
+    public static final double SAGE_APPEND_CURRENT_VERSION = 5.1;
     public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
     public static final double SUBCLONAL_VCN_THRESHOLD = 0.7;
     public static final double MAX_REPEAT_COUNT = 3;

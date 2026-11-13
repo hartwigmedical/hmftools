@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.common.pipeline;
 
+import static com.hartwig.hmftools.common.variant.VcfFileReader.parseToolVersion;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,5 +36,16 @@ public class PipelineVersionFileTest
     {
         assertEquals("5.13", PipelineVersionFile.convertToMajorDotVersion("5.13.1234"));
         assertNull(PipelineVersionFile.convertToMajorDotVersion("local-snapshot"));
+    }
+
+    @Test
+    public void testToolVcfVersion()
+    {
+        assertEquals(5.1, parseToolVersion("5.1"), 0.001);
+        assertEquals(5.1, parseToolVersion("5.1.beta.1"), 0.001);
+        assertEquals(5.1, parseToolVersion("5.1-abc"), 0.001);
+        assertEquals(5, parseToolVersion("5.abc"), 0.001);
+        assertNull(parseToolVersion("a5.1b"));
+        assertNull(parseToolVersion(".1"));
     }
 }
