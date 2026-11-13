@@ -42,12 +42,12 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bwa.MockBwaMemAligner;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.esvee.MockBwaMemAligner;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner;
@@ -751,9 +751,6 @@ public class AlignmentTest
     @Test
     public void testAlignmentRequery()
     {
-        MockBwaMemAligner aligner = new MockBwaMemAligner();
-        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, null, new AlignmentWriter(TEST_CONFIG), null);
-
         // need to ensure the full assembly sequence length matches the alignments returned
         AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
                 mRefGenome, CHR_1, 200, FORWARD, CHR_2, 200, REVERSE, "", "",
@@ -766,13 +763,12 @@ public class AlignmentTest
                 createBwaAlignment(CHR_2, 200, 299, 0, 100, 199, "100S100M50S",
                         "", "", 60, 0, 100));
 
-        aligner.Alignments.put("", initialAlignments);
-
         List<BwaMemAlignment> requeryAlignments = List.of(
                 createBwaAlignment(CHR_1, 210, 259, 0, 0, 49, "50M",
                         "", "", 60, 0, 50));
 
-        aligner.Alignments.put("", requeryAlignments);
+        MockBwaMemAligner aligner = MockBwaMemAligner.forAnyQuery(requeryAlignments);
+        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, null, new AlignmentWriter(TEST_CONFIG), null);
 
         assemblyAligner.processAssembly(assemblyAlignment);
     }

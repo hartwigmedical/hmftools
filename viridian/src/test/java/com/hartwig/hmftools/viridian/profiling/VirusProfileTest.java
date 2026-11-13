@@ -1,0 +1,54 @@
+package com.hartwig.hmftools.viridian.profiling;
+
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+import java.util.Map;
+
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
+import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeSelection;
+import com.hartwig.hmftools.viridian.reference.Virus;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
+
+import org.junit.Test;
+
+public class VirusProfileTest
+{
+    private static final VirusGroup GROUP_A = new VirusGroup("Group A");
+    private static final VirusGroup GROUP_B = new VirusGroup("Group B");
+    private static final VirusGenome V1 = new VirusGenome("v1", 100, new Virus("Virus v1", GROUP_A));
+    private static final VirusGenome V2 = new VirusGenome("v2", 100, new Virus("Virus v2", GROUP_A));
+    private static final VirusGenome W1 = new VirusGenome("w1", 100, new Virus("Virus w1", GROUP_B));
+
+    @Test
+    public void testFrom()
+    {
+        GenomeStats stats = stats(V1);
+
+        List<VirusProfile> profiles = VirusProfile.from(List.of(new RepresentativeSelection(V1, List.of(V2))), Map.of(V1, stats));
+
+        assertEquals(List.of(new VirusProfile(stats, List.of(V2))), profiles);
+    }
+
+    @Test
+    public void testFromRepresentativeWithoutReads()
+    {
+        // Read assignment gave every read of V1 to another virus's representative, so V1 has no measurement and its virus
+        // group is dropped.
+
+        GenomeStats w1Stats = stats(W1);
+
+        List<VirusProfile> profiles = VirusProfile.from(
+                List.of(new RepresentativeSelection(V1, List.of()), new RepresentativeSelection(W1, List.of())), Map.of(W1, w1Stats));
+
+        assertEquals(List.of(new VirusProfile(w1Stats, List.of())), profiles);
+    }
+
+    private static GenomeStats stats(VirusGenome genome)
+    {
+        return new GenomeStats(
+                genome, 10, 1, 80, SummaryStats.from(new int[genome.length()]), SummaryStats.from(new int[] { 100 }));
+    }
+}
