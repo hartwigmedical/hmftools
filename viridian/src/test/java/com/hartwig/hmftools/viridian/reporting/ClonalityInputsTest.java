@@ -116,7 +116,9 @@ public class ClonalityInputsTest
     // ClonalityInputs reads only the QC status, but the fit method is kept consistent with it.
     private static PurityContext purityContext(double purity, double ploidy, Set<PurpleQCStatus> qcStatus)
     {
-        FittedPurityMethod method = qcStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) ? FittedPurityMethod.NO_TUMOR : FittedPurityMethod.SOMATIC;
+        FittedPurityMethod method = qcStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR)
+                ? FittedPurityMethod.NO_TUMOR
+                : FittedPurityMethod.SOMATIC;
         FittedPurity bestFit = new FittedPurity(purity, -1, ploidy, -1, -1, -1);
         PurpleQC qc = ImmutablePurpleQC.builder()
                 .status(qcStatus)
