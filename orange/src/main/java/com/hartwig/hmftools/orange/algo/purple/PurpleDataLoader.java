@@ -99,8 +99,7 @@ public final class PurpleDataLoader
 
             germlineDrivers = germlineDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
-            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(
-                    tumorId, config.ReferenceId, config.RnaSampleId, germlineVariantVcf);
+            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(tumorId, config.ReferenceId, germlineVariantVcf);
 
             panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 

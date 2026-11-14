@@ -74,7 +74,6 @@ public final class GermlineVariantTable
         addEntry(widths, headers, 0.75, COL_AF);
         addEntry(widths, headers, 1, COL_DP);
         addEntry(widths, headers, 1, COL_COPIES);
-        // addEntry(widths, headers, 0.9, COL_MACN);
         addEntry(widths, headers, 1.5, COL_HOTSPOT);
         addEntry(widths, headers, 1, COL_BIALLELIC);
         addEntry(widths, headers, 1.5, COL_GNOMAD);
@@ -100,7 +99,6 @@ public final class GermlineVariantTable
                 rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
                 rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
                 rowCells.add(cells.createContent(copyNumberDisplay(variant)));
-                // rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
                 rowCells.add(cells.createContent(hotspotDisplay(variant)));
                 rowCells.add(cells.createContent(variant.biallelic() ? VALUE_YES : VALUE_NO));
                 rowCells.add(cells.createContent(format("%4.2e", variant.gnomadFrequency())));
