@@ -62,27 +62,6 @@ public class GermlineAmpDelComparer extends ItemComparer
     @Override
     public CategoryType category() { return GERMLINE_AMP_DEL; }
 
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_REPORTED, i -> ((GermlineAmpDelData) i).AmpDelData.Reported.toString(), true),
-                new StringField(FLD_GERMLINE_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.NormalStatus.toString(),
-                        true),
-                new StringField(FLD_TUMOR_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.TumorStatus.toString(),
-                        true),
-                new DoubleField(FLD_GERMLINE_CN, i -> ((GermlineAmpDelData) i).AmpDelData.GermlineCopyNumber,
-                        true, 0.2, 0.1, "%.2f"),
-                new DoubleField(FLD_TUMOR_CN, i -> ((GermlineAmpDelData) i).AmpDelData.TumorCopyNumber,
-                        true, 0.2, 0.1, "%.2f"),
-                new StringField(FLD_CHROMOSOME, i -> ((GermlineAmpDelData) i).mComparisonChromosome,
-                        true),
-                new StringField(FLD_CHROMOSOME_BAND, i -> ((GermlineAmpDelData) i).AmpDelData.ChromosomeBand, true)
-        );
-    }
-    */
-
     @Override
     public List<String> displayFieldNames()
     {

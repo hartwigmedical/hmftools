@@ -28,24 +28,4 @@ public class GermlineAmpDelDataTest
         reportabilityFieldToFalseReportabilityInitializer = Map.of(GermlineAmpDelComparer.Fields.Reported.toString(), b -> b.reported = false);
         nameToNonPassInitializer = Collections.emptyMap();
     }
-
-    /* no lift-over
-    @Test
-    public void fullyMatchesSelfWithLiftover()
-    {
-        GermlineAmpDelData victim = TestGermlineAmpDelDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
-        GermlineAmpDelData liftoverVictim = TestGermlineAmpDelDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
-        FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
-        FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
-    }
-    */
 }

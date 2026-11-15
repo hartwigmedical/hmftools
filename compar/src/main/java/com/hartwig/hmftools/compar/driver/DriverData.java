@@ -93,44 +93,4 @@ public class DriverData extends ComparableItem
 
         return true;
     }
-
-    /*
-    @Override
-    public Mismatch findMismatch(
-            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
-    {
-        // comparison is custom here so that non-reportable drivers can skip comparisons if synthetically created
-        List<String> diffs = Lists.newArrayList();
-
-        // find and compare fields present in both items
-        List<FieldInfo> fields = comparer.fieldsList();
-        Map<String, FieldValue> oldFieldValues = fieldValues();
-        Map<String,FieldValue> newFieldValues = other.fieldValues();
-
-        boolean bothPass = isPass() && other.isPass();
-
-        for(FieldInfo field : fields)
-        {
-            if(!field.FieldCheck.IsCompared)
-                continue;
-
-            if(!bothPass && field.Name.equals(DriverComparer.Fields.Likelihood.toString()))
-                continue;
-
-            FieldValue oldValue = oldFieldValues.get(field.Name);
-            FieldValue newValue = newFieldValues.get(field.Name);
-
-            if(oldValue == null || newValue == null)
-                continue;
-
-            if(oldValue.hasDifference(newValue))
-            {
-                oldValue.addDiffInfo(oldValue, newValue, diffs);
-            }
-        }
-
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-     */
 }
