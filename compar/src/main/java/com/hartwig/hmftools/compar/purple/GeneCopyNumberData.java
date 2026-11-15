@@ -3,31 +3,86 @@ package com.hartwig.hmftools.compar.purple;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GeneCopyNumberData implements ComparableItem
+public class GeneCopyNumberData extends ComparableItem
 {
     public final GeneCopyNumber CopyNumber;
+    private final String mExpectedTranscriptId;
 
-    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
-    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
-    protected static final String FLD_MIN_REGION_START = "MinRegionStart";
-    protected static final String FLD_MIN_REGION_END = "MinRegionEnd";
-
-    public GeneCopyNumberData(final GeneCopyNumber copyNumber)
+    public GeneCopyNumberData(final GeneCopyNumber copyNumber, final List<FieldInfo> fields)
     {
         CopyNumber = copyNumber;
+        mExpectedTranscriptId = "";
+
+        addDoubleValue(GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), copyNumber.MinCopyNumber, fields);
+        addDoubleValue(GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), copyNumber.MaxCopyNumber, fields);
+        addStringValue(GeneCopyNumberComparer.Fields.DriverType.toString(), copyNumber.driverType().toString(), fields);
+
+        addIntValue(GeneCopyNumberComparer.Fields.MinRegionStart.toString(), copyNumber.MinRegionStart, fields);
+        addIntValue(GeneCopyNumberComparer.Fields.MinRegionEnd.toString(), copyNumber.MinRegionEnd, fields);
+        addStringValue(GeneCopyNumberComparer.Fields.TranscriptId.toString(), copyNumber.TransName, fields);
+        addBoolValue(GeneCopyNumberComparer.Fields.IsCanonical.toString(), copyNumber.IsCanonical, fields);
+    }
+
+    private GeneCopyNumberData(final GeneCopyNumber copyNumber, final String expectedTranscriptId)
+    {
+        CopyNumber = copyNumber;
+        mExpectedTranscriptId = expectedTranscriptId;
+    }
+
+    public static GeneCopyNumberData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
+    {
+        String[] keyParts = expectedValues.get(0).Key.split(":", 2);
+        String geneName = keyParts[0];
+        String transcriptId = keyParts.length == 2 ? keyParts[1] : "";
+        double minCopyNumber = 0;
+        double maxCopyNumber = 0;
+        DriverType driverType = DriverType.UNKNOWN;
+
+        for(ExpectedValue expectedValue : expectedValues)
+        {
+            if(expectedValue.FieldName.equals(GeneCopyNumberComparer.Fields.MinCopyNumber.toString()))
+                minCopyNumber = Double.parseDouble(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(GeneCopyNumberComparer.Fields.MaxCopyNumber.toString()))
+                maxCopyNumber = Double.parseDouble(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(GeneCopyNumberComparer.Fields.DriverType.toString()))
+                driverType = DriverType.valueOf(expectedValue.Value);
+        }
+
+        GeneCopyNumber copyNumber = new GeneCopyNumber(
+                "", 0, 0, geneName, "", true, "", maxCopyNumber, minCopyNumber, 0, 0, 0, 0, 0, 0, 0,
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN, 0);
+
+        copyNumber.setDriverType(driverType);
+
+        GeneCopyNumberData geneCopyNumber = new GeneCopyNumberData(copyNumber, transcriptId);
+        geneCopyNumber.addExpectedValues(expectedValues, fields);
+        return geneCopyNumber;
+    }
+
+    private void addExpectedValues(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
+    {
+        for(ExpectedValue expectedValue : expectedValues)
+        {
+            if(expectedValue.FieldName.equals(GeneCopyNumberComparer.Fields.MinCopyNumber.toString()))
+                addDoubleValue(GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), CopyNumber.MinCopyNumber, fields);
+            else if(expectedValue.FieldName.equals(GeneCopyNumberComparer.Fields.MaxCopyNumber.toString()))
+                addDoubleValue(GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), CopyNumber.MaxCopyNumber, fields);
+            else if(expectedValue.FieldName.equals(GeneCopyNumberComparer.Fields.DriverType.toString()))
+                addStringValue(GeneCopyNumberComparer.Fields.DriverType.toString(), CopyNumber.driverType().toString(), fields);
+        }
     }
 
     public CategoryType category() {
@@ -37,23 +92,15 @@ public class GeneCopyNumberData implements ComparableItem
     @Override
     public String key()
     {
-        return format("%s", CopyNumber.geneName());
-    }
+        if(mExpectedTranscriptId.isEmpty())
+            return format("%s", CopyNumber.geneName());
 
-    @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%.2f", CopyNumber.minCopyNumber()));
-        values.add(format("%.2f", CopyNumber.maxCopyNumber()));
-        values.add(format("%d", CopyNumber.MinRegionStart));
-        values.add(format("%d", CopyNumber.MinRegionEnd));
-        return values;
+        return format("%s %s", CopyNumber.geneName(), mExpectedTranscriptId);
     }
 
     @Override
     public boolean reportable() {
-        return false;
+        return CopyNumber.reportedStatus() == ReportedStatus.REPORTED;
     }
 
     @Override
@@ -64,20 +111,9 @@ public class GeneCopyNumberData implements ComparableItem
     {
         final GeneCopyNumberData otherCn = (GeneCopyNumberData)other;
 
-        return CopyNumber.geneName().equals(otherCn.CopyNumber.geneName());
-    }
+        if(!CopyNumber.geneName().equals(otherCn.CopyNumber.geneName()))
+            return false;
 
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
-    {
-        final GeneCopyNumberData otherCn = (GeneCopyNumberData) other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_MIN_COPY_NUMBER, CopyNumber.minCopyNumber(), otherCn.CopyNumber.minCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_MAX_COPY_NUMBER, CopyNumber.maxCopyNumber(), otherCn.CopyNumber.maxCopyNumber(), thresholds);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+        return mExpectedTranscriptId.isEmpty() || mExpectedTranscriptId.equals(otherCn.CopyNumber.TransName);
     }
 }

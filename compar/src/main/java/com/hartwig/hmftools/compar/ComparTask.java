@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
+import static com.hartwig.hmftools.compar.ComparerUtils.buildComparers;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 
 import java.util.Collections;
@@ -21,14 +21,14 @@ public class ComparTask implements Callable<Void>
 
     private final MismatchWriter mWriter;
 
-    public ComparTask(int taskId, final ComparConfig config, final MismatchWriter writer)
+    public ComparTask(int taskId, final ComparConfig config, final FieldCheckCache fieldCheckCache, final MismatchWriter writer)
     {
         mTaskId = taskId;
         mConfig = config;
         mWriter = writer;
 
         mSampleIds = Lists.newArrayList();
-        mComparers = buildComparers(config);
+        mComparers = buildComparers(config, fieldCheckCache);
     }
 
     public List<String> getSampleIds() { return mSampleIds; }

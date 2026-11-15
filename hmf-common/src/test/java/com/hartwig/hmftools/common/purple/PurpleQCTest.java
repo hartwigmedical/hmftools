@@ -34,6 +34,13 @@ public class PurpleQCTest
     }
 
     @Test
+    public void testStatusesReadFromFile()
+    {
+        assertTrue(PurpleQCStatus.fromString("WARN_CONTAMINATION,WARN_LOW_PURITY")
+                .equals(Sets.newHashSet(PurpleQCStatus.WARN_CONTAMINATION, PurpleQCStatus.WARN_LOW_PURITY)));
+    }
+
+    @Test
     public void testNoTumor()
     {
         assertStatus(builder().method(FittedPurityMethod.NO_TUMOR), PurpleQCStatus.FAIL_NO_TUMOR);

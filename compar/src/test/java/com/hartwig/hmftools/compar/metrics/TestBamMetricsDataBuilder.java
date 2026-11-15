@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.metrics;
 import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
 import static com.hartwig.hmftools.compar.metrics.BamMetricsComparer.TUMOR_COVERAGE_PERCENTAGES;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -52,6 +53,10 @@ public class TestBamMetricsDataBuilder
                 .cappedCoveragePercent(-1)
                 .build();
 
-        return new BamMetricsData(TUMOR_BAM_METRICS, bamMetricSummary, TUMOR_COVERAGE_PERCENTAGES);
+        return new BamMetricsData(
+                TUMOR_BAM_METRICS,
+                bamMetricSummary,
+                TUMOR_COVERAGE_PERCENTAGES,
+                new BamMetricsComparer(TUMOR_BAM_METRICS, null, Collections.emptyMap()).fieldsList());
     }
 }

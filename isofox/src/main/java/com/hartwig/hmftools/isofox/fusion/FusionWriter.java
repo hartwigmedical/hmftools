@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -31,8 +32,6 @@ public class FusionWriter
     private final boolean mWriteFragments;
 
     private int mNextFusionId;
-
-    public static final String UNFILTERED_FUSION_FILE_ID = "fusions.tsv";
 
     public FusionWriter(final IsofoxConfig config)
     {
