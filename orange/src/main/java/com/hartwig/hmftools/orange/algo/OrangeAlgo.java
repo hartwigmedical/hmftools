@@ -136,6 +136,8 @@ public class OrangeAlgo
                 .configuredPrimaryTumor(primaryTumorDoids)
                 .refGenomeVersion(config.orangeRefGenomeVersion())
                 .pipelineVersion(pipelineVersion)
+                .panelName(config.PanelName)
+                .sequencingType(config.orangeSequencingType())
                 .purple(purple)
                 .linx(linx)
                 .isofox(isofox)
@@ -158,16 +160,6 @@ public class OrangeAlgo
 
         if(!config.PrimaryTumorDoids.isEmpty())
         {
-            /* currently unused
-            DoidEntry doidEntry = null;
-
-            if(config.DoidJsonFile != null)
-            {
-                LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
-                doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
-            }
-            */
-
             LOGGER.debug("determining configured primary tumor");
 
             Set<DoidNode> nodes = Sets.newHashSet();

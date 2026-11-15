@@ -74,6 +74,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.datamodel.orange.OrangeSequencingType;
 import com.hartwig.hmftools.orange.util.PathResolver;
 
 public class OrangeConfig
@@ -342,6 +343,11 @@ public class OrangeConfig
     public OrangeRefGenomeVersion orangeRefGenomeVersion()
     {
         return RefGenVersion.is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
+    }
+
+    public OrangeSequencingType orangeSequencingType()
+    {
+        return OrangeSequencingType.valueOf(SeqType.toString());
     }
 
     private static LocalDate interpretSamplingDateParam(final String samplingDateString)
