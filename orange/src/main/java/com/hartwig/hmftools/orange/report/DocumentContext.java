@@ -157,12 +157,6 @@ public class DocumentContext
         return table;
     }
 
-    public BaseTable createTable() throws IOException
-    {
-        // Create a simple Boxable BaseTable with full content width
-        return createTable(contentWidth(), null);
-    }
-
     public void addParagraph(final String text, final ReportResources.TextStyle style) throws IOException
     {
         // Add a paragraph of text at the current cursor position.
@@ -293,8 +287,67 @@ public class DocumentContext
         float xPos = x + (maxWidth - drawWidth) / 2;
         float yPos = y - drawHeight;
 
-        try(PDPageContentStream cs = new PDPageContentStream(mDocument, mCurrentPage, PDPageContentStream.AppendMode.APPEND, true, true))
+        try(PDPageContentStream cs = new PDPageContentStream(
+                mDocument, mCurrentPage, PDPageContentStream.AppendMode.APPEND, true, true))
         {
+            cs.drawImage(image, xPos, yPos, drawWidth, drawHeight);
+        }
+
+        return drawHeight;
+    }
+
+    public float addTitledImage(
+            final String text, final PDFont font, float fontSize, final Color textColor,
+            final String imagePath, float x, float y, float maxWidth, float maxHeight) throws IOException
+    {
+        ensurePage();
+
+        // float lineHeight = 0;
+        /*
+        float lineHeight = fontSize * 1.4f * 2;
+
+        try(PDPageContentStream cs = new PDPageContentStream(
+                mDocument, mCurrentPage, PDPageContentStream.AppendMode.APPEND, true, true))
+        {
+            cs.moveTo(x, y);
+            cs.beginText();
+            cs.setFont(font, fontSize);
+            cs.setNonStrokingColor(textColor);
+            cs.showText(text);
+            cs.endText();
+        }
+        */
+
+        float lineHeight = fontSize * 1.4f;
+
+        PDImageXObject image = PDImageXObject.createFromFile(imagePath, mDocument);
+
+        float imgWidth = image.getWidth();
+        float imgHeight = image.getHeight();
+
+        float scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+        if(scale > 1.0f)
+        {
+            scale = 1.0f;
+        }
+
+        float drawWidth = imgWidth * scale;
+        float drawHeight = imgHeight * scale;
+
+        // Center the image within the maxWidth cell
+        float xPos = x + (maxWidth - drawWidth) / 2;
+        float yPos = y - drawHeight - lineHeight * 2;
+
+        try(PDPageContentStream cs = new PDPageContentStream(
+                mDocument, mCurrentPage, PDPageContentStream.AppendMode.APPEND, true, true))
+        {
+            cs.beginText();
+            cs.setFont(font, fontSize);
+            cs.newLineAtOffset(x + 10, y - lineHeight);
+            cs.setNonStrokingColor(textColor);
+            cs.showText(text);
+            cs.endText();
+
             cs.drawImage(image, xPos, yPos, drawWidth, drawHeight);
         }
 

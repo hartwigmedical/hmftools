@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.orange.OrangePlot;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -181,7 +182,10 @@ public class SomaticFindingsChapter implements ReportChapter
         float maxPlotHeight = Math.round(contentWidth() / 2f) - 2;
         float marginLeft = document.marginLeft();
 
-        java.util.List<String> plots = mReport.plots().linxDriverPlots();
+        ReportResources.TextStyle titleStyle = mReportResources.tableHeaderStyle();
+
+        List<OrangePlot> plots = mReport.plots().linxDriverPlots();
+
         for(int i = 0; i < plots.size(); i += 2)
         {
             float rowY = document.cursorY();
@@ -194,12 +198,24 @@ public class SomaticFindingsChapter implements ReportChapter
             }
 
             // Left image
-            document.addImageAt(mPlotPathResolver.resolve(plots.get(i)), marginLeft, rowY, colWidth, maxPlotHeight);
+            OrangePlot plotData = plots.get(i);
+
+            document.addTitledImage(
+                    plotData.title(), titleStyle.font(), titleStyle.fontSize(), titleStyle.color(),
+                    mPlotPathResolver.resolve(plotData.filename()), marginLeft, rowY, colWidth, maxPlotHeight);
+//            document.addImageAt(
+//                    mPlotPathResolver.resolve(plotData.filename()), marginLeft, rowY, colWidth, maxPlotHeight);
 
             // Right image (if exists)
             if(i + 1 < plots.size())
             {
-                document.addImageAt(mPlotPathResolver.resolve(plots.get(i + 1)), marginLeft + colWidth, rowY, colWidth, maxPlotHeight);
+                plotData = plots.get(i + 1);
+
+                document.addTitledImage(
+                        plotData.title(), titleStyle.font(), titleStyle.fontSize(), titleStyle.color(),
+                        mPlotPathResolver.resolve(plotData.filename()), marginLeft + colWidth, rowY, colWidth, maxPlotHeight);
+
+                // document.addImageAt(mPlotPathResolver.resolve(plotData.filename()), marginLeft + colWidth, rowY, colWidth, maxPlotHeight);
             }
 
             document.setCursorY(rowY - maxPlotHeight - 5);

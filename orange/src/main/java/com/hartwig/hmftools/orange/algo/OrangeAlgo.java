@@ -25,7 +25,9 @@ import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlot;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.OrangePlot;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.immuno.LilacInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
@@ -418,11 +420,15 @@ public class OrangeAlgo
                 mPlotManager.processPlotFile(variant.plotFilename());
         }
 
-        List<String> linxDriverPlots = Lists.newArrayList();
+        List<OrangePlot> linxDriverPlots = Lists.newArrayList();
 
-        for(String linxPlot : linxData.reportableEventPlots())
+        for(int i = 0; i < linxData.reportableEventPlots().size(); ++i)
         {
-            linxDriverPlots.add(mPlotManager.processPlotFile(linxPlot));
+            String linxPlot = linxData.reportableEventPlots().get(i);
+            String linxPlotTitle = linxData.reportableEventPlotTitles().get(i);
+            String plotPath = mPlotManager.processPlotFile(linxPlot);
+
+            linxDriverPlots.add(ImmutableOrangePlot.builder().filename(plotPath).title(linxPlotTitle).build());
         }
 
         plotBuilder.linxDriverPlots(linxDriverPlots);

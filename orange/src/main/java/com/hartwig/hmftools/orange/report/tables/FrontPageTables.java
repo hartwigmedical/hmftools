@@ -482,8 +482,9 @@ public class FrontPageTables
         return buildGenomeWideFeaturesAtX(docCtx, report, width, docCtx.marginLeft(), reportResources);
     }
 
-    public static BaseTable buildGenomeWideFeaturesAtX(final DocumentContext docCtx, final OrangeRecord report, float width, float xStart,
-            final ReportResources reportResources) throws IOException
+    public static BaseTable buildGenomeWideFeaturesAtX(
+            final DocumentContext docCtx, final OrangeRecord report, float width, float xStart, final ReportResources reportResources)
+            throws IOException
     {
         boolean includeGermline = !report.tumorOnlyMode();
 
