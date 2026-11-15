@@ -58,7 +58,6 @@ public class SummaryTablePrepTest
     {
         PurityContext purityContext = createTestPurityContext(List.of(
                 PurpleQCStatus.WARN_LOW_PURITY,
-
                 PurpleQCStatus.WARN_TINC,
                 PurpleQCStatus.FAIL_TINC
         ));

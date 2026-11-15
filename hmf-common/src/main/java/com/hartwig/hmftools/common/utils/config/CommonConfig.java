@@ -140,6 +140,9 @@ public final class CommonConfig
     public static final String TEAL_DIR_CFG = toolDirectory("teal");
     public static final String TEAL_DIR_DESC = toolDirectoryDesc("Teal");
 
+    public static final String VIRIDIAN_DIR_CFG = toolDirectory("viridian");
+    public static final String VIRIDIAN_DIR_DESC = toolDirectoryDesc("Viridian");
+
     public static final String VIRUS_DIR_CFG = toolDirectory("virus");
     public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");
 

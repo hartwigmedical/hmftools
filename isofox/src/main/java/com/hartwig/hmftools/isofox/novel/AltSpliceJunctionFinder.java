@@ -100,12 +100,12 @@ public class AltSpliceJunctionFinder
     }
 
     public void evaluateFragmentReads(
-            final List<GeneReadData> genes, final Read read1, final Read read2, final List<Integer> relatedTransIds)
+            final List<GeneReadData> genes, final List<Read> reads, final List<Integer> relatedTransIds)
     {
         if(!mEnabled)
             return;
 
-        if(read1.isDuplicate() || read2.isDuplicate() || genes.isEmpty() || read1.isMultiMapped() || read2.isMultiMapped())
+        if(genes.isEmpty() || reads.stream().anyMatch(x -> x.isDuplicate() || x.isMultiMapped()))
             return;
 
         // exclude SJs too far outside known transcripts
@@ -113,20 +113,30 @@ public class AltSpliceJunctionFinder
                 genes.stream().mapToInt(x -> x.Gene.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
                 genes.stream().mapToInt(x -> x.Gene.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
 
-        if(!positionsWithin(read1.alignmentStart(), read1.alignmentEnd(), geneBounds[SE_START], geneBounds[SE_END])
-        || !positionsWithin(read2.alignmentStart(), read2.alignmentEnd(), geneBounds[SE_START], geneBounds[SE_END]))
+        if(reads.stream().anyMatch(x -> !positionsWithin(x.alignmentStart(), x.alignmentEnd(),
+                geneBounds[SE_START], geneBounds[SE_END])))
         {
             return;
         }
 
         // at least one of the reads must fall within a gene
         final List<GeneReadData> candidateGenes = genes.stream()
-                .filter(x -> positionsWithin(read1.alignmentStart(), read1.alignmentEnd(), x.Gene.GeneStart,x.Gene.GeneEnd)
-                        || positionsWithin(read2.alignmentStart(), read2.alignmentEnd(), x.Gene.GeneStart,x.Gene.GeneEnd))
+                .filter(x -> reads.stream().anyMatch(y -> positionsWithin(y.alignmentStart(), y.alignmentEnd(), x.Gene.GeneStart, x.Gene.GeneEnd)))
                 .collect(Collectors.toList());
 
         if(candidateGenes.isEmpty())
             return;
+
+        if(reads.size() == 1)
+        {
+            if(isCandidate(reads.get(0)))
+                registerAltSpliceJunction(candidateGenes, reads.get(0), relatedTransIds);
+
+            return;
+        }
+
+        Read read1 = reads.get(0);
+        Read read2 = reads.get(1);
 
         if(isCandidateCircular(read1, read2))
         {

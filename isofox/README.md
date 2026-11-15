@@ -116,7 +116,7 @@ write_read_data | Write data on each BAM read, only recommended with restricted 
 write_exon_data | Write data on transcript exon covered by a supporting fragment, only recommended with restricted genes file
 
 ### Memory Usage and Threading
-ISOFOX takes ~10 mins to process a 7GB BAM with 120M reads / 60M fragments using 10 cores, with maximum memory usage of 10GB, and ~30 mins to process a 35GB BAM with 440M reads / 200M fragments using 10 cores, with maximum memory usage of 25GB. 
+ISOFOX takes ~5 mins to process a 20GB BAM with 120M reads using 32 cores. Recommend 64GB memory.
 
 ### Example Usage
 Running all functions:
@@ -347,7 +347,7 @@ Each chimeric junction, novel splice junction and retained intron for each sampl
 
 ### Summary
 
-Generated file: sample_id.isf.summary.csv
+Generated file: sample_id.isf.summary.tsv
 
 Field | Description 
 ---|---
@@ -361,12 +361,12 @@ ReadLength | Raw read length of fragments
 FragLength5th | 5th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
 FragLength50th | 50th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
 FragLength95th | 95th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
-EnrichedGenePercent | % of fragments supporting one of the following 6 genes: (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK)
 MedianGCRatio | Median GC ratio excluding the 6 highly enriched genes
+ForwardStrandPercent | Percent of fragments in the forward strand direction, ie F1R2 and not F2R1
 
 ### Gene Level Data
 
-Generated file: sample_id.isf.gene_data.csv
+Generated file: sample_id.isf.gene_data.tsv
 
 Field | Description 
 ---|---
@@ -383,7 +383,7 @@ TPM | TPM for gene excluding unspliced fragments
 
 ### Transcript Level Data
 
-Generated file: sample_id.isf.trans_data.csv
+Generated file: sample_id.isf.trans_data.tsv
 
 Field | Description 
 ---|---
@@ -407,7 +407,7 @@ UniqueNonSJFragments | Count of fragments uniquely supporting transcript but wit
 
 ### Fragment length distribution
 
-Generated file: sample_id.isf.frag_length.csv
+Generated file: sample_id.isf.frag_length.tsv
 
 Field | Description 
 ---|---
@@ -416,7 +416,7 @@ Count | Count of fragments with specified fragment length
 
 ### Alternate Splice Junctions
 
-Generated file: sample_id.isf.alt_splice_junc.csv
+Generated file: sample_id.isf.alt_splice_junc.tsv
 
 Field | Description 
 ---|---
@@ -442,7 +442,7 @@ OverlappingGenes | List of all genes which overlap the novel splice junction
 
 ### Retained Introns
 
-Generated file: sample_id.isf.retained_intron.csv
+Generated file: sample_id.isf.retained_intron.tsv
 
 Field | Description 
 ---|---

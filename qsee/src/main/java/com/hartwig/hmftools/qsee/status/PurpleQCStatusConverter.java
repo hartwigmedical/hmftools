@@ -29,6 +29,7 @@ public class PurpleQCStatusConverter
             case WARN_LOW_PURITY -> getQseeQcStatus(SummaryTableFeature.PURITY.name(), QcStatusType.WARN);
             case WARN_TINC -> getQseeQcStatus(SummaryTableFeature.TINC.name(), QcStatusType.WARN);
             case FAIL_TINC -> getQseeQcStatus(SummaryTableFeature.TINC.name(), QcStatusType.FAIL);
+            case WARN_CONTAMINATION -> getQseeQcStatus(SummaryTableFeature.CONTAMINATION.name(), QcStatusType.WARN);
             case FAIL_CONTAMINATION -> getQseeQcStatus(SummaryTableFeature.CONTAMINATION.name(), QcStatusType.FAIL);
 
             case FAIL_NO_TUMOR -> getQseeQcStatus(PurpleQCStatus.FAIL_NO_TUMOR.name(), QcStatusType.FAIL);

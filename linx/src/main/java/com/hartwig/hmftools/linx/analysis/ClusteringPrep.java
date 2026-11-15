@@ -380,7 +380,7 @@ public class ClusteringPrep
                 {
                     SvVarData var = breakend.getSV();
 
-                    if(breakend.orientation() == 1 && var.id() == lohEvent.StartSV)
+                    if(breakend.forwardOrient() && var.id() == lohEvent.StartSV)
                     {
                         // check for an INV that the correct end is associated
                         boolean skipInvBreakend = var.type() == INV
@@ -393,7 +393,7 @@ public class ClusteringPrep
                         }
                     }
 
-                    if(breakend.orientation() == -1 && var.id() == lohEvent.EndSV)
+                    if(breakend.reverseOrient() && var.id() == lohEvent.EndSV)
                     {
                         boolean skipInvBreakend = var.type() == INV
                                 && abs(breakend.position() - lohEvent.PosEnd) > abs(breakend.getOtherBreakend().position() - lohEvent.PosEnd);
@@ -431,12 +431,12 @@ public class ClusteringPrep
 
                 for(SvBreakend breakend : breakendList)
                 {
-                    if(breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
+                    if(breakend.forwardOrient() && breakend.getSV().id() == homLossEvent.StartSV)
                     {
                         homLossEvent.setBreakend(breakend, true);
                     }
 
-                    if(breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
+                    if(breakend.reverseOrient() && breakend.getSV().id() == homLossEvent.EndSV)
                     {
                         homLossEvent.setBreakend(breakend, false);
                     }

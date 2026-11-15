@@ -349,12 +349,13 @@ public class PurityPloidyFitter
 
         mPurityAdjuster = new PurityAdjuster(fittedPurity.purity(), fittedPurity.normFactor(), mSampleData.Cobalt.CobaltChromosomes);
 
-        final AmberData amberData = mSampleData.Amber;
-        final CobaltData cobaltData = mSampleData.Cobalt;
+        AmberData amberData = mSampleData.Amber;
+        CobaltData cobaltData = mSampleData.Cobalt;
 
         PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
                 mConfig.Fitting.MinDiploidTumorRatioCount,
                 mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
+                mConfig.TargetRegionsMode,
                 amberData.AverageTumorDepth,
                 fittedPurity.ploidy(),
                 mPurityAdjuster,

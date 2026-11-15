@@ -9,6 +9,8 @@ public class FusionConstants
 
     public static final int DEFAULT_HARD_FILTER_MIN_FRAGS = 2;
 
+    public static final int CHIMERIC_SHORT_INV_MIN_LENGTH = 2000;
+
     public static final int HIGH_LOG_COUNT = 10000;
 
     public static final int FILTER_COHORT_LIMIT_KNOWN = 5;

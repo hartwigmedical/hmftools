@@ -6,11 +6,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.beust.jcommander.internal.Lists;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.common.virus.VirusTestFactory;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterTestFactory;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
@@ -24,10 +24,10 @@ public class VirusInterpreterTest
     @Test
     public void shouldConvertAnnotatedVirus()
     {
-        assertTrue(VirusInterpreter.interpret(VirusTestFactory.createEmptyData()).allViruses().isEmpty());
-        assertEqualsValue(VirusTestFactory.createMinimalData(), VirusInterpreter.interpret(VirusTestFactory.createMinimalData()));
-        assertEqualsValue(VirusTestFactory.createProperData(), VirusInterpreter.interpret(VirusTestFactory.createProperData()));
-        assertEqualsValue(VirusTestFactory.createHHVInterpretationData(), VirusInterpreter.interpret(VirusTestFactory.createHHVInterpretationData()));
+        assertTrue(VirusInterpreter.interpret(VirusInterpreterTestFactory.createEmptyData()).allViruses().isEmpty());
+        assertEqualsValue(VirusInterpreterTestFactory.createMinimalData(), VirusInterpreter.interpret(VirusInterpreterTestFactory.createMinimalData()));
+        assertEqualsValue(VirusInterpreterTestFactory.createProperData(), VirusInterpreter.interpret(VirusInterpreterTestFactory.createProperData()));
+        assertEqualsValue(VirusInterpreterTestFactory.createHHVInterpretationData(), VirusInterpreter.interpret(VirusInterpreterTestFactory.createHHVInterpretationData()));
     }
 
     @Test
@@ -56,14 +56,14 @@ public class VirusInterpreterTest
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH).build();
     }
 
-    private static void assertEqualsValue(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData input,
+    private static void assertEqualsValue(@NotNull com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterData input,
             @NotNull VirusInterpreterData converted)
     {
         assertEqualsValue(input.allViruses(), converted.allViruses());
         assertEqualsValue(input.reportableViruses(), converted.reportableViruses());
     }
 
-    private static void assertEqualsValue(@NotNull List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input,
+    private static void assertEqualsValue(@NotNull List<com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus> input,
             @NotNull List<VirusInterpreterEntry> converted)
     {
         assertEquals(converted.size(), input.size());
@@ -73,7 +73,7 @@ public class VirusInterpreterTest
         }
     }
 
-    private static void assertEqualsValue(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus input,
+    private static void assertEqualsValue(@NotNull com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus input,
             @NotNull VirusInterpreterEntry converted)
     {
         assertEquals(input.name(), converted.name());

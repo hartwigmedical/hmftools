@@ -180,7 +180,7 @@ public class VisDataWriter
                         var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(), beEnd != null ? beEnd.position() : 0,
-                        beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
+                        beStart.orientAsByte(), beEnd != null ? beEnd.orientAsByte() : 0,
                         beStart.getSV().getFoldbackBreakend(beStart.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
                         beEnd!= null ? (beEnd.getSV().getFoldbackBreakend(beEnd.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
                         var.jcn(), chain != null && chain.isDoubleMinute()));
@@ -350,15 +350,15 @@ public class VisDataWriter
     {
         int position = breakend.position();
 
-        if(breakend.orientation() == 1 && breakend.arm() == P)
+        if(breakend.forwardOrient() && breakend.arm() == P)
         {
             return isChainEnd ? DIRECTION_TELOMERE : Long.toString(position);
         }
-        else if(breakend.orientation() == -1 && breakend.arm() == P)
+        else if(breakend.reverseOrient() && breakend.arm() == P)
         {
             return isChainEnd ? Long.toString(position) : DIRECTION_CENTROMERE;
         }
-        else if(breakend.orientation() == -1 && breakend.arm() == Q)
+        else if(breakend.reverseOrient() && breakend.arm() == Q)
         {
             return isChainEnd ? Long.toString(position) : DIRECTION_TELOMERE;
         }

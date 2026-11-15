@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.reseg;
 
-import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_STEP;
@@ -16,29 +15,43 @@ public final class RatioBucketSeries
     // used to cache and manipulate binned observed tumor ratios and diffs
     public record Bucket(double level, double value) {}
 
+    private final double mRatioMin;
+    private final double mRatioMax;
+    private final double mRatioStep;
     private final double[] mCounts;
     private final int mBucketCount;
 
+    public RatioBucketSeries(final double ratioMin, final double ratioMax, final double ratioStep)
+    {
+        mRatioMin = ratioMin;
+        mRatioMax = ratioMax;
+        mRatioStep = ratioStep;
+
+        mBucketCount = (int)Math.round((ratioMax - ratioMin) / ratioStep) + 1;
+        mCounts = new double[mBucketCount];
+    }
+
     public RatioBucketSeries()
     {
-        mBucketCount = (int)Math.round((RESEG_RATIO_BUCKET_MAX - RESEG_RATIO_BUCKET_MIN) / RESEG_RATIO_BUCKET_STEP) + 1;
-        mCounts = new double[mBucketCount];
+        this(RESEG_RATIO_BUCKET_MIN, RESEG_RATIO_BUCKET_MAX, RESEG_RATIO_BUCKET_STEP);
     }
 
     public void addCount(double value, double weight)
     {
-        if(value < RESEG_RATIO_BUCKET_MIN || value > RESEG_RATIO_BUCKET_MAX)
+        if(value < mRatioMin || value > mRatioMax)
             return;
 
-        int index = (int)Math.round((value - RESEG_RATIO_BUCKET_MIN) / RESEG_RATIO_BUCKET_STEP);
+        int index = (int)Math.round((value - mRatioMin) / mRatioStep);
         index = Math.max(0, Math.min(mBucketCount - 1, index));
         mCounts[index] += weight;
     }
 
-    public List<Bucket> buildSmoothedSeries()
+    public List<Bucket> buildSmoothedSeries() { return buildSmoothedSeries(RESEG_ROLLING_AVG_WINDOW); }
+
+    public List<Bucket> buildSmoothedSeries(int rollingAvergeCount)
     {
         // rolling-average, edge-trimmed (buckets without a full window are dropped, then duplicates are removed
-        int half = RESEG_ROLLING_AVG_WINDOW / 2;
+        int half = rollingAvergeCount / 2;
         List<Bucket> smoothed = Lists.newArrayList();
 
         for(int i = half; i < mBucketCount - half; i++)
@@ -49,8 +62,8 @@ public final class RatioBucketSeries
                 sum += mCounts[k];
             }
 
-            double avg = sum / RESEG_ROLLING_AVG_WINDOW;
-            double level = round(RESEG_RATIO_BUCKET_MIN + i * RESEG_RATIO_BUCKET_STEP, 2);
+            double avg = sum / rollingAvergeCount;
+            double level = Math.round((mRatioMin + i * mRatioStep) / mRatioStep) * mRatioStep;
             smoothed.add(new Bucket(level, avg));
         }
 

@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.Read;
@@ -329,7 +330,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(0, riFinder.getRetainedIntrons().size());
 
@@ -340,7 +341,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(1, riFinder.getRetainedIntrons().size());
         RetainedIntron retIntron = riFinder.getRetainedIntrons().get(0);
@@ -355,7 +356,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(2, riFinder.getRetainedIntrons().size());
         retIntron = riFinder.getRetainedIntrons().get(1);
@@ -372,7 +373,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(2, riFinder.getRetainedIntrons().size());
         retIntron = riFinder.getRetainedIntrons().get(1);
@@ -391,7 +392,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(2, riFinder.getRetainedIntrons().size());
 
@@ -401,7 +402,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(2, riFinder.getRetainedIntrons().size());
 
@@ -414,7 +415,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertTrue(riFinder.getRetainedIntrons().isEmpty());
 
@@ -426,7 +427,7 @@ public class NovelJunctionsTest
         processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
         processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
-        riFinder.evaluateFragmentReads(read1, read2);
+        riFinder.evaluateFragmentReads(new Fragment(read1, read2));
 
         assertEquals(2, riFinder.getRetainedIntrons().size());
 

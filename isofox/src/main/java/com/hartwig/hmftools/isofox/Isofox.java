@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.PANEL_LOW_COVERAGE_FAC
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH;
@@ -47,7 +46,6 @@ import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
-import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
@@ -128,13 +126,6 @@ public class Isofox
             NeoEpitopeReader neReader = new NeoEpitopeReader(mConfig, mGeneTransCache);
             neReader.calcFragmentSupport();
             return true;
-        }
-
-        if(mConfig.runFunction(READ_COUNTS))
-        {
-            boolean status = countBamReads(chrGeneMap);
-            mResultsWriter.close();
-            return status;
         }
 
         // BAM processing for the key routines - novel junctions, fusions and gene expression
@@ -436,24 +427,6 @@ public class Isofox
 
             combinedPc.logStats();
         }
-    }
-
-    private boolean countBamReads(final Map<String, List<GeneData>> chrGeneMap)
-    {
-        ISF_LOGGER.info("basic BAM read counts");
-
-        List<BamReadCounter> taskList = Lists.newArrayList();
-        List<Callable<Void>> callableList = Lists.newArrayList();
-
-        for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
-        {
-            BamReadCounter bamReaderTask = new BamReadCounter(mConfig, mResultsWriter);
-            bamReaderTask.initialise(entry.getKey(), entry.getValue());
-            taskList.add(bamReaderTask);
-            callableList.add(bamReaderTask);
-        }
-
-        return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
     public static void main(@NotNull final String[] args)

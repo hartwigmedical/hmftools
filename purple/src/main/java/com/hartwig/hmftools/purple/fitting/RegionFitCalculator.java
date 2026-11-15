@@ -23,7 +23,6 @@ import com.hartwig.hmftools.purple.FittingConfig;
 import com.hartwig.hmftools.purple.region.FittingRegion;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.region.PloidyDeviation;
-import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 public class RegionFitCalculator
@@ -33,7 +32,7 @@ public class RegionFitCalculator
     private final PloidyDeviation mPloidyDeviation;
     private final CobaltChromosomes mCobaltChromosomes;
 
-    public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig, int averageReadDepth)
+    public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig, double ambiguousBaf)
     {
         mCobaltChromosomes = cobaltChromosomes;
         mFitScoreConfig = fitScoreConfig;
@@ -45,7 +44,7 @@ public class RegionFitCalculator
                 fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
                 fitScoreConfig.PloidyPenaltyMinDeviation);
 
-        mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
+        mAmbiguousBaf = ambiguousBaf;
     }
 
     public List<ObservedRegion> fitRegion(double purity, double normFactor, final Collection<ObservedRegion> observedRegions)

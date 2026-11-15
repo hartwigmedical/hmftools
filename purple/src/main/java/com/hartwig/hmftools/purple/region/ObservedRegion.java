@@ -197,7 +197,7 @@ public class ObservedRegion implements FittingRegion
 
     public String toString()
     {
-        return String.format("loc(%s:%d-%d) ratio(%s) seg(%s) status(%s) baf(%d obs=%.2f) cn(%.2f ref=%.2f baf=%.2f) fit(%.2f baf=%.2f) start(min=%d max=%d)",
+        return String.format("loc(%s:%d-%d) ratio(%s) seg(%s) status(%s) baf(%d obs=%.3f) cn(%.2f ref=%.2f baf=%.2f) fit(%.2f baf=%.2f) start(min=%d max=%d)",
                 mChromosome, mPosStart, mPosEnd, mRatioSupport, mSupport, mGermlineStatus, mBafCount, mObservedBAF,
                 mTumorCopyNumber, mRefNormalisedCopyNumber, mTumorBAF, mFittedTumorCopyNumber, mFittedBAF,
                 mMinStart, mMaxStart);

@@ -251,11 +251,11 @@ public class NeoEpitopeWriter
 
             if(fusionLowerToUpper)
             {
-                fusionDirection = pair.firstBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+                fusionDirection = pair.firstBreakend().orientAsByte() != upGeneStrand ? upGeneStrand : -upGeneStrand;
             }
             else
             {
-                fusionDirection = pair.secondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+                fusionDirection = pair.secondBreakend().orientAsByte() != upGeneStrand ? upGeneStrand : -upGeneStrand;
             }
 
             // any invalid traversal causes this fusion to be entirely skipped from further analysis

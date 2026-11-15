@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.purple.PurpleConstants.STANDARD_BAF_TARGET_PERC;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -59,6 +60,7 @@ import com.hartwig.hmftools.common.purple.ChrArmCopyNumbersFile;
 import com.hartwig.hmftools.purple.copynumber.ChromosomeCopyNumbers;
 import com.hartwig.hmftools.purple.drivers.AmplificationDrivers;
 import com.hartwig.hmftools.purple.drivers.DeletionDrivers;
+import com.hartwig.hmftools.purple.fitting.AmbiguousBaf;
 import com.hartwig.hmftools.purple.fitting.BestFit;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
@@ -284,6 +286,8 @@ public class PurpleApplication
             observedRegions.addAll(resegmentedRegions);
         }
 
+        double ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, amberData.AverageTumorDepth);
+
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
         List<ObservedRegion> fittedRegions = Lists.newArrayList();
@@ -292,7 +296,7 @@ public class PurpleApplication
         PurityAdjuster purityAdjuster = null;
         SomaticStream somaticStream = null;
 
-        RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, amberData.AverageTumorDepth);
+        RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, ambiguousBaf);
 
         if(mConfig.runTumor())
         {

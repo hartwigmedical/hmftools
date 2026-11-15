@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.region;
 
 import static com.hartwig.hmftools.purple.PurpleConstants.BAF_PNT_5;
+import static com.hartwig.hmftools.purple.fitting.AmbiguousBaf.depthBasedBAF;
 import static com.hartwig.hmftools.purple.fitting.RegionFitCalculator.estimateMinMaxBaf;
 
 import static org.junit.Assert.assertEquals;
@@ -52,7 +53,8 @@ public class RegionFitCalculatorTest
         MedianRatio medianRatio = new MedianRatio(chromosome, 0.5, 1);
         CobaltChromosomes cobaltChromosomes = new CobaltChromosomes(Lists.newArrayList(medianRatio), true);
 
-        RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, fittingConfig, 100);
+        double ambiguousBaf = depthBasedBAF(100); // TODO: adjust these unit tests to call into new routine
+        RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, fittingConfig, ambiguousBaf);
         double purity = 0.08;
         double normFactor = 0.986;
 

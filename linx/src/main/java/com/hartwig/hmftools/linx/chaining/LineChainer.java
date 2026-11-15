@@ -266,8 +266,8 @@ public class LineChainer implements CohortFileInterface
         int minTILength = getMinTemplatedInsertionLength(breakend2, breakend1);
 
         if(!isPossibleLink(
-                breakend1.chromosome(), breakend1.position(), breakend1.orientation(),
-                breakend2.chromosome(), breakend2.position(), breakend2.orientation(), minTILength))
+                breakend1.chromosome(), breakend1.position(), breakend1.orientAsByte(),
+                breakend2.chromosome(), breakend2.position(), breakend2.orientAsByte(), minTILength))
         {
             return null;
         }
@@ -359,8 +359,9 @@ public class LineChainer implements CohortFileInterface
 
                     for(SglMapping mapping : sgl.getSglMappings())
                     {
-                        if(isPossibleLink(mapping.Chromosome, mapping.Position, mapping.Orientation,
-                                breakend.chromosome(), breakend.position(), breakend.orientation(), minDistance))
+                        if(isPossibleLink(
+                                mapping.Chromosome, mapping.Position, mapping.Orientation,
+                                breakend.chromosome(), breakend.position(), breakend.orientAsByte(), minDistance))
                         {
                             mSourceBreakends.add(new SvBreakend(sgl, mapping));
                             sgl.addLineElement(SUSPECT, false);
@@ -445,7 +446,7 @@ public class LineChainer implements CohortFileInterface
             if(firstLink.firstBreakend().inLineElement() && firstLink.firstBreakend().type() != INV)
             {
                 sourcePositions[0] = firstLink.firstBreakend().position();
-                sourceOrients[0] = firstLink.firstBreakend().orientation();
+                sourceOrients[0] = firstLink.firstBreakend().orientAsByte();
             }
 
             if(lastLink.secondBreakend().inLineElement() && lastLink.secondBreakend().type() != INV)
@@ -453,12 +454,12 @@ public class LineChainer implements CohortFileInterface
                 if(sourcePositions[0] == -1)
                 {
                     sourcePositions[0] = lastLink.secondBreakend().position();
-                    sourceOrients[0] = lastLink.secondBreakend().orientation();
+                    sourceOrients[0] = lastLink.secondBreakend().orientAsByte();
                 }
                 else
                 {
                     sourcePositions[1] = lastLink.secondBreakend().position();
-                    sourceOrients[1] = lastLink.secondBreakend().orientation();
+                    sourceOrients[1] = lastLink.secondBreakend().orientAsByte();
                 }
             }
 
@@ -577,14 +578,14 @@ public class LineChainer implements CohortFileInterface
                 {
                     if(breakend.type() == INV && breakend.getOtherBreakend().inLineElement())
                     {
-                        invOrient = breakend.orientation();
+                        invOrient = breakend.orientAsByte();
                         invPositions[se] = breakend.position();
                     }
                     else
                     {
                         sourceChr = breakend.chromosome();
                         sourcePositions[se] = breakend.position();
-                        sourceOrient[se] = breakend.orientation();
+                        sourceOrient[se] = breakend.orientAsByte();
                     }
                 }
                 else
@@ -621,14 +622,14 @@ public class LineChainer implements CohortFileInterface
                                 {
                                     sourceChr = firstOtherBreakend.chromosome();
                                     sourcePositions[0] = firstOtherBreakend.position();
-                                    sourceOrient[0] = firstOtherBreakend.orientation();
+                                    sourceOrient[0] = firstOtherBreakend.orientAsByte();
                                 }
 
                                 if(secondOtherBreakend != null)
                                 {
                                     sourceChr = secondOtherBreakend.chromosome();
                                     sourcePositions[1] = secondOtherBreakend.position();
-                                    sourceOrient[1] = secondOtherBreakend.orientation();
+                                    sourceOrient[1] = secondOtherBreakend.orientAsByte();
                                 }
 
                                 break;
