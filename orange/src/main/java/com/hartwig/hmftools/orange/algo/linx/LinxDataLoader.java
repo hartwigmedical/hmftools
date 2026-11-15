@@ -5,21 +5,13 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SV_VIS_CLUSTER_PREFIX;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.PNG_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -305,17 +297,16 @@ public final class LinxDataLoader
             Set<String> distinctGenes = Sets.newHashSet();
             int svCount = 0;
 
-            for(LinxSvAnnotation annotation : svAnnotations)
+            for(LinxSvAnnotation svAnnotation : svAnnotations)
             {
-                if(annotation.clusterId() == clusterId)
+                if(svAnnotation.clusterId() == clusterId)
                 {
                     ++svCount;
 
-                    String[] genes = annotation.geneStart().split(ITEM_DELIM, -1);
-                    Arrays.stream(genes).forEach(x -> distinctGenes.add(x));
+                    List<LinxBreakend> svBreakends = breakends.stream()
+                            .filter(x -> x.svId() == svAnnotation.svId()).collect(Collectors.toList());
 
-                    genes = annotation.geneEnd().split(ITEM_DELIM, -1);
-                    Arrays.stream(genes).forEach(x -> distinctGenes.add(x));
+                    svBreakends.forEach(x -> distinctGenes.add(x.gene()));
                 }
             }
 
