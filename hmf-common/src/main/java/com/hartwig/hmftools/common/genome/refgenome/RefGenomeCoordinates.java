@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,18 +33,16 @@ public enum RefGenomeCoordinates
         return refGenomeVersion.is37() ? COORDS_37 : COORDS_38;
     }
 
-    RefGenomeCoordinates(@NotNull final Map<Chromosome,Integer> lengths, @NotNull final Map<Chromosome,Integer> centromeres)
+    RefGenomeCoordinates(final Map<Chromosome,Integer> lengths, final Map<Chromosome,Integer> centromeres)
     {
         Lengths = lengths;
         Centromeres = centromeres;
     }
 
-    @NotNull
     public Map<Chromosome,Integer> lengths() {
         return Lengths;
     }
 
-    @NotNull
     public Map<Chromosome,Integer> centromeres() {
         return Centromeres;
     }
@@ -91,4 +91,30 @@ public enum RefGenomeCoordinates
         return reader.lines().toList();
     }
 
+    public static Map<HumanChromosome,List<BaseRegion>> centromereGaps(final RefGenomeVersion refGenomeVersion)
+    {
+        List<String> gapEntries = readCentromereGaps(refGenomeVersion);
+
+        Map<HumanChromosome,List<BaseRegion>> chrGapMap = Maps.newHashMap();
+
+        for(String gapStr : gapEntries)
+        {
+            String[] gapItems = gapStr.split(TSV_DELIM);
+            HumanChromosome chromosome = HumanChromosome.fromString(gapItems[0].replaceAll("hs", ""));
+            int gapStart = Integer.parseInt(gapItems[1]);
+            int gapEnd = Integer.parseInt(gapItems[2]);
+
+            List<BaseRegion> regions = chrGapMap.get(chromosome);
+
+            if(regions == null)
+            {
+                regions = Lists.newArrayList();
+                chrGapMap.put(chromosome, regions);
+            }
+
+            regions.add(new BaseRegion(gapStart, gapEnd));
+        }
+
+        return chrGapMap;
+    }
 }

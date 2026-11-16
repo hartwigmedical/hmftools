@@ -24,8 +24,10 @@ public class ExtendDiploidTest
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1e-10;
     private static final PurityAdjuster PURE = buildPurityAdjuster(Gender.FEMALE, 1d, 1d);
-    private static final ExtendDiploid PURE_VICTIM =
-            new ExtendDiploid(new AlleleTolerance(PURE), MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
+
+    private static final ExtendDiploid PURE_VICTIM = new ExtendDiploid(
+            new AlleleTolerance(PURE, false),
+            MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
 
     @Test
     public void testFavourTumorRatioCountOverLength()

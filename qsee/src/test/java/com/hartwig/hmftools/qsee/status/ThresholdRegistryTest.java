@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
-import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;

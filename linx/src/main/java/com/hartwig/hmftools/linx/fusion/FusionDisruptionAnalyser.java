@@ -580,11 +580,11 @@ public class FusionDisruptionAnalyser
 
                         if(fusionLowerToUpper)
                         {
-                            fusionDirection = pair.firstBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+                            fusionDirection = pair.firstBreakend().orientAsByte() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                         }
                         else
                         {
-                            fusionDirection = pair.secondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+                            fusionDirection = pair.secondBreakend().orientAsByte() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                         }
 
                         // any invalid traversal causes this fusion to be entirely skipped from further analysis
@@ -797,7 +797,7 @@ public class FusionDisruptionAnalyser
 
             // the chain does not terminate the transcript if the next breakend is now past the end of the transcript or
             // if the breakend is down-stream of coding
-            if(nextBreakend.orientation() == 1)
+            if(nextBreakend.forwardOrient())
             {
                 if(nextBreakend.position() > transcript.transEnd())
                     break;

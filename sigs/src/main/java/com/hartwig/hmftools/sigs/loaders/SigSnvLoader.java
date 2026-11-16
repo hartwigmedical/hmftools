@@ -17,10 +17,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SmallVariantFactory;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.fitter.SigVariant;
+import com.hartwig.hmftools.sigs.fitter.VariantFilters;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -71,7 +71,7 @@ public class SigSnvLoader
 
     public Matrix getSampleBucketCounts() { return mSampleBucketCounts; }
 
-    public void loadData(final DatabaseAccess dbAccess, final String vcfFile, boolean writePosFreqData)
+    public void loadData(final String vcfFile, boolean writePosFreqData)
     {
         mSampleBucketCounts = new Matrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
@@ -84,8 +84,7 @@ public class SigSnvLoader
         {
             String sampleId = mSampleIds.get(sampleIndex);
 
-            final List<SmallVariant> variants = vcfFile != null ?
-                    loadSomaticVariants(vcfFile, sampleId) : dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
+            List<SigVariant> variants = loadSomaticVariants(vcfFile, sampleId);
 
             SIG_LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
@@ -111,27 +110,27 @@ public class SigSnvLoader
             mPosFreqWriters.forEach(x -> closeBufferedWriter(x));
     }
 
-    private List<SmallVariant> loadSomaticVariants(final String vcfFile, final String sampleId)
+    private List<SigVariant> loadSomaticVariants(final String vcfFile, final String sampleId)
     {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
         SmallVariantFactory variantFactory = new SmallVariantFactory(filter);
-        final List<SmallVariant> variantList = Lists.newArrayList();
+        List<SigVariant> variantList = Lists.newArrayList();
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
-        for(VariantContext variant : vcfFileReader.iterator())
+        for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            if(variant.isFiltered())
+            if(variantContext.isFiltered())
                 continue;
 
-            final SmallVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+            SmallVariant somaticVariant = variantFactory.createVariant(sampleId, variantContext).orElse(null);
 
             if(somaticVariant == null || !somaticVariant.isSnp())
                 continue;
 
-            variantList.add(somaticVariant);
+            variantList.add(new SigVariant(somaticVariant, variantContext));
         }
 
         return variantList;
@@ -174,12 +173,16 @@ public class SigSnvLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SigVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final SmallVariant variant : variants)
+        int filteredCount = 0;
+
+        for(SigVariant sigVariant : variants)
         {
+            SmallVariant variant = sigVariant.Variant;
+
             if(variant.isFiltered() || !variant.isSnp())
                 continue;
 
@@ -192,8 +195,11 @@ public class SigSnvLoader
                 continue;
 
             // check filters
-            if(mFilters != null && !mFilters.passesFilters(variant))
+            if(!mFilters.passesFilters(sigVariant))
+            {
+                ++filteredCount;
                 continue;
+            }
 
             for(PositionFrequencies positionFrequencies : mPositionFrequencies)
             {
@@ -208,10 +214,15 @@ public class SigSnvLoader
                 SIG_LOGGER.error("sample({}) invalid bucketName({}) from var({}>{}) context={})",
                         sampleId, bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
 
-                return;
+                System.exit(1);
             }
 
             ++sampleCounts[bucketIndex][sampleIndex];
+        }
+
+        if(filteredCount > 0)
+        {
+            SIG_LOGGER.debug("filtered {} variants", filteredCount);
         }
     }
 
@@ -225,5 +236,4 @@ public class SigSnvLoader
 
         return String.format("MissingBucket_%d", index);
     }
-
 }

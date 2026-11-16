@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
+import static com.hartwig.hmftools.isofox.fusion.FusionDataTest.suppDataFromRead;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.fromReads;
@@ -32,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
 import static junit.framework.TestCase.assertFalse;
 
 import java.util.List;
@@ -257,19 +259,17 @@ public class FusionFragmentsTest
     @Test
     public void testInvFragment()
     {
-        final EnsemblDataCache geneTransCache = createGeneDataCache();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
         int gcId = 0;
 
-        final GeneCollection gc1 =
-                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
 
         // INV being +1/+1
-        final GeneCollection gc3 =
-                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+        GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
 
         int readId = 0;
 
@@ -281,8 +281,9 @@ public class FusionFragmentsTest
 
         read1.setFlag(FIRST_OF_PAIR, true);
         read2.setFlag(FIRST_OF_PAIR, true);
-        read1.setSuppAlignment("supp");
-        read2.setSuppAlignment("supp");
+        read3.setFlag(SECOND_OF_PAIR, true);
+        read1.setSuppAlignment(suppDataFromRead(read2).asSamTag());
+        read2.setSuppAlignment(suppDataFromRead(read1).asSamTag());
         read1.setStrand(false, false);
         read1.setStrand(false, false);
         read3.setStrand(false, false);

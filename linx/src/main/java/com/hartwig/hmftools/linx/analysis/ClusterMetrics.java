@@ -108,9 +108,9 @@ public class ClusterMetrics
                 boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
 
                 boolean isSimpleDel = !isDB && var.type() == DEL
-                        && breakend.orientation() == 1 && nextBreakend.getSV() == var;
+                        && breakend.forwardOrient() && nextBreakend.getSV() == var;
 
-                boolean isTraversedDB = !isDB && !isSimpleDel && breakend.orientation() == 1 && nextBreakend.orientation() == -1;
+                boolean isTraversedDB = !isDB && !isSimpleDel && breakend.forwardOrient() && nextBreakend.reverseOrient();
 
                 if(isDB || isSimpleDel || isTraversedDB)
                 {
@@ -123,7 +123,7 @@ public class ClusterMetrics
                     if(delLength <= SHORT_DB_LENGTH)
                         ++ShortDBCount;
                 }
-                else if(nextBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 2 && breakend.orientation() == -1 && nextBreakend.orientation() == 1)
+                else if(nextBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 2 && breakend.reverseOrient() && nextBreakend.forwardOrient())
                 {
                     // a gap in the cluster breakends - check for DELs from other clusters
                     int impliedTICount = 0;
@@ -158,7 +158,7 @@ public class ClusterMetrics
                 {
                     // if neither breakend points across the centromere then subtract it from the total range
                     // and also check for a reliable TI across this region as well
-                    if(breakend.orientation() == 1 && nextBreakend.orientation() == -1 && !crossCentromereLinks.containsKey(chromosome))
+                    if(breakend.forwardOrient() && nextBreakend.reverseOrient() && !crossCentromereLinks.containsKey(chromosome))
                         TotalRange -= breakendsDistance;
                 }
             }
@@ -175,7 +175,7 @@ public class ClusterMetrics
             SvBreakend upperBreakend = breakendList.get(startIndex + 1);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-            && lowerBreakend.orientation() == ORIENT_REV && upperBreakend.orientation() == ORIENT_FWD
+            && lowerBreakend.reverseOrient() && upperBreakend.forwardOrient()
             && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 startIndex += 2;
@@ -198,7 +198,7 @@ public class ClusterMetrics
             SvBreakend upperBreakend = breakendList.get(endIndex);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-                    && lowerBreakend.orientation() == ORIENT_REV && upperBreakend.orientation() == ORIENT_FWD
+                    && lowerBreakend.reverseOrient() && upperBreakend.forwardOrient()
                     && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 endIndex -= 2;

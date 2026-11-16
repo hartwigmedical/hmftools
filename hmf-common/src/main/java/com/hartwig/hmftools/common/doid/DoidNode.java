@@ -22,6 +22,9 @@ public abstract class DoidNode
     public abstract String type();
 
     @Nullable
+    public abstract String propertyType();
+
+    @Nullable
     public abstract DoidMetadata doidMetadata();
 
     @Nullable

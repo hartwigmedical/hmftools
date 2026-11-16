@@ -32,7 +32,8 @@ public final class CommonConfig
     public static final String REFERENCE_BAM_DESC = "Reference BAM file";
     public static final String REFERENCE_BAMS_DESC = REFERENCE_BAM_DESC + PLURALS_DESC;
 
-    public static final String RNA_SAMPLE_ID = "rna_sample";
+    public static final String RNA_SAMPLE_ID = "rna_sample"; // remove duplicate once unused
+    public static final String RNA_SAMPLE = "rna_sample";
     public static final String RNA_SAMPLE_DESC = "RNA sample ID";
 
     public static final String RNA_BAM = "rna_bam";
@@ -49,9 +50,6 @@ public final class CommonConfig
 
     public static final String TARGET_REGIONS_BED = "target_regions_bed";
     public static final String TARGET_REGIONS_BED_DESC = "Target regions BED file";
-
-    public static final String BLACKLISTED_SITES = "blacklisted_sites";
-    public static final String BLACKLISTED_SITES_DESC = "Blacklisted sites file";
 
     public static final String SAMPLE_DATA_DIR_CFG = "sample_data_dir";
     public static final String SAMPLE_DATA_DIR_DESC = "Path to sample pipeline files";
@@ -142,6 +140,9 @@ public final class CommonConfig
 
     public static final String TEAL_DIR_CFG = toolDirectory("teal");
     public static final String TEAL_DIR_DESC = toolDirectoryDesc("Teal");
+
+    public static final String VIRIDIAN_DIR_CFG = toolDirectory("viridian");
+    public static final String VIRIDIAN_DIR_DESC = toolDirectoryDesc("Viridian");
 
     public static final String VIRUS_DIR_CFG = toolDirectory("virus");
     public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");

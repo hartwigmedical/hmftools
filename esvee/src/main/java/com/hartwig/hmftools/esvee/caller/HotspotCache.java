@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
 
@@ -15,9 +16,11 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.errorprone.annotations.Var;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -29,7 +32,7 @@ public class HotspotCache
     {
         mHotspotRegions = Maps.newHashMap();
 
-        if(configBuilder.hasValue(KNOWN_HOTSPOT_FILE))
+        if(configBuilder != null && configBuilder.hasValue(KNOWN_HOTSPOT_FILE))
         {
             loadFile(configBuilder.getValue(KNOWN_HOTSPOT_FILE));
         }
@@ -39,7 +42,7 @@ public class HotspotCache
     {
         // check hotspot rescue
         if(var.isSgl())
-            return false;
+            return sglMatchesHotspot(var);
 
         if(isPolyATSequence(var.contextStart()) || (var.contextEnd() != null && isPolyATSequence(var.contextEnd())))
             return false;
@@ -51,6 +54,39 @@ public class HotspotCache
     {
         final String homology = variant.getAttributeAsString(HOMSEQ, "");
         return homology.contains(POLY_A_HOMOLOGY) || homology.contains(POLY_T_HOMOLOGY);
+    }
+
+    private boolean sglMatchesHotspot(final Variant sgl)
+    {
+        // takes insert sequence alignments into consideration
+        String alignmentsStr = sgl.contextStart().getAttributeAsString(INSALN, "");
+
+        if(alignmentsStr.isEmpty())
+            return false;
+
+        List<AlternativeAlignment> alignments = AlternativeAlignment.fromVcfTag(alignmentsStr);
+        List<KnownHotspot> regions = mHotspotRegions.get(sgl.chromosomeStart());
+
+        if(regions == null)
+            return false;
+
+        String chrStart = sgl.chromosomeStart();
+        int posStart = sgl.posStart();
+        Orientation orientStart = sgl.orientStart();
+
+        for(AlternativeAlignment altAlignment : alignments)
+        {
+            for(KnownHotspot region : regions)
+            {
+                if(region.matches(chrStart, altAlignment.Chromosome, posStart, altAlignment.Position, orientStart, altAlignment.Orient)
+                || region.matches(altAlignment.Chromosome, chrStart, altAlignment.Position, posStart, altAlignment.Orient, orientStart))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private boolean matchesHotspot(
@@ -97,30 +133,7 @@ public class HotspotCache
 
                 KnownHotspot knownHotspot = new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo);
 
-                // add to both chromosome lists
-                List<KnownHotspot> svRegions = mHotspotRegions.get(chrStart);
-
-                if(svRegions == null)
-                {
-                    svRegions = Lists.newArrayList();
-                    mHotspotRegions.put(chrStart, svRegions);
-                }
-
-                svRegions.add(knownHotspot);
-
-                if(!chrStart.equals(chrEnd))
-                {
-                    svRegions = mHotspotRegions.get(chrEnd);
-
-                    if(svRegions == null)
-                    {
-                        svRegions = Lists.newArrayList();
-                        mHotspotRegions.put(chrEnd, svRegions);
-                    }
-
-                    svRegions.add(knownHotspot);
-                }
-
+                addHotspot(knownHotspot);
                 ++itemCount;
 
                 line = fileReader.readLine();
@@ -151,6 +164,19 @@ public class HotspotCache
         }
 
         hotspots.add(hotspot);
-    }
 
+        // add to both chromosome lists
+        if(!hotspot.RegionStart.Chromosome.equals(hotspot.RegionEnd.Chromosome))
+        {
+            hotspots = mHotspotRegions.get(hotspot.RegionEnd.Chromosome);
+
+            if(hotspots == null)
+            {
+                hotspots = Lists.newArrayList();
+                mHotspotRegions.put(hotspot.RegionEnd.Chromosome, hotspots);
+            }
+
+            hotspots.add(hotspot);
+        }
+    }
 }

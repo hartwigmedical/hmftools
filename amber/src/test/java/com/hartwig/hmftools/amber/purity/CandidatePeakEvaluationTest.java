@@ -33,7 +33,7 @@ public class CandidatePeakEvaluationTest
         List<PositionEvidence> shallowPoints = createHomPeakEvidencePointsWithDepth(5, 91); // See CandidatePeakTest
         List<PositionEvidence> allPoints = new ArrayList<>(deepEnoughPoints);
         allPoints.addAll(shallowPoints);
-        CandidatePeakEvaluationResult result = calculateResult(allPoints);
+        CandidatePeakResult result = calculateResult(allPoints);
         assertEquals(0.0, result.score(), 0.0001);
 
         // 15 deep enough points
@@ -51,7 +51,7 @@ public class CandidatePeakEvaluationTest
         List<PositionEvidence> missedPoints = createUncapturedPointsWithDepth(14, 1000);
         List<PositionEvidence> allPoints = new ArrayList<>(capturedPoints);
         allPoints.addAll(missedPoints);
-        CandidatePeakEvaluationResult result = calculateResult(allPoints);
+        CandidatePeakResult result = calculateResult(allPoints);
         assertEquals(0.0, result.score(), 0.0001);
 
         List<PositionEvidence> moreCapturedPoints = createHomPeakEvidencePointsWithDepth(1, 1000);
@@ -65,7 +65,7 @@ public class CandidatePeakEvaluationTest
     public void capturedPointsCanBeInHetPeakTest()
     {
         List<PositionEvidence> points = createHetPeakEvidencePointsWithDepth(15, 1000);
-        CandidatePeakEvaluationResult result = calculateResult(points);
+        CandidatePeakResult result = calculateResult(points);
         Assert.assertTrue(result.score() > 0.0);
     }
 
@@ -78,11 +78,11 @@ public class CandidatePeakEvaluationTest
         List<PositionEvidence> allPoints = new ArrayList<>(homPoints);
         allPoints.addAll(hetPoints);
         allPoints.addAll(uncapturedPoints);
-        CandidatePeakEvaluationResult result = calculateResult(allPoints);
+        CandidatePeakResult result = calculateResult(allPoints);
         assertEquals(0.31, result.score(), 0.0001);
     }
 
-    private CandidatePeakEvaluationResult calculateResult(List<PositionEvidence> evidencePoints)
+    private CandidatePeakResult calculateResult(List<PositionEvidence> evidencePoints)
     {
         CandidatePeakEvaluation evaluation = new CandidatePeakEvaluation(mPeak, evidencePoints);
         evaluation.call();

@@ -66,7 +66,6 @@ public class DataLoader
             int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
             int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
             int varInfoIndex = fieldsIndexMap.get(FLD_NE_VAR_INFO);
-            int geneIdUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
             int geneIdDownIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_DOWN);
             int geneNameUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
             int geneNameDownIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_DOWN);
@@ -143,8 +142,6 @@ public class DataLoader
     {
         String vcfFile = rnaSomaticVcf.replaceAll("\\*", sample.TumorId);
 
-        String rnaSampleId = sample.RnaSampleId != null ? sample.RnaSampleId : sample.TumorId + RNA_SAMPLE_ID_SUFFIX;
-
         if(!Files.exists(Paths.get(vcfFile)))
             return sample.HasRna ? null : Lists.newArrayList();
 
@@ -158,7 +155,7 @@ public class DataLoader
                 if(variantContext.isFiltered())
                     continue;
 
-                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sample.TumorId, rnaSampleId);
+                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sample.TumorId, sample.RnaSampleId);
 
                 if(variant == null)
                     continue;
@@ -210,7 +207,7 @@ public class DataLoader
         if(isofoxDataDir == null)
             return Lists.newArrayList();
 
-        String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sample.TumorId);
+        String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sample.RnaSampleId);
 
         if(!Files.exists(Paths.get(filename)))
             return sample.HasRna ? null : Lists.newArrayList();
@@ -220,13 +217,13 @@ public class DataLoader
             List<RnaNeoEpitope> rnaNeoDataList = RnaNeoEpitope.read(filename).stream()
                     .filter(x -> x.VariantType.isFusion()).collect(Collectors.toList());
 
-            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sample.TumorId, rnaNeoDataList.size());
+            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sample.RnaSampleId, rnaNeoDataList.size());
 
             return rnaNeoDataList;
         }
         catch(IOException exception)
         {
-            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sample.TumorId, exception.toString());
+            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sample.RnaSampleId, exception.toString());
             return null;
         }
     }

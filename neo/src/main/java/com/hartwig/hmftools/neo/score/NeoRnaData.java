@@ -49,6 +49,9 @@ public class NeoRnaData
 
     public void setExpression(final double[] expression)
     {
+        if(expression == null)
+            return;
+
         mHasExpression = true;
         mTransExpression[FS_UP] = expression[FS_UP];
         mTransExpression[FS_DOWN] = expression[FS_DOWN];

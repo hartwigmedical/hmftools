@@ -382,8 +382,8 @@ public class ClusterClassification
         if(!ChainJcnLimits.jcnMatch(sgl1, sgl2))
             return NONE;
 
-        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
-                || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
+        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.reverseOrient())
+                || (breakend2.position() < breakend1.position() && breakend2.reverseOrient());
 
         int length = abs(breakend1.position() - breakend2.position());
 
@@ -393,7 +393,7 @@ public class ClusterClassification
         {
             // a DUP if breakends are further than the anchor distance away, else an INS
             int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
-            if(length >= minTiLength)
+            if(length + 1 >= minTiLength)
                 resolvedType = SGL_PAIR_DUP;
             else
                 resolvedType = SGL_PAIR_INS;

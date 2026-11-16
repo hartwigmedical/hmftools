@@ -13,9 +13,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.bwa.MockBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.esvee.MockBwaMemAligner;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Test;
@@ -101,7 +101,7 @@ public class SagaSequenceMatcherTest
     private static SagaSequenceMatcher matcher(final byte[] query, final List<BwaMemAlignment> alignments,
             final Map<Integer, SagaAssembly> assembliesByContigId)
     {
-        MockBwaMemAligner aligner = new MockBwaMemAligner(Map.of(new String(query), alignments));
+        MockBwaMemAligner aligner = MockBwaMemAligner.forQueries(Map.of(new String(query), alignments));
         return new SagaSequenceMatcher(CONFIG, aligner, assembliesByContigId);
     }
 

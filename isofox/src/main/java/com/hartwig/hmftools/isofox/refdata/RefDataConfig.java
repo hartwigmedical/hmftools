@@ -44,7 +44,6 @@ public class RefDataConfig
     public final RefGenomeInterface RefGenome;
 
     public final List<String> RestrictedGeneIds; // specific set of genes to process
-    public final List<String> EnrichedGeneIds;
 
     public final int Threads;
     public final String OutputDir;
@@ -79,9 +78,6 @@ public class RefDataConfig
         {
             RefGenome = null;
         }
-
-        EnrichedGeneIds = Lists.newArrayList();
-        IsofoxConstants.populateEnrichedGeneIds(EnrichedGeneIds, RefGenVersion);
 
         FragmentSizeData = loadFragmentSizeConfig(configBuilder);
 
@@ -138,7 +134,6 @@ public class RefDataConfig
         RefGenVersion = V37;
         RefGenome = null;
 
-        EnrichedGeneIds = Lists.newArrayList();
         FragmentSizeData = Lists.newArrayList();
         RestrictedGeneIds = Lists.newArrayList();
     }

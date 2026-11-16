@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
-import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
@@ -93,9 +91,6 @@ public class AmberData
                 .orElse(DEFAULT_READ_DEPTH));
 
         PatientGender = determineGender(refGenVersion, ChromosomeBafs, chrXRegionPercentage);
-
-        PPL_LOGGER.info("Amber average tumor depth({}) ambiguous BAF({})",
-                AverageTumorDepth, String.format("%.3f", ExpectedBAF.expectedBAF(AverageTumorDepth)));
     }
 
     public int minSomaticTotalReadCount()

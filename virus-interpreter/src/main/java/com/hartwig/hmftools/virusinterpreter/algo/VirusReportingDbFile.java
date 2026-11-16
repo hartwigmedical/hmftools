@@ -11,7 +11,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 

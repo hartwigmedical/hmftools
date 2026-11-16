@@ -7,13 +7,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 

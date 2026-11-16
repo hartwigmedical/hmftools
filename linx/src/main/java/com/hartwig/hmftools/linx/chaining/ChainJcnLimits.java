@@ -188,7 +188,7 @@ public class ChainJcnLimits
         // use knowledge of A to find a minimum for non-disrupted B
         double bJcnMin = -1;
 
-        double startClusterJcn = startBreakend.orientation() == 1 ? startBreakend.jcn() : 0;
+        double startClusterJcn = startBreakend.forwardOrient() ? startBreakend.jcn() : 0;
 
         if(startMajorAPIsInt && startMajorAPR == aJcn)
         {
@@ -199,7 +199,7 @@ public class ChainJcnLimits
             bJcnMin = startMajorAP - startClusterJcn;
         }
 
-        double endClusterJcn = endBreakend.orientation() == -1 ? endBreakend.jcn() : 0;
+        double endClusterJcn = endBreakend.reverseOrient() ? endBreakend.jcn() : 0;
 
         for(int i = startIndex; i <= endIndex; ++i)
         {
@@ -406,7 +406,7 @@ public class ChainJcnLimits
 
     public static boolean jcnExceedsMajorAlleleJcn(final SvBreakend breakend)
     {
-        double adjacentMaJcn = breakend.majorAlleleJcn(breakend.orientation() == -1);
+        double adjacentMaJcn = breakend.majorAlleleJcn(breakend.reverseOrient());
         return breakend.jcn() > adjacentMaJcn && !copyNumbersEqual(breakend.jcn(), adjacentMaJcn);
     }
 

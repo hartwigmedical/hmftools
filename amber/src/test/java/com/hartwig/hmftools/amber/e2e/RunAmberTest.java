@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
@@ -161,7 +160,6 @@ public class RunAmberTest
         TumorBamFile = scenario.getTumorBamFile();
         TumorSample = scenario.getTumorSampleName();
         File panelFile = panelFileName == null ? null : scenario.getTestDataFile(panelFileName);
-        File blacklistFile = blacklistFileName == null ? null : scenario.getTestDataFile(blacklistFileName);
 
         int argCount = 6;
         if(TumorBamFile != null)
@@ -181,8 +179,6 @@ public class RunAmberTest
         if(blacklistFileName != null)
         {
             Preconditions.checkNotNull(panelFile, "Blacklist file specified without panel file");
-            Preconditions.checkArgument(blacklistFile.exists(), "Blacklist file does not exist: " + blacklistFile.getAbsolutePath());
-            Preconditions.checkArgument(blacklistFile.isFile(), "Blacklist file is not a file: " + blacklistFile.getAbsolutePath());
             argCount += 2;
         }
         String[] args = new String[argCount];
@@ -211,11 +207,6 @@ public class RunAmberTest
         {
             args[index++] = String.format("-%s", TARGET_REGIONS_BED);
             args[index++] = String.format("%s", panelFile.getAbsolutePath());
-        }
-        if(blacklistFileName != null)
-        {
-            args[index++] = String.format("-%s", BLACKLISTED_SITES);
-            args[index] = String.format("%s", blacklistFile.getAbsolutePath());
         }
 
         AmberApplication.main(args);

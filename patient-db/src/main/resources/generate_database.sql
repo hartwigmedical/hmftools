@@ -958,7 +958,6 @@ CREATE TABLE `rnaStatistics`
     `fragmentLengthPct05` DOUBLE PRECISION NOT NULL,
     `fragmentLengthPct50` DOUBLE PRECISION NOT NULL,
     `fragmentLengthPct95` DOUBLE PRECISION NOT NULL,
-    `enrichedGenePercent` DOUBLE PRECISION NOT NULL,
     `medianGCRatio` DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (`id`)
 );

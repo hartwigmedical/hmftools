@@ -51,6 +51,7 @@ public class RegionData
     {
         mRelativeEnrichment = relativeEnrichment;
     }
+    public void markInvalid() { mRelativeEnrichment = 0; }
 
     public void addSampleRegionData(final SampleRegionData sampleRegionData)
     {

@@ -9,7 +9,6 @@ public enum IsofoxFunction
     RETAINED_INTRONS,
     FUSIONS,
     STATISTICS,
-    READ_COUNTS,
     NEO_EPITOPES;
 
     public static final List<IsofoxFunction> DEFAULT_FUNCTIONS = List.of(TRANSCRIPT_COUNTS, ALT_SPLICE_JUNCTIONS, FUSIONS);

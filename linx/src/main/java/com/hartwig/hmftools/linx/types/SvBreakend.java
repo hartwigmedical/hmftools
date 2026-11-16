@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -21,7 +22,7 @@ public class SvBreakend {
     private final Arm mArm ;
     private final String mChrArm;
     private final int mPosition;
-    private final byte mOrientation;
+    private final Orientation mOrientation;
     private boolean mUsesStart;
 
     public SvBreakend(final SvVarData var, boolean useStart)
@@ -34,7 +35,7 @@ public class SvBreakend {
         mArm = var.arm(useStart);
         mChrArm = makeChrArmStr(mChromosome, mArm);
         mPosition = var.position(useStart);
-        mOrientation = var.orientation(useStart);
+        mOrientation = Orientation.fromByte(var.orientation(useStart));
     }
 
     public SvBreakend(final SvVarData var, final SglMapping mapping)
@@ -47,7 +48,7 @@ public class SvBreakend {
         mArm = getChromosomalArm(mapping.Chromosome, mapping.Position);
         mChrArm = makeChrArmStr(mChromosome, mArm);
         mPosition = mapping.Position;
-        mOrientation = mapping.Orientation;
+        mOrientation = Orientation.fromByte(mapping.Orientation);
     }
 
     public SvVarData getSV() { return mSV; }
@@ -58,7 +59,10 @@ public class SvBreakend {
     public String getChrArm() { return mChrArm; }
 
     public int position() { return mPosition; }
-    public byte orientation() { return mOrientation; }
+    public byte orientAsByte() { return mOrientation.asByte(); }
+    public Orientation orientation() { return mOrientation; }
+    public boolean forwardOrient() { return mOrientation.isForward(); } // for convenience
+    public boolean reverseOrient() { return mOrientation.isReverse(); }
     public boolean usesStart() { return mUsesStart; }
     public StructuralVariantType type() { return mSV.type(); }
 
@@ -73,11 +77,11 @@ public class SvBreakend {
     public static String DIRECTION_CENTROMERE = "C";
     public static String DIRECTION_TELOMERE = "T";
 
-    public String direction() { return (mOrientation == 1) == (mArm == P) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
+    public String direction() { return (mOrientation.isForward()) == (mArm == P) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
 
     public String toString()
     {
-        return String.format("%s: %s %s:%d:%d", mSV.id(), mUsesStart ? "start" :"end", mChromosome, mPosition, mOrientation);
+        return String.format("%s: %s %s:%d:%d", mSV.id(), mUsesStart ? "start" :"end", mChromosome, mPosition, mOrientation.asByte());
     }
 
     public int anchorDistance()

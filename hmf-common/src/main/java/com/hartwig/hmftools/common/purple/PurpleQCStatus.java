@@ -19,6 +19,7 @@ public enum PurpleQCStatus
     WARN_GENDER_MISMATCH,
     WARN_LOW_PURITY,
     WARN_TINC,
+    WARN_CONTAMINATION,
 
     FAIL_CONTAMINATION,
     FAIL_NO_TUMOR,
@@ -27,11 +28,13 @@ public enum PurpleQCStatus
     // default QC status determination
     public static final int MAX_UNSUPPORTED_SEGMENTS = 220;
     public static final int MAX_DELETED_GENES = 280;
-    public static final double MAX_CONTAMINATION = 0.1;
     public static final double MIN_PURITY = 0.2;
 
+    public static final double CONTAMINATION_FAIL_LEVEL = 0.1;
+    public static final double CONTAMINATION_WARN_LEVEL = 0.02;
+
     public static final double TINC_FAIL_LEVEL = 0.25;
-    public static final double TINC_WARN_LEVEL = 0;
+    public static final double TINC_WARN_LEVEL = 0.02;
 
     public static final String STATUS_DELIM = ",";
 
@@ -66,9 +69,13 @@ public enum PurpleQCStatus
             result.add(PurpleQCStatus.WARN_LOW_PURITY);
         }
 
-        if(Doubles.greaterThan(contamination, MAX_CONTAMINATION))
+        if(contamination >= CONTAMINATION_FAIL_LEVEL)
         {
             result.add(PurpleQCStatus.FAIL_CONTAMINATION);
+        }
+        else if(contamination >= CONTAMINATION_WARN_LEVEL)
+        {
+            result.add(PurpleQCStatus.WARN_CONTAMINATION);
         }
 
         if(method.equals(FittedPurityMethod.NO_TUMOR))

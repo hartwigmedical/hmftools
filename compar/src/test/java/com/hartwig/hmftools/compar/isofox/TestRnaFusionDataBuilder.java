@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -23,13 +23,10 @@ public class TestRnaFusionDataBuilder
     public String transcriptDown = "TRANS_01";
     public int exonUp = 2;
     public int exonDown = 4;
+    public String filter = "PASS";
     public int splitFragments = 100;
     public int realignedFrags = 50;
     public int discordantFrags = 20;
-    public String comparisonChromosomeUp = "21";
-    public int comparisonPositionUp = 1000;
-    public String comparisonChromosomeDown = "21";
-    public int comparisonPositionDown = 2000;
 
     private static final Consumer<TestRnaFusionDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -45,13 +42,10 @@ public class TestRnaFusionDataBuilder
         b.transcriptDown = "TRANS_04";
         b.exonUp = 3;
         b.exonDown = 5;
+        b.filter = "FRAGMENT_COUNT";
         b.splitFragments = 10;
         b.realignedFrags = 5;
         b.discordantFrags = 2;
-        b.comparisonChromosomeUp = "2";
-        b.comparisonPositionUp = 3000;
-        b.comparisonChromosomeDown = "2";
-        b.comparisonPositionDown = 4000;
     };
 
     public static final TestComparableItemBuilder<TestRnaFusionDataBuilder, RnaFusionData> BUILDER =
@@ -75,6 +69,7 @@ public class TestRnaFusionDataBuilder
                 .exonDown(exonDown)
                 .knownType(knownType)
                 .svType(StructuralVariantType.BND)
+                .filter(filter)
                 .splitFragments(splitFragments)
                 .realignedFrags(realignedFrags)
                 .discordantFrags(discordantFrags)
@@ -85,8 +80,6 @@ public class TestRnaFusionDataBuilder
                 .cohortFrequency(-1)
                 .build();
 
-        return new RnaFusionData(fusion,
-                new BasePosition(comparisonChromosomeUp, comparisonPositionUp),
-                new BasePosition(comparisonChromosomeDown, comparisonPositionDown));
+        return RnaFusionData.from(fusion, new RnaFusionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

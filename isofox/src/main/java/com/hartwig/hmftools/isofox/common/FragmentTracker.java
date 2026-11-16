@@ -15,18 +15,20 @@ public class FragmentTracker
         mReadMap = Maps.newHashMap();
     }
 
+    public Map<String,Object> readMap() { return mReadMap; }
+
     public List<Object> getValues() { return mReadMap.values().stream().collect(Collectors.toList()); }
 
     public int readsCount() { return mReadMap.size(); }
 
     public Read checkRead(final Read read)
     {
-        Read otherRead = (Read)mReadMap.remove(read.Id);
+        Read otherRead = (Read)mReadMap.remove(read.id());
 
         if(otherRead != null)
             return otherRead;
 
-        mReadMap.put(read.Id, read);
+        mReadMap.put(read.id(), read);
         return null;
     }
 

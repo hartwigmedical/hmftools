@@ -16,7 +16,7 @@ public class FlagstatDataTest extends ComparableItemTest<FlagstatData, FlagstatC
     @Before
     public void setUp()
     {
-        comparer = new FlagstatComparer(TUMOR_FLAGSTAT, new ComparConfig());
+        comparer = new FlagstatComparer(TUMOR_FLAGSTAT, new ComparConfig(), Collections.emptyMap());
         builder = TestFlagstatDataBuilder.BUILDER;
         FlagstatData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer =

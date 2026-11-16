@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.peach;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
@@ -36,6 +37,7 @@ public class TestPeachDataBuilder
                 .function(function)
                 .linkedDrugs(linkedDrugs)
                 .urlPrescriptionInfo(prescriptionUrls)
-                .build());
+                .build(),
+                new PeachComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

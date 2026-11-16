@@ -1,17 +1,38 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_SPLIT_FRAGS;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.OLD_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
+
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -19,14 +40,51 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
+public class RnaFusionComparer extends ItemComparer
 {
+    protected enum Fields
+    {
+        KnownType,
+        JuncTypeUp,
+        JuncTypeDown,
+        SplitFrags,
+        Filter;
+    }
+
+    private final Map<SourceType,Map<String,List<RnaFusionData>>> mUnfilteredFusions;
+
+    public RnaFusionComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mUnfilteredFusions = new EnumMap<>(SourceType.class);
+
+        mFields.add(new FieldInfo(
+                Fields.KnownType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.KnownType.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.JuncTypeUp.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.JuncTypeUp.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.JuncTypeDown.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.JuncTypeDown.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.SplitFrags.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.SplitFrags.toString(), 5.0, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Filter.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Filter.toString()), null));
+    }
+
     @Override
     public CategoryType category()
     {
@@ -34,75 +92,308 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public boolean hasReportable()
+    public List<String> displayFieldNames()
     {
-        return false;
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-    }
+        String filename = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
+        filename = checkOldIsofoxFilename(filename);
 
-    @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-        thresholds.addFieldThreshold(FLD_SPLIT_FRAGS, 5, 0.05);
-    }
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return List.of(FLD_KNOWN_TYPE, FLD_JUNC_TYPE_UP, FLD_JUNC_TYPE_DOWN, FLD_SPLIT_FRAGS);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // Not currently supported
-        return Lists.newArrayList();
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
-    {
-        String filename = determineFileName(sampleId, fileSources);
         List<RnaFusion> fusions = RnaFusionFile.read(filename);
         if(fusions == null)
         {
-            CMP_LOGGER.warn("sample({}) failed to load Isofox Gene data", sampleId);
+            CMP_LOGGER.warn("sample({}) failed to load Isofox fusion data", sampleId);
             return null;
         }
+
+        loadUnfilteredFusions(sampleId, fileSources);
 
         List<ComparableItem> comparableItems = Lists.newArrayList();
 
         for(RnaFusion fusion : fusions)
         {
-            BasePosition comparisonPositionUp = CommonUtils.determineComparisonGenomePosition(
-                    fusion.chromosomeUp(), fusion.positionUp(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-            BasePosition comparisonPositionDown = CommonUtils.determineComparisonGenomePosition(
-                    fusion.chromosomeDown(), fusion.positionDown(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-            comparableItems.add(new RnaFusionData(fusion, comparisonPositionUp, comparisonPositionDown));
+            comparableItems.add(convertFusion(fusion, fileSources.Source));
         }
 
         return comparableItems;
     }
 
-    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    private void loadUnfilteredFusions(final String sampleId, final PipelineSourcePaths fileSources)
     {
-        String filename = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
-        String oldFilename = filename.replace(".tsv", ".csv");
+        mUnfilteredFusions.remove(fileSources.Source);
 
-        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
+        String filename = RnaFusionFile.generateUnfilteredFilename(fileSources.Isofox, sampleId);
+        filename = checkOldIsofoxFilename(filename);
+
+        if(!Files.exists(Paths.get(filename)))
+            return;
+
+        List<RnaFusion> fusions;
+        try(BufferedReader reader = Files.newBufferedReader(Paths.get(filename)))
         {
-            return oldFilename;
+            String header = reader.readLine();
+
+            if(header != null && !createFieldsIndexMap(header, inferFileDelimiter(filename)).containsKey(Fields.Filter.toString()))
+            {
+                CMP_LOGGER.warn("sample({}) unfiltered fusions file has no Filter column, needs Isofox 1.8+, lookup skipped", sampleId);
+                return;
+            }
+
+            fusions = RnaFusionFile.read(filename);
         }
-        else
+        catch(IOException | RuntimeException e)
         {
-            return filename;
+            CMP_LOGGER.warn("sample({}) failed to parse Isofox unfiltered fusion data ({})", sampleId, e.getClass().getSimpleName());
+            return;
         }
+
+        if(fusions == null)
+        {
+            CMP_LOGGER.warn("sample({}) failed to load Isofox unfiltered fusion data", sampleId);
+            return;
+        }
+
+        List<RnaFusion> nonPassingFusions = fusions.stream().filter(x -> !x.filter().equals(PASS_FILTER)).collect(Collectors.toList());
+
+        List<RnaFusionData> comparableFusions = nonPassingFusions.stream()
+                .map(x -> convertFusion(x, fileSources.Source)).collect(Collectors.toList());
+
+        mUnfilteredFusions.put(fileSources.Source, fusionsByName(comparableFusions));
+
+        CMP_LOGGER.debug("sample({}) loaded {} {} non-passing fusions", sampleId, fileSources.Source, nonPassingFusions.size());
+    }
+
+    private RnaFusionData convertFusion(final RnaFusion fusion, final SourceType sourceType)
+    {
+        if(!mConfig.RequiresLiftover || sourceType != SourceType.OLD)
+            return RnaFusionData.from(fusion, mFields);
+
+        BasePosition liftedPositionUp = CommonUtils.determineComparisonGenomePosition(
+                fusion.chromosomeUp(), fusion.positionUp(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+        BasePosition liftedPositionDown = CommonUtils.determineComparisonGenomePosition(
+                fusion.chromosomeDown(), fusion.positionDown(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+        RnaFusion liftedFusion = ImmutableRnaFusion.builder().from(fusion)
+                .chromosomeUp(liftedPositionUp.Chromosome)
+                .chromosomeDown(liftedPositionDown.Chromosome)
+                .positionUp(liftedPositionUp.Position)
+                .positionDown(liftedPositionDown.Position)
+                .build();
+
+        return RnaFusionData.from(liftedFusion, mFields);
+    }
+
+    @Override
+    public List<ComparableItem> loadFromExpected(final Map<String,List<ExpectedValue>> valuesByKey)
+    {
+        List<ComparableItem> comparableItems = Lists.newArrayList();
+
+        for(List<ExpectedValue> expectedValues : valuesByKey.values())
+        {
+            RnaFusionData fusion = RnaFusionData.fromExpected(expectedValues, mFields);
+            fusion.setRemark(ExpectedValue.remark(expectedValues));
+            comparableItems.add(fusion);
+        }
+
+        for(List<RnaFusionData> fusions : fusionsByName(comparableItems).values())
+        {
+            if(fusions.size() > 1 && fusions.stream().anyMatch(x -> !x.HasCoordinates))
+            {
+                throw new IllegalArgumentException(
+                        format("RNA fusion(%s) has both gene pair and coordinate expected keys", fusions.get(0).Name));
+            }
+        }
+
+        return comparableItems;
+    }
+
+    @Override
+    public void compareItems(
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
+            final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
+    {
+        if(!mConfig.isExpectedSourced(SourceType.OLD))
+        {
+            CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesExpected, oldItems, newItems);
+            checkUnfilteredFusions(mismatches);
+            return;
+        }
+
+        // first organise fusion by name
+        Map<String,List<RnaFusionData>> fusionsByNameOld = fusionsByName(oldItems);
+        Map<String,List<RnaFusionData>> fusionsByNameNew = fusionsByName(newItems);
+
+        Set<String> matchedByName = Sets.newHashSet();
+
+        for(Map.Entry<String,List<RnaFusionData>> oldEntry : fusionsByNameOld.entrySet())
+        {
+            String fusionName = oldEntry.getKey();
+            List<RnaFusionData> newFusions = fusionsByNameNew.get(fusionName);
+            List<RnaFusionData> oldFusions = oldEntry.getValue();
+
+            if(newFusions == null)
+                continue;
+
+            matchedByName.add(fusionName);
+
+            RnaFusionData oldTopFusion = oldFusions.get(0);
+
+            if(!oldTopFusion.HasCoordinates)
+            {
+                Mismatch mismatch = oldTopFusion.findMismatch(this, newFusions.get(0), matchLevel, includeMatches, includesExpected);
+
+                if(mismatch != null)
+                    mismatches.add(mismatch);
+
+                continue;
+            }
+
+            StringJoiner oldFusionStr = new StringJoiner(ITEM_DELIM);
+            StringJoiner newFusionStr = new StringJoiner(ITEM_DELIM);
+
+            // match on name, then on coordinates
+            // for expected entries, if there is at least one match on coordinates then report other differences as value differences
+            for(RnaFusionData oldFusion : oldFusions)
+            {
+                RnaFusionData newFusion = newFusions.stream().filter(x -> x.isMatched(oldFusion)).findFirst().orElse(null);
+
+                if(newFusion == null)
+                {
+                    oldFusionStr.add(fusionInfo(oldFusion, SourceType.NEW));
+                }
+                else
+                {
+                    Mismatch mismatch = oldFusion.findMismatch(this, newFusion, matchLevel, includeMatches, includesExpected);
+
+                    if(mismatch != null)
+                        mismatches.add(mismatch);
+                }
+            }
+
+            for(RnaFusionData newFusion : newFusions)
+            {
+                RnaFusionData oldFusion = oldFusions.stream().filter(x -> x.isMatched(newFusion)).findFirst().orElse(null);
+
+                if(oldFusion == null)
+                {
+                    newFusionStr.add(fusionInfo(newFusion, SourceType.OLD));
+                }
+            }
+
+            if(oldFusionStr.length() > 0 || newFusionStr.length() > 0)
+            {
+                ComparableItem oldItem = oldFusions.get(0);
+                ComparableItem newItem = newFusions.get(0);
+                String diffStr = format("fusions(%s/%s)", oldFusionStr, newFusionStr);
+                Mismatch mismatch = new Mismatch(oldItem, newItem, VALUE, List.of(diffStr));
+                mismatches.add(mismatch);
+            }
+        }
+
+        // and add unmatched fusions
+        addUnmatchedFusions(fusionsByNameOld, matchedByName, mismatches, matchLevel, false);
+        addUnmatchedFusions(fusionsByNameNew, matchedByName, mismatches, matchLevel, true);
+
+        checkUnfilteredFusions(mismatches);
+    }
+
+    private void checkUnfilteredFusions(final List<Mismatch> mismatches)
+    {
+        for(int i = 0; i < mismatches.size(); ++i)
+        {
+            Mismatch mismatch = mismatches.get(i);
+
+            boolean oldOnly = mismatch.Type == OLD_ONLY && mismatch.NewItem == null;
+            boolean newOnly = mismatch.Type == NEW_ONLY && mismatch.OldItem == null;
+
+            if(!oldOnly && !newOnly)
+                continue;
+
+            RnaFusionData fusion = (RnaFusionData)mismatch.nonNullItem();
+            RnaFusionData unfilteredFusion = findUnfilteredFusion(fusion, oldOnly ? SourceType.NEW : SourceType.OLD);
+
+            if(unfilteredFusion == null)
+                continue;
+
+            ComparableItem oldItem = oldOnly ? fusion : unfilteredFusion;
+            ComparableItem newItem = oldOnly ? unfilteredFusion : fusion;
+            List<String> diffs = CommonUtils.findDiffs(this, oldItem, newItem);
+            mismatches.set(i, new Mismatch(oldItem, newItem, mismatch.Type, diffs));
+        }
+    }
+
+    private RnaFusionData findUnfilteredFusion(final RnaFusionData fusion, final SourceType sourceType)
+    {
+        Map<String,List<RnaFusionData>> unfilteredFusions = mUnfilteredFusions.get(sourceType);
+
+        if(unfilteredFusions == null)
+            return null;
+
+        return unfilteredFusions.getOrDefault(fusion.Name, Collections.emptyList()).stream()
+                .filter(x -> x.isMatched(fusion)).findFirst().orElse(null);
+    }
+
+    private static void addUnmatchedFusions(
+            final Map<String,List<RnaFusionData>> fusionsByName, final Set<String> matchedByName,
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, boolean isNew)
+    {
+        for(Map.Entry<String,List<RnaFusionData>> entry : fusionsByName.entrySet())
+        {
+            String fusionName = entry.getKey();
+
+            if(matchedByName.contains(fusionName))
+                continue;
+
+            for(RnaFusionData fusion : entry.getValue())
+            {
+                if(isNew && matchLevel == REPORTABLE && !fusion.reportable())
+                    continue;
+
+                Mismatch mismatch = isNew ?
+                        new Mismatch(null, fusion, NEW_ONLY, Collections.emptyList()) :
+                        new Mismatch(fusion, null, OLD_ONLY, Collections.emptyList());
+
+                mismatches.add(mismatch);
+            }
+        }
+    }
+
+    private String fusionInfo(final RnaFusionData fusionData, final SourceType otherSource)
+    {
+        RnaFusionData unfilteredFusion = findUnfilteredFusion(fusionData, otherSource);
+
+        if(unfilteredFusion == null)
+            return fusionInfo(fusionData);
+
+        return format("%s unfiltered(%s filter=%s)", fusionInfo(fusionData), fusionInfo(unfilteredFusion), unfilteredFusion.Filter);
+    }
+
+    private static String fusionInfo(final RnaFusionData fusionData)
+    {
+        return format("coords(%d-%d frags=%d)", fusionData.PositionUp, fusionData.PositionDown, fusionData.SplitFragments);
+    }
+
+    private static Map<String,List<RnaFusionData>> fusionsByName(final List<? extends ComparableItem> comparableItems)
+    {
+        Map<String,List<RnaFusionData>> fusionsByName = Maps.newHashMap();
+
+        for(ComparableItem item : comparableItems)
+        {
+            RnaFusionData fusionData = (RnaFusionData)item;
+
+            fusionsByName.computeIfAbsent(fusionData.Name, x -> Lists.newArrayList()).add(fusionData);
+        }
+
+        for(List<RnaFusionData> fusions : fusionsByName.values())
+        {
+            fusions.sort(Comparator.comparingInt((RnaFusionData x) -> x.SplitFragments).reversed());
+        }
+
+        return fusionsByName;
     }
 }

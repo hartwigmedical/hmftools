@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.cider;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.cider.ImmutableCdr3LocusSummary;
@@ -32,6 +33,7 @@ public class TestCdr3LocusSummaryDataBuilder
                 .readsTotal(-1)
                 .downSampled(false)
                 .sequences(-1)
-                .build());
+                .build(),
+                new Cdr3LocusSummaryComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

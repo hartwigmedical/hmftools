@@ -163,8 +163,6 @@ COHORT_TYPE <- list(
    
 )
 
-DEFAULT_COVERAGE_THRESHOLDS <- c(50, 100, 200, 400)
-
 ## =============================
 ## Loader functions 
 ## =============================
@@ -248,7 +246,7 @@ merge_tsvs.bam_metric.frag_length <- function(cohort_type){
    merge_tsvs(cohort_type, pattern = "*.bam_metric.frag_length.tsv(.gz)*$", output_file_suffix = ".bam_metric.frag_length.tsv.gz", read_func = read_func)
 }
 
-merge_tsvs.bam_metric.coverage <- function(cohort_type, coverage_thresholds=DEFAULT_COVERAGE_THRESHOLDS){
+merge_tsvs.bam_metric.coverage <- function(cohort_type, coverage_thresholds=c(50, 100, 200, 400)){
    
    read_func <- function(path){
       df <- read.delim(path)
@@ -263,46 +261,54 @@ merge_tsvs.bam_metric.coverage <- function(cohort_type, coverage_thresholds=DEFA
    merge_tsvs(cohort_type, pattern="*.bam_metric.coverage.tsv(.gz)*$", output_file_suffix = ".bam_metric.coverage.tsv.gz", read_func=read_func)
 }
 
-merge_tsvs.bam_metric.gene_coverage <- function(cohort_type, coverage_thresholds=DEFAULT_COVERAGE_THRESHOLDS){
-   
+## Proportion of bases above each coverage threshold, from DR_ depth range columns (one row per region per threshold)
+calc_prop_bases_above_coverage <- function(df, id_cols, coverage_thresholds){
+
+   ## Get depth matrix
+   depths <- df %>% dplyr::select(dplyr::starts_with("DR_")) %>% as.matrix()
+
+   ## Get depth bins from header
+   bin_min <- stringr::str_extract(colnames(depths), "_(\\d+)", group = 1) %>% as.numeric()
+
+   ## Calc proportion of bases in region above X coverage
+   total_bases <- rowSums(depths)
+
+   output <- lapply(coverage_thresholds, function(coverage_threshold){
+      #coverage_threshold=50
+      bins_above_coverage <- depths[, bin_min >= coverage_threshold, drop = FALSE]
+      bases_above_coverage <- rowSums(bins_above_coverage)
+      prop_bases_above_coverage <- bases_above_coverage / total_bases
+
+      data.frame(
+         df[, id_cols, drop = FALSE],
+         CoverageAbove = coverage_threshold,
+         PropBasesAboveCoverage = prop_bases_above_coverage,
+         row.names = NULL
+      )
+   })
+
+   do.call(rbind, output)
+}
+
+merge_tsvs.bam_metric.gene_coverage <- function(cohort_type, coverage_thresholds=c(50, 100, 200, 400)){
+
    read_func <- function(path){
-      
       df <- read.delim(path)
-      
-      ## Get depth matrix
-      depths <- df %>% dplyr::select(dplyr::starts_with("DR")) %>% as.matrix()
-      rownames(depths) <- df$GeneName
-      
-      ## Get depth bins from header
-      bin_min <- stringr::str_extract(colnames(depths), "_(\\d+)", group = 1) %>% as.numeric()
-      
-      ## Calc proportion of bases in gene above X coverage
-      total_gene_bases <- rowSums(depths)
-      
-      output <- lapply(coverage_thresholds, function(coverage_threshold){
-         #coverage_threshold=50
-         bins_above_coverage <- depths[,bin_min >= coverage_threshold]
-         bases_above_coverage <- rowSums(bins_above_coverage)
-         prop_bases_above_coverage <- bases_above_coverage / total_gene_bases
-         
-         data.frame(
-            GeneName = rownames(depths),
-            CoverageAbove = coverage_threshold,
-            PropBasesAboveCoverage = prop_bases_above_coverage,
-            row.names=NULL
-         )
-      }) 
-      
-      output <- do.call(rbind, output)
-      
-      return(output)
+      calc_prop_bases_above_coverage(df, id_cols = "GeneName", coverage_thresholds = coverage_thresholds)
    }
-   
+
    merge_tsvs(cohort_type, pattern="*.bam_metric.gene_coverage.tsv(.gz)*$", output_file_suffix = ".bam_metric.gene_coverage.tsv.gz", read_func = read_func)
 }
 
-merge_tsvs.bam_metric.exon_coverage <- function(cohort_type){ 
-   merge_tsvs(cohort_type, pattern="*.bam_metric.exon_coverage.tsv(.gz)*$", output_file_suffix=".bam_metric.exon_coverage.tsv.gz") 
+merge_tsvs.bam_metric.exon_coverage <- function(cohort_type, coverage_thresholds=c(250)){
+
+   read_func <- function(path){
+      df <- read.delim(path)
+      id_cols <- c("GeneName", "Chromosome", "PosStart", "PosEnd", "ExonRank", "MedianDepth", "MeanDepth")
+      calc_prop_bases_above_coverage(df, id_cols = id_cols, coverage_thresholds = coverage_thresholds)
+   }
+
+   merge_tsvs(cohort_type, pattern="*.bam_metric.exon_coverage.tsv(.gz)*$", output_file_suffix=".bam_metric.exon_coverage.tsv.gz", read_func = read_func)
 }
 
 ## --------------------------------
@@ -715,8 +721,9 @@ EXON_INFO <- local({
 EXON_COVERAGE_PLOTS <- local({
 
    plot_data <- TARGET_COHORT$bam_metric.exon_coverage %>%
+      dplyr::filter(CoverageAbove == 250) %>%
       dplyr::group_by(GeneName, ExonRank) %>%
-      dplyr::summarise(MeanPropExonAbove250X = mean(PercAboveDepth_250)) %>%
+      dplyr::summarise(MeanPropExonAbove250X = mean(PropBasesAboveCoverage)) %>%
       dplyr::ungroup()
    
    plot_data$ExonCoveredProp <- EXON_INFO$CoveredProp[match(exon_key(plot_data), exon_key(EXON_INFO))]

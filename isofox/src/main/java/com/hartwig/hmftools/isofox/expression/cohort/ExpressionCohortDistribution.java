@@ -137,7 +137,7 @@ public class ExpressionCohortDistribution
 
                     final List<Double> cancerValues = Lists.newArrayListWithExpectedSize(samples.size());
 
-                    for(final String sampleId : samples)
+                    for(String sampleId : samples)
                     {
                         Integer sampleIndex = mSampleIndexMap.get(sampleId);
 
@@ -263,7 +263,7 @@ public class ExpressionCohortDistribution
 
             mWriter.write(String.format(",%6.3e", medianValue));
 
-            for (int i = 0; i < PERCENTILE_COUNT; ++i)
+            for(int i = 0; i < PERCENTILE_COUNT; ++i)
             {
                 double value = percentileValues[i];
 

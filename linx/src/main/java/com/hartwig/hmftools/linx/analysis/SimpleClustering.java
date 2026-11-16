@@ -942,7 +942,7 @@ public class SimpleClustering implements CohortFileInterface
 
                         SvBreakend breakend = breakendList.get(index);
 
-                        if((breakend.orientation() == -1) != traverseUp)
+                        if(breakend.reverseOrient() != traverseUp)
                             continue;
 
                         double breakendJcn = breakend.jcn();
@@ -1063,7 +1063,7 @@ public class SimpleClustering implements CohortFileInterface
 
             for(SvBreakend breakend : breakendList)
             {
-                if(breakend.orientation() == ORIENT_FWD)
+                if(breakend.forwardOrient())
                     continue;
 
                 if(breakend.getCluster().getResolvedType() == LINE)
@@ -1082,7 +1082,7 @@ public class SimpleClustering implements CohortFileInterface
                 {
                     SvBreakend nextBreakend = breakendList.get(index);
 
-                    if(nextBreakend.orientation() == ORIENT_REV)
+                    if(nextBreakend.reverseOrient())
                         continue;
 
                     double nextAdjacentMaJcn = nextBreakend.majorAlleleJcn(false);
@@ -1205,7 +1205,7 @@ public class SimpleClustering implements CohortFileInterface
 
                     SvBreakend otherBreakend = lohBreakend.getOtherBreakend();
                     int index = otherBreakend.getChrPosIndex();
-                    boolean traverseUp = otherBreakend.orientation() == -1;
+                    boolean traverseUp = otherBreakend.reverseOrient();
                     SvCluster resolvingCluster = null;
                     SvBreakend resolvingBreakend = null;
 

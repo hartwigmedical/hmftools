@@ -13,18 +13,18 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.feature.CategoryPrep;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.FeaturePrep;
-import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
+import com.hartwig.hmftools.qsee.feature.FeaturePrep;
 
 public class CohortPercentilesTrainer
 {
     private final TrainConfig mTrainConfig;
-    private final QseePrepConfig mPrepConfig;
+    private final QseeConfig mPrepConfig;
 
     private final double[] mPercentiles;
 

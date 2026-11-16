@@ -148,7 +148,7 @@ public class SpliceSiteCache
 
             lines.remove(0);
 
-            for(final String line : lines)
+            for(String line : lines)
             {
                 // GeneSetId,Chromosome,SpliceSitePosition,TraverseFrags,SupportFrags,SkipFrags
                 final String[] items = line.split(OLD_FILE_DELIM);
@@ -189,7 +189,7 @@ public class SpliceSiteCache
         if(geneDataList == null)
             return false;
 
-        for(final GeneData geneData : geneDataList)
+        for(GeneData geneData : geneDataList)
         {
             if(positionWithin(position, geneData.GeneStart, geneData.GeneEnd))
                 return true;
@@ -332,7 +332,7 @@ public class SpliceSiteCache
             // skip field names
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
             {
                 ISF_LOGGER.error("empty cohort splice site percentiles file({})", filename);
                 return;
@@ -355,7 +355,7 @@ public class SpliceSiteCache
             {
                 String[] items = line.split(OLD_FILE_DELIM, -1);
 
-                if (items.length != expectedColCount)
+                if(items.length != expectedColCount)
                 {
                     ISF_LOGGER.error("invalid splice site percentile data length({}) vs expected({}): {}",
                             items.length, expectedColCount, line);

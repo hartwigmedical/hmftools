@@ -16,7 +16,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -30,7 +30,7 @@ public class WindowStatusesTest extends CalculationsTestBase
     @Before
     public void setup()
     {
-        ListMultimap<Chromosome, GCProfile> gcProfiles = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, GCProfile> gcProfiles = ArrayListMultimap.create();
         gcProfiles.put(_1, gcProfile(_1, 1, 0.47, 0.70));    // not mappable
         gcProfiles.put(_1, gcProfile(_1, 1001, 0.48, 0.50)); // not mappable
         gcProfiles.put(_1, gcProfile(_1, 2001, 0.49, 1.0));
@@ -63,7 +63,7 @@ public class WindowStatusesTest extends CalculationsTestBase
         exclusions.add(cbr(_3, 1100, 1200));
         exclusions.add(cbr(_3, 7100, 7200));
 
-        ListMultimap<Chromosome, DiploidStatus> diploidRegions = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, DiploidStatus> diploidRegions = ArrayListMultimap.create();
         for(int i = 0; i < 7; i++)
         {
             diploidRegions.put(_1, ds(_1, 1000 * i + 1, true));
@@ -126,22 +126,22 @@ public class WindowStatusesTest extends CalculationsTestBase
         checkExcluded(_3, 11001); // beyond the range of the diploid regions data
     }
 
-    private DiploidStatus ds(Chromosome chromosome, int position, boolean status)
+    private DiploidStatus ds(HumanChromosome chromosome, int position, boolean status)
     {
         return new DiploidStatus(V38.versionedChromosome(chromosome), position, position + 999, status);
     }
 
-    private void checkExcluded(Chromosome chromosome, int position)
+    private void checkExcluded(HumanChromosome chromosome, int position)
     {
         assertTrue(statuses.exclude(chromosome, dr(chromosome, position)));
     }
 
-    private void checkIncluded(Chromosome chromosome, int position)
+    private void checkIncluded(HumanChromosome chromosome, int position)
     {
         assertFalse(statuses.exclude(chromosome, dr(chromosome, position)));
     }
 
-    private DepthReading dr(Chromosome chromosome, int position)
+    private DepthReading dr(HumanChromosome chromosome, int position)
     {
         return dr(chromosome, position, 0.47, 0.50);
     }

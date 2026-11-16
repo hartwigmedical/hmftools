@@ -265,7 +265,7 @@ public class PairResolution
         if(chainStart.orientation() == chainEnd.orientation())
             return;
 
-        boolean faceAway = (chainStart.position() < chainEnd.position()) == (chainStart.orientation() == 1);
+        boolean faceAway = (chainStart.position() < chainEnd.position()) == (chainStart.forwardOrient());
 
         long totalChainLength = chain.getLength(false);
         long syntheticLength = abs(chainStart.position() - chainEnd.position());
@@ -482,7 +482,7 @@ public class PairResolution
         if(upperBe1.position() < lowerBe2.position() || upperBe2.position() < lowerBe1.position())
         {
             // no overlap and facing away is unclassified
-            boolean inversionsFacing = (upperBe1.position() < lowerBe2.position()) == (upperBe1.orientation() == -1);
+            boolean inversionsFacing = (upperBe1.position() < lowerBe2.position()) == (upperBe1.reverseOrient());
 
             if(!inversionsFacing)
                 return;
@@ -508,8 +508,8 @@ public class PairResolution
             cluster.addAnnotation(String.format("PairLen=%d;%d;%d", lowerDb1.length(), upperDb1.length(), NO_LENGTH));
             return;
         }
-        else if((lowerBe1.orientation() == 1 && lowerBe1.position() < lowerBe2.position() && upperBe1.position() < upperBe2.position())
-        || (lowerBe2.orientation() == 1 && lowerBe2.position() < lowerBe1.position() && upperBe2.position() < upperBe1.position()))
+        else if((lowerBe1.forwardOrient() && lowerBe1.position() < lowerBe2.position() && upperBe1.position() < upperBe2.position())
+        || (lowerBe2.forwardOrient() && lowerBe2.position() < lowerBe1.position() && upperBe2.position() < upperBe1.position()))
         {
             // still possibly a reciprocal INV but interrupted by other breakends
             return;
