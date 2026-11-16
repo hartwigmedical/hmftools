@@ -183,6 +183,7 @@ public class SomaticFindingsChapter implements ReportChapter
         float marginLeft = document.marginLeft();
 
         ReportResources.TextStyle titleStyle = mReportResources.tableHeaderStyle();
+        float titleBuffer = titleStyle.fontSize() * 1.4f * 2; // used for plot titles
 
         List<OrangePlot> plots = mReport.plots().linxDriverPlots();
 
@@ -203,8 +204,6 @@ public class SomaticFindingsChapter implements ReportChapter
             document.addTitledImage(
                     plotData.title(), titleStyle.font(), titleStyle.fontSize(), titleStyle.color(),
                     mPlotPathResolver.resolve(plotData.filename()), marginLeft, rowY, colWidth, maxPlotHeight);
-//            document.addImageAt(
-//                    mPlotPathResolver.resolve(plotData.filename()), marginLeft, rowY, colWidth, maxPlotHeight);
 
             // Right image (if exists)
             if(i + 1 < plots.size())
@@ -214,11 +213,9 @@ public class SomaticFindingsChapter implements ReportChapter
                 document.addTitledImage(
                         plotData.title(), titleStyle.font(), titleStyle.fontSize(), titleStyle.color(),
                         mPlotPathResolver.resolve(plotData.filename()), marginLeft + colWidth, rowY, colWidth, maxPlotHeight);
-
-                // document.addImageAt(mPlotPathResolver.resolve(plotData.filename()), marginLeft + colWidth, rowY, colWidth, maxPlotHeight);
             }
 
-            document.setCursorY(rowY - maxPlotHeight - 5);
+            document.setCursorY(rowY - maxPlotHeight - 20 - titleBuffer);
         }
     }
 }

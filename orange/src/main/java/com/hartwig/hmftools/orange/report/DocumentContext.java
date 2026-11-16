@@ -302,22 +302,6 @@ public class DocumentContext
     {
         ensurePage();
 
-        // float lineHeight = 0;
-        /*
-        float lineHeight = fontSize * 1.4f * 2;
-
-        try(PDPageContentStream cs = new PDPageContentStream(
-                mDocument, mCurrentPage, PDPageContentStream.AppendMode.APPEND, true, true))
-        {
-            cs.moveTo(x, y);
-            cs.beginText();
-            cs.setFont(font, fontSize);
-            cs.setNonStrokingColor(textColor);
-            cs.showText(text);
-            cs.endText();
-        }
-        */
-
         float lineHeight = fontSize * 1.4f;
 
         PDImageXObject image = PDImageXObject.createFromFile(imagePath, mDocument);

@@ -183,7 +183,6 @@ public final class DisruptionTable
             case UPSTREAM -> "Upstream";
             case DOWNSTREAM -> "Downstream";
         };
-
     }
 
     private static List<LinxBreakend> sort(final List<LinxBreakend> breakends)

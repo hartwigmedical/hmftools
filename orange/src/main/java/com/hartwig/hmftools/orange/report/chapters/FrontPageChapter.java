@@ -81,7 +81,7 @@ public class FrontPageChapter implements ReportChapter
         float rightFinalY = document.addTableNoAdvance(genomeTable);
 
         // Draw box borders around both sections
-        float bottomY = Math.min(leftFinalY, rightFinalY) - 20;
+        float bottomY = Math.min(leftFinalY, rightFinalY) - 10;
         float borderBoxesWidths = nestedTableWidth + 10;
         float borderBoxesHeight = savedY - bottomY;
         drawBoxBorder(document, driverTableLeft - 5, bottomY, borderBoxesWidths, borderBoxesHeight);

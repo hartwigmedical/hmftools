@@ -293,7 +293,6 @@ public class FrontPageTables
         if(includeGermline)
         {
             addCellEntry(table, cells, "DPYD status:", peachGeneStatus(report.peach(), "DPYD"));
-            // addCellEntry(table, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
         }
 
         return table;
