@@ -57,7 +57,10 @@ public final class PurpleDataLoader
         String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorId);
         String purityTsv = PurplePurity.generateFilename(purpleDir, tumorId);
         String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorId);
-        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorId));
+
+        String somaticVariantVcf = config.PurpleRnaAppendVcf != null ?
+                config.PurpleRnaAppendVcf : resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorId));
+
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorId);
         String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorId));
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorId);

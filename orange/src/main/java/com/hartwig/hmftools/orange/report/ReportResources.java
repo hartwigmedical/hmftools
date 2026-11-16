@@ -32,6 +32,8 @@ public class ReportResources
     public static final int FULL_PAGE_IMAGE_WIDTH = 750;
     public static final int FULL_PAGE_IMAGE_HEIGHT = 430;
 
+    public static final int MAX_TABLE_WIDTH = 450; // used for auto-scaling
+
     public static final Color PALETTE_WHITE = new Color(255, 255, 255);
     public static final Color PALETTE_BLACK = new Color(0, 0, 0);
 

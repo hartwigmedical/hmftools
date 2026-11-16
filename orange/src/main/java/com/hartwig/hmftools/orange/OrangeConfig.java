@@ -103,6 +103,7 @@ public class OrangeConfig
     public final String PipelineVersionFile;
 
     public final String PurpleDataDirectory;
+    public final String PurpleRnaAppendVcf;
     public final String PurplePlotDirectory;
     public final String QSeeDirectory;
     public final String LinxSomaticDataDirectory;
@@ -128,6 +129,8 @@ public class OrangeConfig
     private static final String SAMPLING_DATE = "sampling_date";
     private static final String DISPLAY_SAMPLE_ID = "display_sample";
     private static final String PANEL_NAME = "panel_name";
+
+    private static final String PURPLE_RNA_APPENDED_VCF = "purple_rna_append_vcf";
 
     // Input files used by the algorithm
     private static final String DOID_JSON = "doid_json";
@@ -229,6 +232,7 @@ public class OrangeConfig
 
         // RNA data can be in the appended Sage VCF and/or from Isofox
         RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+        PurpleRnaAppendVcf = configBuilder.getValue(PURPLE_RNA_APPENDED_VCF);
 
         String isofoxDir = null;
 
@@ -335,6 +339,7 @@ public class OrangeConfig
         configBuilder.addConfigItem(PANEL_NAME, false, "Panel name if known");
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, RNA_SAMPLE_DESC);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
+        configBuilder.addPath(PURPLE_RNA_APPENDED_VCF, false, "Purple somatic VCF appended with RNA");
 
         configBuilder.addFlag(ADD_DISCLAIMER, "Prints a disclaimer on each page");
         addLoggingOptions(configBuilder);
@@ -437,5 +442,6 @@ public class OrangeConfig
         AddDisclaimer = addDisclaimer;
         DisplaySampleId = tumorId;
         PanelName = "";
+        PurpleRnaAppendVcf = null;
     }
 }

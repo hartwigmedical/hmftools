@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static java.lang.Math.acos;
+import static java.lang.Math.ceil;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.text.DecimalFormat;
@@ -9,16 +13,16 @@ import java.util.Locale;
 
 import java.io.IOException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 
-import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.jetbrains.annotations.Nullable;
 
 import be.quodlibet.boxable.BaseTable;
-import be.quodlibet.boxable.Cell;
-import be.quodlibet.boxable.Row;
 
 public final class TableCommon
 {
@@ -40,16 +44,12 @@ public final class TableCommon
     public static final String COL_FRAGS = "Fragments";
     public static final String COL_DEPTH = "Depth";
     public static final String COL_DP = COL_DEPTH;
-    public static final String COL_DEPTH_START = "Depth Start";
-    public static final String COL_DEPTH_END = "Depth End";
     public static final String COL_FUSION = "Fusion";
 
     // variants
     public static final String COL_VARIANT = "Variant";
     public static final String COL_HGVS = "HGVS";
-    public static final String COL_VCN = "VCN";
     public static final String COL_COPIES = "Copies";
-    public static final String COL_MACN = "MACN";
     public static final String COL_CL = "Clonal";
     public static final String COL_AF = "AF";
     public static final String COL_SL = "Somatic";
@@ -57,8 +57,6 @@ public final class TableCommon
     public static final String COL_HOTSPOT = "Hotspot";
 
     public static final String COL_SUPPORT = "Support"; // for fields of type fragments / depth
-    public static final String COL_SUPPORT_START = "Support Start";
-    public static final String COL_SUPPORT_END = "Support End";
 
     // RNA
     public static final String COL_RNA = "RNA";
@@ -232,6 +230,20 @@ public final class TableCommon
         return new Tables(reportResources).createEmpty(docCtx, title, width);
     }
 
+    public static void convertWidths(
+            final List<TableHeaderData> headers, final String[] columnTexts, final float[] columnWidths, final float[] columnPercentages)
+    {
+        double totalWidths = headers.stream().mapToDouble(x -> x.AdjustedWidth).sum();
+
+        for(int c = 0; c < headers.size(); ++c)
+        {
+            TableHeaderData headerData = headers.get(c);
+            columnWidths[c] = (float)headerData.AdjustedWidth;
+            columnTexts[c] = headerData.Text;
+            columnPercentages[c] = (float)(headerData.AdjustedWidth / totalWidths * 100);
+        }
+    }
+
     public static float[] toPercentages(final float[] widths)
     {
         float total = 0;
@@ -247,15 +259,125 @@ public final class TableCommon
         return pcts;
     }
 
-    public static java.util.List<Cell<PDPage>> addDataRow(
-            final BaseTable table, final Cells cells, final float[] pcts, final String[] values)
+    public static float calculateTextWidth(final String text, final boolean isHeader, @Nullable final ReportResources reportResources)
     {
-        Row<PDPage> row = table.createRow(Tables.rowHeight());
-        java.util.List<Cell<PDPage>> createdCells = new java.util.ArrayList<>();
-        for(int i = 0; i < values.length; i++)
+        if(reportResources == null)
+            return text.length();
+
+        ReportResources.TextStyle style = isHeader ? reportResources.tableHeaderStyle() : reportResources.tableContentStyle();
+        PDFont font = style.font();
+        float fontSize = style.fontSize();
+
+        try
         {
-            createdCells.add(cells.addContentCell(row, pcts[i], values[i]));
+            String actualText = isHeader ? text.toUpperCase() : text;
+            return (font.getStringWidth(actualText) / 1000f) * fontSize;
         }
-        return createdCells;
+        catch(Exception e)
+        {
+            return 0;
+        }
     }
+
+    public static void scaleTableWidths(
+            final List<TableHeaderData> headers, final List<List<String>> tableRowData, final int maxTableWidth,
+            @Nullable final ReportResources reportResources)
+    {
+        int columnCount = headers.size();
+        float[] maxColumnDataLengths = new float[columnCount];
+
+        float maxHeaderDataLength = 0;
+
+        for(int c = 0; c < columnCount; ++c)
+        {
+            TableHeaderData headerData = headers.get(c);
+
+            for(int r = 0; r < tableRowData.size(); r++)
+            {
+                float dataLength = calculateTextWidth(tableRowData.get(r).get(c), false, reportResources);
+                maxColumnDataLengths[c] = max(maxColumnDataLengths[c], dataLength);
+            }
+
+            float headerLength = calculateTextWidth(headerData.Text, true, reportResources);
+
+            headerData.AdjustedWidth = max(maxColumnDataLengths[c], headerLength);
+            maxHeaderDataLength += headerData.AdjustedWidth;
+        }
+
+        if(maxHeaderDataLength > maxTableWidth)
+        {
+            // first try wrapping each column which can be wrapped, either the header or the data
+            float requiredReduction = maxHeaderDataLength - maxTableWidth;
+
+            // first try wrapping just the column header text
+            for(int c = 0; c < columnCount; ++c)
+            {
+                TableHeaderData headerData = headers.get(c);
+
+                float maxDataLength = maxColumnDataLengths[c];
+
+                if(headerData.WrapAtPercent > 0)
+                {
+                    float headerLength = calculateTextWidth(headerData.Text, true, reportResources);
+                    float minHeaderLength = (float)(headerLength * headerData.WrapAtPercent);
+
+                    if(minHeaderLength >= maxDataLength)
+                    {
+                        double reduction = headerData.length() - minHeaderLength;
+                        headerData.AdjustedWidth = minHeaderLength;
+                        requiredReduction -= reduction;
+                    }
+
+                    if(requiredReduction <= 0)
+                        break;
+                }
+            }
+
+            if(requiredReduction > 0)
+            {
+                for(int c = 0; c < columnCount; ++c)
+                {
+                    TableHeaderData headerData = headers.get(c);
+
+                    float maxDataLength = maxColumnDataLengths[c];
+                    float minHeaderLength = headerData.minLength();
+
+                    if(headerData.CanWrapData)
+                    {
+                        double newLength = max(minHeaderLength, maxDataLength * 0.5);
+                        double reduction = headerData.AdjustedWidth - newLength;
+                        headerData.AdjustedWidth = newLength;
+
+                        requiredReduction -= reduction;
+
+                        if(requiredReduction <= 0)
+                            break;
+                    }
+                }
+            }
+        }
+
+        double totalFinalWidth = headers.stream().mapToDouble(x -> x.AdjustedWidth).sum();
+
+        // use excess width to buffer the columns
+        if(totalFinalWidth < maxTableWidth)
+        {
+            double excess = maxTableWidth - totalFinalWidth;
+            double excessPerColumn = excess / (double)columnCount;
+
+            for(int c = 0; c < columnCount; ++c)
+            {
+                TableHeaderData headerData = headers.get(c);
+                headerData.AdjustedWidth += excessPerColumn;
+            }
+        }
+    }
+
+    @VisibleForTesting
+    public static void scaleTableWidths(
+            final List<TableHeaderData> headers, final List<List<String>> tableRowData, final int maxTableWidth)
+    {
+        scaleTableWidths(headers, tableRowData, maxTableWidth, null);
+    }
+
 }

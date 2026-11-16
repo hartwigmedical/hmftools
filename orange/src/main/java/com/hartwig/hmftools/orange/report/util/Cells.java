@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.util;
 
+import java.util.List;
+
 import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -172,8 +174,7 @@ public class Cells
         return cell;
     }
 
-    public java.util.List<Cell<PDPage>> addRow(
-            final BaseTable table, final float[] pcts, final java.util.List<String> values)
+    public java.util.List<Cell<PDPage>> addRow(final BaseTable table, final float[] pcts, final List<String> values)
     {
         Row<PDPage> row = table.createRow(COMPACT_ROW_HEIGHT);
         java.util.List<Cell<PDPage>> createdCells = new java.util.ArrayList<>();
