@@ -315,7 +315,7 @@ public class OrangeJsonTest
         assertEquals(ReportQcStatus.NO_ABNORMALITIES, virus1.qcStatus());
         assertEquals(VirusInterpretation.HPV, virus1.interpretation());
         assertEquals(1, virus1.integrations());
-        assertEquals(90, virus1.percentageCovered(), EPSILON);
+        assertEquals(0.9, virus1.percentageCovered(), EPSILON);
         assertEquals(20, virus1.meanCoverage(), EPSILON);
         assertEquals(ClonalityStatus.CLONAL, virus1.clonalityStatus());
         assertEquals(2.5, virus1.copiesPerTumorCell(), EPSILON);

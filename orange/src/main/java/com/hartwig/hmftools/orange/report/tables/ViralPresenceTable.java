@@ -67,7 +67,7 @@ public final class ViralPresenceTable
             rowCells.add(cells.createContent(virus.qcStatus().toString()));
             rowCells.add(cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
             rowCells.add(cells.createContent(String.valueOf(virus.integrations())));
-            rowCells.add(cells.createContent(formatPercentage(virus.percentageCovered(), false)));
+            rowCells.add(cells.createContent(formatPercentage(virus.percentageCovered())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));
             rowCells.add(cells.createContent(copiesPerTumorCellField(virus)));
 

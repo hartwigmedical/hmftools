@@ -38,10 +38,10 @@ public class ViridianInterpreterTest
     {
         VirusReport reported = new VirusReport(
                 "Human papillomavirus type 16", "Human papillomavirus", ReportQcStatus.AMBIGUOUS_VIRUS, VirusType.HPV,
-                2, 90.0, 20.0, 2.5, ClonalityStatus.CLONAL, true);
+                2, 0.9, 20.0, 2.5, ClonalityStatus.CLONAL, true);
         VirusReport notReported = new VirusReport(
                 "JC polyomavirus", "JC polyomavirus", ReportQcStatus.NO_ABNORMALITIES, null,
-                0, 40.0, 1.0, null, ClonalityStatus.PURPLE_FAIL_NO_TUMOR, false);
+                0, 0.4, 1.0, null, ClonalityStatus.PURPLE_FAIL_NO_TUMOR, false);
 
         com.hartwig.hmftools.datamodel.viridian.VirusReport expectedReported = ImmutableVirusReport.builder()
                 .name("Human papillomavirus type 16")
@@ -49,7 +49,7 @@ public class ViridianInterpreterTest
                 .qcStatus(com.hartwig.hmftools.datamodel.viridian.ReportQcStatus.AMBIGUOUS_VIRUS)
                 .integrations(2)
                 .interpretation(VirusInterpretation.HPV)
-                .percentageCovered(90.0)
+                .percentageCovered(0.9)
                 .meanCoverage(20.0)
                 .reported(true)
                 .clonalityStatus(com.hartwig.hmftools.datamodel.viridian.ClonalityStatus.CLONAL)
@@ -61,7 +61,7 @@ public class ViridianInterpreterTest
                 .qcStatus(com.hartwig.hmftools.datamodel.viridian.ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(0)
                 .interpretation(null)
-                .percentageCovered(40.0)
+                .percentageCovered(0.4)
                 .meanCoverage(1.0)
                 .reported(false)
                 .clonalityStatus(com.hartwig.hmftools.datamodel.viridian.ClonalityStatus.PURPLE_FAIL_NO_TUMOR)

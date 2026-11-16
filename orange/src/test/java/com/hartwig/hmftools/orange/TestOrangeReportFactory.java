@@ -310,7 +310,7 @@ public final class TestOrangeReportFactory
                 .qcStatus(ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(3)
                 .interpretation(VirusInterpretation.HPV)
-                .percentageCovered(87D)
+                .percentageCovered(0.87)
                 .meanCoverage(42D)
                 .reported(true)
                 .clonalityStatus(ClonalityStatus.CLONAL)

@@ -384,7 +384,7 @@ public class TestOrangeJsonWriter
                 .qcStatus(ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(1)
                 .interpretation(VirusInterpretation.HPV)
-                .percentageCovered(90)
+                .percentageCovered(0.9)
                 .meanCoverage(20)
                 .reported(true)
                 .clonalityStatus(ClonalityStatus.CLONAL)
@@ -397,7 +397,7 @@ public class TestOrangeJsonWriter
                 .qcStatus(ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(0)
                 .interpretation(null)     // nullable field
-                .percentageCovered(40)
+                .percentageCovered(0.4)
                 .meanCoverage(1)
                 .reported(false)
                 .clonalityStatus(ClonalityStatus.PURPLE_FAIL_NO_TUMOR)
