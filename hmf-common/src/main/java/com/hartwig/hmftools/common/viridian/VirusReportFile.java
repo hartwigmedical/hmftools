@@ -38,14 +38,14 @@ public final class VirusReportFile
                 String reportingType = row.getStringOrNull(Column.interpretation);
                 return new VirusReport(
                         row.get(Column.name),
-                        row.get(Column.virus_group),
+                        row.get(Column.virusGroup),
                         ReportQcStatus.valueOf(row.get(Column.qcStatus)),
                         reportingType != null ? VirusType.fromVirusName(reportingType) : null,
                         row.getInt(Column.integrations),
                         row.getDouble(Column.percentageCovered),
                         row.getDouble(Column.meanCoverage),
-                        row.getDoubleOrNull(Column.copies_per_tumor_cell),
-                        ClonalityStatus.valueOf(row.get(Column.clonality_status)),
+                        row.getDoubleOrNull(Column.copiesPerTumorCell),
+                        ClonalityStatus.valueOf(row.get(Column.clonalityStatus)),
                         row.getBoolean(Column.reported));
             }).toList();
         }
@@ -63,9 +63,9 @@ public final class VirusReportFile
                     row.set(Column.percentageCovered, report.coveragePercentage());
                     row.set(Column.meanCoverage, report.meanDepth());
                     row.set(Column.reported, report.isReported());
-                    row.set(Column.clonality_status, report.clonalityStatus().name());
-                    row.setOrNull(Column.copies_per_tumor_cell, report.copiesPerTumorCell());
-                    row.set(Column.virus_group, report.virusGroup());
+                    row.set(Column.clonalityStatus, report.clonalityStatus().name());
+                    row.setOrNull(Column.copiesPerTumorCell, report.copiesPerTumorCell());
+                    row.set(Column.virusGroup, report.virusGroup());
                 });
     }
 
@@ -78,8 +78,8 @@ public final class VirusReportFile
         percentageCovered,
         meanCoverage,
         reported,
-        clonality_status,
-        copies_per_tumor_cell,
-        virus_group,
+        clonalityStatus,
+        copiesPerTumorCell,
+        virusGroup,
     }
 }
