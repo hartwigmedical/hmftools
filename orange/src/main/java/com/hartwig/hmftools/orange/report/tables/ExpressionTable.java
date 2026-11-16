@@ -32,8 +32,8 @@ import org.apache.logging.log4j.util.Strings;
 
 public final class ExpressionTable
 {
-    private static String COL_PERCENTILE = "Percentile";
-    private static String COL_FOLD_CHANGE = "Fold Change";
+    protected static String COL_PERCENTILE = "Percentile";
+    protected static String COL_FOLD_CHANGE = "Fold Change";
 
     public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<GeneExpression> expressions, boolean sortAscending,

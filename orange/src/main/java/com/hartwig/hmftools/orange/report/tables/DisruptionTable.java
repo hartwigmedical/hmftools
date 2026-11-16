@@ -3,7 +3,9 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_WIDTH;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.convertWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
@@ -12,12 +14,9 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.scaleTableWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
 import java.util.List;
@@ -56,20 +55,18 @@ public final class DisruptionTable
 
         Cells cells = new Cells(reportResources);
 
-        List<Integer> widths = Lists.newArrayList();
-        List<String> headers = Lists.newArrayList();
+        List<TableHeaderData> headers = Lists.newArrayList();
+        headers.add(new TableHeaderData(COL_GENE, 0, false));
+        headers.add(new TableHeaderData(COL_POSITION, 0, false));
+        headers.add(new TableHeaderData(COL_ZYGOSITY, 0, false));
+        headers.add(new TableHeaderData(COL_CONTEXT, 0, false));
+        headers.add(new TableHeaderData(COL_TYPE, 0, false));
+        headers.add(new TableHeaderData(COL_JCN, 0, false));
+        headers.add(new TableHeaderData(COL_UNDISRUPTED_CN, 0, false));
+        headers.add(new TableHeaderData(COL_DRIVER, 0, false));
 
-        addEntry(widths, headers, 1, COL_GENE);
-        addEntry(widths, headers, 3, COL_POSITION);
-        addEntry(widths, headers, 1, COL_ZYGOSITY);
-        addEntry(widths, headers, 2, COL_CONTEXT);
-        addEntry(widths, headers, 1, COL_TYPE);
-        addEntry(widths, headers, 1, COL_JCN);
-        addEntry(widths, headers, 2, COL_UNDISRUPTED_CN);
-        addEntry(widths, headers, 1, COL_DRIVER);
-
-        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
-        float[] pcts = toPercentages(intToFloatArray(widths));
+        List<List<String>> tableRowData = Lists.newArrayList();
+        List<Boolean> shadeVariantData = Lists.newArrayList();
 
         List<LinxBreakend> sortedBreakends = sort(breakends);
 
@@ -84,29 +81,48 @@ public final class DisruptionTable
                 otherBreakend = sortedBreakends.get(i + 1);
             }
 
-            List<String> rowCells = Lists.newArrayList();
+            List<String> rowData = Lists.newArrayList();
+            tableRowData.add(rowData);
 
-            rowCells.add(cells.createContent(breakend.gene()));
-            rowCells.add(cells.createContent(locationDisplay(breakend, otherBreakend)));
-            rowCells.add(cells.createContent(breakend.undisruptedCopyNumber() < 0.5 ? VALUE_HOM : VALUE_HET));
-            rowCells.add(cells.createContent(contextDisplay(breakend, otherBreakend)));
-            rowCells.add(cells.createContent(breakend.type().toString()));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(breakend.junctionCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(breakend.undisruptedCopyNumber())));
+            rowData.add(breakend.gene());
+            rowData.add(locationDisplay(breakend, otherBreakend));
+            rowData.add(breakend.undisruptedCopyNumber() < 0.5 ? VALUE_HOM : VALUE_HET);
+            rowData.add(contextDisplay(breakend, otherBreakend));
+            rowData.add(breakend.type().toString());
+            rowData.add(formatSingleDigitDecimal(breakend.junctionCopyNumber()));
+            rowData.add(formatSingleDigitDecimal(breakend.undisruptedCopyNumber()));
 
             DriverInterpretation interpretation = DriverInterpretation.interpret(breakend.driverLikelihood());
-            rowCells.add(cells.createContent(interpretation.toString()));
+            rowData.add(interpretation.toString());
 
-            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
-
-            if(isCandidateLikelihood(breakend.driverLikelihood()))
-            {
-                reportResources.shadeCandidateCells(createdCells);
-            }
+            boolean isCandidate = isCandidateLikelihood(breakend.driverLikelihood());
+            shadeVariantData.add(isCandidate);
 
             if(otherBreakend != null)
             {
                 ++i;
+            }
+        }
+
+        scaleTableWidths(headers, tableRowData, MAX_TABLE_WIDTH, reportResources);
+
+        int columnCount = headers.size();
+        String[] columnTexts = new String[columnCount];
+        float[] columnWidths = new float[columnCount];
+        float[] columnPercentages = new float[columnCount];
+
+        convertWidths(headers, columnTexts, columnWidths, columnPercentages);
+
+        BaseTable table = createStandardTable(docCtx, title, width, columnWidths, columnTexts, reportResources);
+
+        for(int r = 0; r < tableRowData.size(); ++r)
+        {
+            List<String> rowData = tableRowData.get(r);
+            List<Cell<PDPage>> createdCells = cells.addRow(table, columnPercentages, rowData);
+
+            if(shadeVariantData.get(r))
+            {
+                reportResources.shadeCandidateCells(createdCells);
             }
         }
 
