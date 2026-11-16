@@ -48,7 +48,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
     {
         String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
         String filePath = GeneDepthFile.generateGeneCoverageFilename(baseDir, sampleId);
-        return GeneDepthFile.read(filePath);
+        return GeneDepthFile.readGeneCoverage(filePath);
     }
 
     private PurplePurity loadPurplePurity(String sampleId) throws IOException
