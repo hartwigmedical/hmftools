@@ -124,4 +124,68 @@ public class VariantSelectorsTest
         testVariant = new SimpleVariant(CHR_1, 102, ref, "C");
         assertTrue(hotspotCache.isHotspot(testVariant));
     }
+
+    @Test
+    public void testHotspotProximity()
+    {
+        String ref = "A";
+        String alt = "C";
+
+        List<SimpleVariant> hotspots = List.of(
+                new SimpleVariant(CHR_1, 100, ref, alt),
+                new SimpleVariant(CHR_1, 110, ref, alt),
+                new SimpleVariant(CHR_1, 110, ref, alt),
+                new SimpleVariant(CHR_1, 122, ref, alt),
+                new SimpleVariant(CHR_1, 123, ref, alt),
+                new SimpleVariant(CHR_1, 123, ref, alt),
+                new SimpleVariant(CHR_1, 123, "AAA", alt),
+                new SimpleVariant(CHR_1, 140, ref, alt));
+
+        HotspotCache hotspotCache = new HotspotCache(hotspots);
+
+        SimpleVariant testVariant = new SimpleVariant(CHR_1, 94, ref, alt);
+        assertFalse(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 95, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 105, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 116, ref, alt);
+        assertFalse(hotspotCache.isNearHotspot(testVariant));
+
+        // test navigation
+        testVariant = new SimpleVariant(CHR_1, 124, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 120, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 135, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 145, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 146, ref, alt);
+        assertFalse(hotspotCache.isNearHotspot(testVariant));
+
+        hotspotCache.setIndex(0);
+
+        testVariant = new SimpleVariant(CHR_1, 124, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        hotspotCache.setIndex(hotspots.size() - 1);
+
+        testVariant = new SimpleVariant(CHR_1, 119, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        // check indels
+        testVariant = new SimpleVariant(CHR_1, 130, ref, alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+
+        testVariant = new SimpleVariant(CHR_1, 133, "AAA", alt);
+        assertTrue(hotspotCache.isNearHotspot(testVariant));
+    }
 }

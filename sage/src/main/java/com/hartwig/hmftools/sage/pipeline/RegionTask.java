@@ -40,7 +40,7 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.PhasingUtils;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
-import com.hartwig.hmftools.sage.vis.VariantVis;
+import com.hartwig.hmftools.sage.select.HotspotCache;
 
 public class RegionTask
 {
@@ -63,6 +63,7 @@ public class RegionTask
 
     private final List<SageVariant> mSageVariants;
     private final Set<Integer> mPassingPhaseSets;
+    private final HotspotCache mHotspotCache;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -100,6 +101,8 @@ public class RegionTask
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
+
+        mHotspotCache = new HotspotCache(hotspots);
 
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
@@ -248,6 +251,8 @@ public class RegionTask
 
         mResults.addSynCounts(mEvidenceStage.getSyncCounts());
         mResults.addEvidenceStats(mEvidenceStage.getEvidenceStats());
+
+        mHotspotCache.setNearHotspots(mSageVariants);
 
         if(mConfig.Common.WriteFragmentLengths)
         {
