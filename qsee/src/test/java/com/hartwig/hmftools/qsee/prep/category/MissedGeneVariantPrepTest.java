@@ -86,21 +86,38 @@ public class MissedGeneVariantPrepTest
     @Test
     public void canCalcLimitOfDetectionVAF()
     {
+        double actualVAF;
+        double expectedVAF;
+
         Map<DepthRange,Integer> depthCounts = Map.of(
                 new DepthRange(20, 20), 10,
                 new DepthRange(100, 100), 90
         );
-        double actualVAF = MissedGeneVariantPrep.calcLimitOfDetectionVAF(depthCounts);
-        double expectedVAF = 0.244766;
+
+        // Without purity adjustment
+        actualVAF = MissedGeneVariantPrep.calcPurityAdjustedLimitOfDetectionVAF(depthCounts, 1.0);
+        expectedVAF = 0.244766;
         assertEquals(expectedVAF, actualVAF, 1e-6);
 
+        // With purity adjustment
+        actualVAF = MissedGeneVariantPrep.calcPurityAdjustedLimitOfDetectionVAF(depthCounts, 0.5);
+        expectedVAF = 0.489532;
+        assertEquals(expectedVAF, actualVAF, 1e-6);
+
+        // Purity adjustment leads to VAF > 1 (invalid)
+        actualVAF = MissedGeneVariantPrep.calcPurityAdjustedLimitOfDetectionVAF(depthCounts, 0.2);
+        expectedVAF = Double.POSITIVE_INFINITY;
+        assertEquals(expectedVAF, actualVAF, 0);
+
+        // Depth too low, no VAF can achieve the missed variant likelihood target
         Map<DepthRange,Integer> lowDepthCounts = Map.of(
                 new DepthRange(2, 2), 10,
                 new DepthRange(100, 100), 90
         );
-        double actualLowDepthVAF = MissedGeneVariantPrep.calcLimitOfDetectionVAF(lowDepthCounts);
-        double expectedLowDepthVAF = Double.POSITIVE_INFINITY;
-        assertEquals(expectedLowDepthVAF, actualLowDepthVAF, 0);
+
+        actualVAF = MissedGeneVariantPrep.calcPurityAdjustedLimitOfDetectionVAF(lowDepthCounts, 1.0);
+        expectedVAF = Double.POSITIVE_INFINITY;
+        assertEquals(expectedVAF, actualVAF, 0);
     }
 
     private static void assertFeaturesEqual(List<Feature> expectedFeatures, List<Feature> actualFeatures)

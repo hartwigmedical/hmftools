@@ -116,7 +116,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static double calcLimitOfDetectionVAF(Map<DepthRange,Integer> depthCounts)
+    static double calcPurityAdjustedLimitOfDetectionVAF(Map<DepthRange,Integer> depthCounts, double purity)
     {
         // As VAF (x) increases, missed variant likelihood (y) monotonically decreases (i.e. downward slope)
         // We can therefore use a binary search approach (i.e. bisection) to quickly find 'x' given 'y'
@@ -138,7 +138,15 @@ public class MissedGeneVariantPrep implements CategoryPrep
                 lowerVAF = midVAF;
         }
 
-        return upperVAF;
+        double limitOfDetectionVAF = upperVAF;
+
+        // Lower purity means higher theoretical VAF required to detect variant in tumor
+        double adjustedLimitOfDetectionVAF = limitOfDetectionVAF / purity;
+
+        if(adjustedLimitOfDetectionVAF > 1)
+            return Double.POSITIVE_INFINITY;
+
+        return adjustedLimitOfDetectionVAF;
     }
 
     @VisibleForTesting
