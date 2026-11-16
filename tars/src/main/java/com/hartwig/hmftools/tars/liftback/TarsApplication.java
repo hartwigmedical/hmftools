@@ -291,12 +291,6 @@ public class TarsApplication
 
     private boolean sortAndIndex(final String unsortedBam, final String sortedBam)
     {
-        if(mConfig.BamToolPath == null)
-        {
-            TARS_LOGGER.info("no -{} configured; leaving unsorted BAM at {}", BamToolName.BAMTOOL_PATH, unsortedBam);
-            return false;
-        }
-
         BamToolName toolName = fromPath(mConfig.BamToolPath);
         TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
 

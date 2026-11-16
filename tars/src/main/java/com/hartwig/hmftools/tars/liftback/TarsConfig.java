@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.util.Arrays;
 import java.util.List;
@@ -80,14 +81,16 @@ public class TarsConfig
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         Threads = parseThreads(configBuilder);
 
-        if(OutputDir == null)
+        if(OutputDir == null || BamToolPath == null)
         {
-            throw new IllegalArgumentException("missing required config: output_dir");
+            TARS_LOGGER.error("missing config: outputDir({}) bamTool({})", OutputDir != null, BamToolPath != null);
+            System.exit(1);
         }
 
         if(!checkCreateOutputDir(OutputDir))
         {
-            throw new IllegalStateException("failed to create output directory: " + OutputDir);
+            TARS_LOGGER.error("failed to create output directory: {}", OutputDir);
+            System.exit(1);
         }
     }
 
