@@ -12,7 +12,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
-import com.hartwig.hmftools.qsee.prep.VisDataFile;
 
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;

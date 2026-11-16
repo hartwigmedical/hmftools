@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.qsee.cohort;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
+import com.hartwig.hmftools.qsee.QseeConfig;
 
 public class TrainConfig
 {
-    public final QseePrepConfig Prep;
+    public final QseeConfig Prep;
 
     public final int NumPercentiles;
     public final double PercentileIncrement;
@@ -22,7 +22,7 @@ public class TrainConfig
 
     public TrainConfig(final ConfigBuilder configBuilder)
     {
-        Prep = new QseePrepConfig(configBuilder);
+        Prep = new QseeConfig(configBuilder);
 
         NumPercentiles = configBuilder.getInteger(NUM_PERCENTILES);
         PercentileIncrement = configBuilder.getDecimal(PERCENTILE_INCREMENT);
@@ -31,7 +31,7 @@ public class TrainConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        QseePrepConfig.registerConfig(configBuilder);
+        QseeConfig.registerConfig(configBuilder);
 
         configBuilder.addInteger(NUM_PERCENTILES, NUM_PERCENTILES_DESC, 101);
         configBuilder.addDecimal(PERCENTILE_INCREMENT, PERCENTILE_INCREMENT_DESC, Double.NaN);

@@ -294,6 +294,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 - `-merge_plots`: In multi-sample mode produce a single PDF with all samples.
 - `-sequencing_type`: Can be `ILLUMINA`, `SBX` or `ULTIMA`. Only used to determine base qual bins in BaseQualRecalibrationPrep
 - `-skip_categories`: A comma separated list of categories to skip prep for. Valid options: BASE_QUAL_RECALIBRATION, COVERAGE_DISTRIBUTION, DISCORDANT_FRAG_FREQ, DUPLICATE_FREQ, FRAG_LENGTH_DISTRIBUTION, GC_BIAS, MISSED_GENE_VARIANT, MS_INDEL_ERROR
+- `-skip_plot`: Write the output files (vis data, QC status) only, without plotting
 - `-write_cohort_features`: If provided, write the raw feature values when calculating cohort percentiles. 
 - `-threads`: Number of threads to use for parallel processing (one sample per thread)
 - `-log_level`: Log level (default: `INFO`). See [log4j docs](https://logging.apache.org/log4j/2.x/manual/customloglevels.html) for valid values

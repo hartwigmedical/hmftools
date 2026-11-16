@@ -8,10 +8,10 @@ import java.util.Objects;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
-import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBin;
-import com.hartwig.hmftools.qsee.prep.category.discordant.DiscordantFragGroup;
-import com.hartwig.hmftools.qsee.prep.category.msindel.RepeatType;
-import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.feature.category.bqr.BaseQualBin;
+import com.hartwig.hmftools.qsee.feature.category.discordant.DiscordantFragGroup;
+import com.hartwig.hmftools.qsee.feature.category.msindel.RepeatType;
+import com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
