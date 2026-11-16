@@ -21,7 +21,7 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.VisSampleData;
+import com.hartwig.hmftools.qsee.feature.SampleFeatures;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -43,7 +43,7 @@ public class VisDataFile
         return generateFilename(config.OutputDir, sampleId, config.OutputId);
     }
 
-    public static void write(String outputFile, List<VisSampleData> visSampleDataEntries)
+    public static void write(String outputFile, List<SampleFeatures> multiSampleFeatures)
     {
         try(BufferedWriter writer = createBufferedWriter(outputFile))
         {
@@ -62,29 +62,30 @@ public class VisDataFile
             writer.write(header.toString());
             writer.newLine();
 
-            for(VisSampleData entry : visSampleDataEntries)
+            for(SampleFeatures sampleFeatures : multiSampleFeatures)
             {
-                Feature feature = entry.feature();
+                for(Feature feature : sampleFeatures.features())
+                {
+                    if(Double.isNaN(feature.value()))
+                        continue;
 
-                if(Double.isNaN(feature.value()))
-                    continue;
+                    FeatureKey featureKey = feature.key();
 
-                FeatureKey featureKey = feature.key();
+                    StringJoiner line = new StringJoiner(TSV_DELIM);
+                    line.add(sampleFeatures.sampleId());
+                    line.add(sampleFeatures.sampleType().name());
+                    line.add(featureKey.sourceTool().name());
+                    line.add(featureKey.type().name());
+                    line.add(featureKey.name());
 
-                StringJoiner line = new StringJoiner(TSV_DELIM);
-                line.add(entry.sampleId());
-                line.add(entry.sampleType().name());
-                line.add(featureKey.sourceTool().name());
-                line.add(featureKey.type().name());
-                line.add(featureKey.name());
+                    String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(feature.value());
+                    line.add(featureValue);
 
-                String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(feature.value());
-                line.add(featureValue);
+                    line.add(feature.metadata().displayString());
 
-                line.add(feature.metadata().displayString());
-
-                writer.write(line.toString());
-                writer.newLine();
+                    writer.write(line.toString());
+                    writer.newLine();
+                }
             }
         }
         catch(IOException e)

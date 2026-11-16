@@ -79,6 +79,7 @@ public class QseeConfig
     public final List<PrepCategory> Categories;
     public final boolean TargetedMode;
     public final boolean AllowMissingInput;
+    public final boolean SkipPlot;
 
     public final String OutputDir;
     public final String OutputId;
@@ -96,6 +97,9 @@ public class QseeConfig
 
     public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
     public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
+
+    public static final String SKIP_PLOT = "skip_plot";
+    public static final String SKIP_PLOT_DESC = "Write output files only, without plotting";
 
     public QseeConfig(final ConfigBuilder configBuilder)
     {
@@ -126,6 +130,7 @@ public class QseeConfig
         SequencingTech = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
+        SkipPlot = configBuilder.hasFlag(SKIP_PLOT);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -159,6 +164,7 @@ public class QseeConfig
         configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);
         configBuilder.addFlag(TARGETED_MODE, TARGETED_MODE_DESC);
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
+        configBuilder.addFlag(SKIP_PLOT, SKIP_PLOT_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
         configBuilder.addConfigItem(OUTPUT_ID, false, OUTPUT_DIR_DESC);
