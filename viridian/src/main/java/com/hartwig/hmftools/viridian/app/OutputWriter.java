@@ -7,9 +7,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.summingDouble;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_CANDIDATE_READ_SOURCE;
-import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_EXTRA_VIRUS_DECOY_CONTIGS;
-import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_KMER_FILTER;
 
 import java.util.List;
 import java.util.Map;
@@ -54,47 +51,47 @@ public class OutputWriter
                     VirusGenome genome = support.genome();
 
                     row.set(GenomeSupportColumn.contig, genome.contigName());
-                    row.set(GenomeSupportColumn.virus_name, genome.virus().name());
-                    row.set(GenomeSupportColumn.virus_group, genome.virusGroup().name());
-                    row.set(GenomeSupportColumn.genome_length, genome.length());
-                    row.set(GenomeSupportColumn.aligned_reads, stats.readCount());
-                    row.set(GenomeSupportColumn.multi_align_reads, support.multiAlignReads());
-                    row.set(GenomeSupportColumn.origin_clipped_reads, stats.originClippedReads());
+                    row.set(GenomeSupportColumn.virusName, genome.virus().name());
+                    row.set(GenomeSupportColumn.virusGroup, genome.virusGroup().name());
+                    row.set(GenomeSupportColumn.genomeLength, genome.length());
+                    row.set(GenomeSupportColumn.alignedReads, stats.readCount());
+                    row.set(GenomeSupportColumn.multiAlignReads, support.multiAlignReads());
+                    row.set(GenomeSupportColumn.originClippedReads, stats.originClippedReads());
                     row.set(GenomeSupportColumn.coverage, stats.coverageFraction());
-                    row.set(GenomeSupportColumn.read_votes, support.readVotes());
+                    row.set(GenomeSupportColumn.readVotes, support.readVotes());
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, support.alignmentsPerRead());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
                     row.setOrNull(
-                            GenomeSupportColumn.vote_fraction,
+                            GenomeSupportColumn.voteFraction,
                             fraction(support.readVotes(), groupVotes.get(genome.virusGroup())));
-                    row.set(GenomeSupportColumn.top_match_reads, support.topMatchReads());
-                    row.set(GenomeSupportColumn.is_representative, representativeGenomes.contains(genome));
+                    row.set(GenomeSupportColumn.topMatchReads, support.topMatchReads());
+                    row.set(GenomeSupportColumn.isRepresentative, representativeGenomes.contains(genome));
                 });
     }
 
     private enum GenomeSupportColumn
     {
         contig,
-        virus_name,
-        virus_group,
-        is_representative,
-        genome_length,
+        virusName,
+        virusGroup,
+        isRepresentative,
+        genomeLength,
         coverage,
-        aligned_reads,
-        read_votes,
-        vote_fraction,
-        top_match_reads,
-        multi_align_reads,
-        origin_clipped_reads
+        alignedReads,
+        readVotes,
+        voteFraction,
+        topMatchReads,
+        multiAlignReads,
+        originClippedReads
     }
 
     private static final String DEPTH_STATS_COLUMNS = "depth";
-    private static final String ALIGNER_SCORE_STATS_COLUMNS = "aligner_score";
+    private static final String ALIGNER_SCORE_STATS_COLUMNS = "alignerScore";
 
-    private static final String ALIGN_PER_READ_STATS_COLUMNS = "align_per_read";
+    private static final String ALIGN_PER_READ_STATS_COLUMNS = "alignPerRead";
 
     private static final List<String> GENOME_SUPPORT_COLUMNS =
             Stream.concat(
@@ -111,21 +108,21 @@ public class OutputWriter
         DelimFileWriter.write(
                 file, VIRUS_PROFILE_COLUMNS, rows, (profile, row) ->
                 {
-                    row.set(VirusProfileColumn.virus_group, profile.virusGroup().name());
+                    row.set(VirusProfileColumn.virusGroup, profile.virusGroup().name());
 
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
                     row.set(VirusProfileColumn.contig, genome.contigName());
-                    row.set(VirusProfileColumn.virus_name, genome.virus().name());
-                    row.set(VirusProfileColumn.genome_length, genome.length());
-                    row.set(VirusProfileColumn.aligned_reads, stats.readCount());
-                    row.set(VirusProfileColumn.origin_clipped_reads, stats.originClippedReads());
+                    row.set(VirusProfileColumn.virusName, genome.virus().name());
+                    row.set(VirusProfileColumn.genomeLength, genome.length());
+                    row.set(VirusProfileColumn.alignedReads, stats.readCount());
+                    row.set(VirusProfileColumn.originClippedReads, stats.originClippedReads());
                     row.set(VirusProfileColumn.coverage, stats.coverageFraction());
 
                     List<VirusGenome> secondaries = profile.secondaryGenomes();
-                    row.setOrNull(VirusProfileColumn.secondary_contigs, joinOrNull(secondaries, VirusGenome::contigName));
+                    row.setOrNull(VirusProfileColumn.secondaryContigs, joinOrNull(secondaries, VirusGenome::contigName));
                     row.setOrNull(
-                            VirusProfileColumn.secondary_virus_names,
+                            VirusProfileColumn.secondaryVirusNames,
                             joinOrNull(secondaries, secondary -> secondary.virus().name()));
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
@@ -135,15 +132,15 @@ public class OutputWriter
 
     private enum VirusProfileColumn
     {
-        virus_group,
-        virus_name,
+        virusGroup,
+        virusName,
         contig,
-        genome_length,
+        genomeLength,
         coverage,
-        aligned_reads,
-        origin_clipped_reads,
-        secondary_contigs,
-        secondary_virus_names,
+        alignedReads,
+        originClippedReads,
+        secondaryContigs,
+        secondaryVirusNames,
     }
 
     private static final List<String> VIRUS_PROFILE_COLUMNS =
@@ -166,7 +163,7 @@ public class OutputWriter
 
     private static String summaryStatsColumn(String group, String field)
     {
-        return group + "_" + field;
+        return group + Character.toUpperCase(field.charAt(0)) + field.substring(1);
     }
 
     @Nullable
@@ -187,23 +184,23 @@ public class OutputWriter
                 file, IntegrationColumn.values(), integrations, (integration, row) ->
                 {
                     CandidateSv sv = integration.sv();
-                    row.set(IntegrationColumn.sv_type, sv.type().name());
+                    row.set(IntegrationColumn.svType, sv.type().name());
                     row.set(IntegrationColumn.filter, sv.filter());
 
                     HostBreakend startBreakend = sv.startBreakend();
                     BreakendSupport startSupport = startBreakend.support();
-                    row.set(IntegrationColumn.start_id, startBreakend.id());
-                    row.set(IntegrationColumn.start_chromosome, startBreakend.basePosition().Chromosome);
-                    row.set(IntegrationColumn.start_position, startBreakend.basePosition().Position);
-                    row.set(IntegrationColumn.start_orientation, startBreakend.orientation().asByte());
-                    row.set(IntegrationColumn.start_tumor_variant_frags, startSupport.tumorVariantFragments());
-                    row.set(IntegrationColumn.start_tumor_ref_frags, startSupport.tumorReferenceFragments());
-                    row.set(IntegrationColumn.start_tumor_af, startSupport.tumorAlleleFrequency());
+                    row.set(IntegrationColumn.startId, startBreakend.id());
+                    row.set(IntegrationColumn.startChromosome, startBreakend.basePosition().Chromosome);
+                    row.set(IntegrationColumn.startPosition, startBreakend.basePosition().Position);
+                    row.set(IntegrationColumn.startOrientation, startBreakend.orientation().asByte());
+                    row.set(IntegrationColumn.startTumorVariantFrags, startSupport.tumorVariantFragments());
+                    row.set(IntegrationColumn.startTumorRefFrags, startSupport.tumorReferenceFragments());
+                    row.set(IntegrationColumn.startTumorAf, startSupport.tumorAlleleFrequency());
                     row.setOrNull(
-                            IntegrationColumn.start_normal_variant_frags.name(),
+                            IntegrationColumn.startNormalVariantFrags.name(),
                             startSupport.normalVariantFragments());
                     row.setOrNull(
-                            IntegrationColumn.start_normal_ref_frags.name(),
+                            IntegrationColumn.startNormalRefFrags.name(),
                             startSupport.normalReferenceFragments());
 
                     // Note unset columns are written as null, leaving a SGL's second breakend blank.
@@ -211,98 +208,104 @@ public class OutputWriter
                     if(endBreakend != null)
                     {
                         BreakendSupport endSupport = endBreakend.support();
-                        row.set(IntegrationColumn.end_id, endBreakend.id());
-                        row.set(IntegrationColumn.end_chromosome, endBreakend.basePosition().Chromosome);
-                        row.set(IntegrationColumn.end_position, endBreakend.basePosition().Position);
-                        row.set(IntegrationColumn.end_orientation, endBreakend.orientation().asByte());
-                        row.set(IntegrationColumn.end_tumor_variant_frags, endSupport.tumorVariantFragments());
-                        row.set(IntegrationColumn.end_tumor_ref_frags, endSupport.tumorReferenceFragments());
-                        row.set(IntegrationColumn.end_tumor_af, endSupport.tumorAlleleFrequency());
+                        row.set(IntegrationColumn.endId, endBreakend.id());
+                        row.set(IntegrationColumn.endChromosome, endBreakend.basePosition().Chromosome);
+                        row.set(IntegrationColumn.endPosition, endBreakend.basePosition().Position);
+                        row.set(IntegrationColumn.endOrientation, endBreakend.orientation().asByte());
+                        row.set(IntegrationColumn.endTumorVariantFrags, endSupport.tumorVariantFragments());
+                        row.set(IntegrationColumn.endTumorRefFrags, endSupport.tumorReferenceFragments());
+                        row.set(IntegrationColumn.endTumorAf, endSupport.tumorAlleleFrequency());
                         row.setOrNull(
-                                IntegrationColumn.end_normal_variant_frags.name(),
+                                IntegrationColumn.endNormalVariantFrags.name(),
                                 endSupport.normalVariantFragments());
                         row.setOrNull(
-                                IntegrationColumn.end_normal_ref_frags.name(),
+                                IntegrationColumn.endNormalRefFrags.name(),
                                 endSupport.normalReferenceFragments());
                     }
 
-                    row.set(IntegrationColumn.line_site, sv.lineSite());
+                    row.set(IntegrationColumn.lineSite, sv.lineSite());
                     InsertRepeat insertRepeat = sv.insertRepeat();
                     if(insertRepeat != null)
                     {
-                        row.set(IntegrationColumn.repeat_class, insertRepeat.repeatClass());
-                        row.set(IntegrationColumn.repeat_type, insertRepeat.repeatType());
-                        row.set(IntegrationColumn.repeat_coverage, insertRepeat.coverage());
+                        row.set(IntegrationColumn.repeatClass, insertRepeat.repeatClass());
+                        row.set(IntegrationColumn.repeatType, insertRepeat.repeatType());
+                        row.set(IntegrationColumn.repeatCoverage, insertRepeat.coverage());
                     }
-                    row.set(IntegrationColumn.insert_host_alignments, sv.insertHostAlignments());
-                    row.set(IntegrationColumn.insert_seq_length, sv.insertSequence().length());
-                    row.set(IntegrationColumn.insert_sequence, sv.insertSequence());
+                    row.set(IntegrationColumn.insertHostAlignments, sv.insertHostAlignments());
+                    row.set(IntegrationColumn.insertSeqLength, sv.insertSequence().length());
+                    row.set(IntegrationColumn.insertSequence, sv.insertSequence());
 
                     ViralInsertAlignment alignment = integration.alignment();
                     VirusGenome genome = alignment.genome();
-                    row.set(IntegrationColumn.virus_name, genome.virus().name());
-                    row.set(IntegrationColumn.virus_group, genome.virusGroup().name());
-                    row.set(IntegrationColumn.virus_contig, genome.contigName());
-                    row.set(IntegrationColumn.virus_position, alignment.position());
-                    row.set(IntegrationColumn.virus_orientation, alignment.orientation().asByte());
-                    row.set(IntegrationColumn.align_cigar, alignment.cigar().toString());
-                    row.set(IntegrationColumn.aligned_length, alignment.alignedLength());
-                    row.set(IntegrationColumn.aligner_score, alignment.alignerScore());
-                    row.set(IntegrationColumn.aligned_edit_distance, alignment.alignedEditDistance());
+                    row.set(IntegrationColumn.virusName, genome.virus().name());
+                    row.set(IntegrationColumn.virusGroup, genome.virusGroup().name());
+                    row.set(IntegrationColumn.virusContig, genome.contigName());
+                    row.set(IntegrationColumn.virusPosition, alignment.position());
+                    row.set(IntegrationColumn.virusOrientation, alignment.orientation().asByte());
+                    row.set(IntegrationColumn.alignCigar, alignment.cigar().toString());
+                    row.set(IntegrationColumn.alignedLength, alignment.alignedLength());
+                    row.set(IntegrationColumn.alignerScore, alignment.alignerScore());
+                    row.set(IntegrationColumn.alignedEditDistance, alignment.alignedEditDistance());
                 });
     }
 
     private enum IntegrationColumn
     {
-        sv_type,
+        svType,
         filter,
-        start_id,
-        start_chromosome,
-        start_position,
-        start_orientation,
-        end_id,
-        end_chromosome,
-        end_position,
-        end_orientation,
-        start_tumor_variant_frags,
-        start_tumor_ref_frags,
-        start_tumor_af,
-        start_normal_variant_frags,
-        start_normal_ref_frags,
-        end_tumor_variant_frags,
-        end_tumor_ref_frags,
-        end_tumor_af,
-        end_normal_variant_frags,
-        end_normal_ref_frags,
-        line_site,
-        repeat_class,
-        repeat_type,
-        repeat_coverage,
-        insert_host_alignments,
-        insert_seq_length,
-        insert_sequence,
-        virus_name,
-        virus_group,
-        virus_contig,
-        virus_position,
-        virus_orientation,
-        align_cigar,
-        aligned_length,
-        aligner_score,
-        aligned_edit_distance
+        startId,
+        startChromosome,
+        startPosition,
+        startOrientation,
+        endId,
+        endChromosome,
+        endPosition,
+        endOrientation,
+        startTumorVariantFrags,
+        startTumorRefFrags,
+        startTumorAf,
+        startNormalVariantFrags,
+        startNormalRefFrags,
+        endTumorVariantFrags,
+        endTumorRefFrags,
+        endTumorAf,
+        endNormalVariantFrags,
+        endNormalRefFrags,
+        lineSite,
+        repeatClass,
+        repeatType,
+        repeatCoverage,
+        insertHostAlignments,
+        insertSeqLength,
+        insertSequence,
+        virusName,
+        virusGroup,
+        virusContig,
+        virusPosition,
+        virusOrientation,
+        alignCigar,
+        alignedLength,
+        alignerScore,
+        alignedEditDistance
     }
 
     public static void writeRunManifest(String file, ViridianConfig config)
     {
-        List<String> columns = List.of(CFG_CANDIDATE_READ_SOURCE, CFG_EXTRA_VIRUS_DECOY_CONTIGS, CFG_KMER_FILTER);
         DelimFileWriter.write(
-                file, columns, List.of(config), (runConfig, row) ->
+                file, ManifestColumn.values(), List.of(config), (runConfig, row) ->
                 {
-                    row.set(CFG_CANDIDATE_READ_SOURCE, runConfig.candidateReadSource().name());
+                    row.set(ManifestColumn.candidateReadSource, runConfig.candidateReadSource().name());
                     row.set(
-                            CFG_EXTRA_VIRUS_DECOY_CONTIGS,
+                            ManifestColumn.extraVirusDecoyContigs,
                             String.join(ITEM_DELIM, runConfig.extraVirusDecoyContigs().stream().sorted().toList()));
-                    row.set(CFG_KMER_FILTER, runConfig.kmerFilterEnabled());
+                    row.set(ManifestColumn.kmerFilter, runConfig.kmerFilterEnabled());
                 });
+    }
+
+    private enum ManifestColumn
+    {
+        candidateReadSource,
+        extraVirusDecoyContigs,
+        kmerFilter
     }
 }

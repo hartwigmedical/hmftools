@@ -1,7 +1,8 @@
 # Viridian
 
 Viridian detects the presence of oncology-related viruses in samples from whole genome sequencing data.
-The application functions by identifying reads with viral sequences and identifying integrations of the virus genome into the human genome (via structural variants).
+The application functions by identifying reads with viral sequences and identifying integrations of the virus genome into the human genome (
+via structural variants).
 Viridian runs downstream of ESVEE, Purple and BamMetrics.
 
 Viridian was initially designed to be a replacement for the VirusBreakend [[1]](#references) and Virus Interpreter [[2]](#references) tools.
@@ -62,7 +63,8 @@ Viridian uses a curated set of virus genomes on which its virus calling methodol
 The viruses are only those related to oncology, such as HPV, HBV, EBV, MCV, etc.
 Viruses not curated in Viridian's reference cannot be detected by the application.
 
-Viruses are grouped in a manner most useful for oncology, rather than focusing on the taxonomic classification, which allows simpler implementation.  
+Viruses are grouped in a manner most useful for oncology, rather than focusing on the taxonomic classification, which allows simpler
+implementation.  
 Viridian structures viruses like so:
 
 - "Virus group". Group of viruses at the main granularity significant for reporting, e.g. HPV. Viridian calls at most one virus per group.
@@ -76,14 +78,16 @@ Viridian calls at most one virus per virus group, via selection of the virus gen
 At a high level, Viridian calls viruses from two sources of information, reflecting the ways in which viruses may be present in cells:
 
 1. Reads with virus genome sequence. Virus DNA is ambiently present in cells.
-2. Virus genome integration into the host genome. The virus genome sequence (or part of) has inserted itself, or been accidentally joined into, the host genome.
+2. Virus genome integration into the host genome. The virus genome sequence (or part of) has inserted itself, or been accidentally joined
+   into, the host genome.
 
 Both may be significant to understanding the biology of the tumor, depending on the type of virus.
 
 ### Read Profiling
 
 Detection of viruses from sequences of reads from the tumor BAM.
-The goal is to select one virus genome per virus group - the "representative genome" - which best represents the virus sequence in the sample reads.
+The goal is to select one virus genome per virus group - the "representative genome" - which best represents the virus sequence in the
+sample reads.
 Reads are aligned against the representative genome to produce depth and coverage data used for reporting.
 
 #### 1. Read extraction
@@ -93,9 +97,12 @@ Viridian scans the BAM for a subset of candidate viral reads which _may_ be attr
 Types of fragments/reads which may be viral:
 
 - Fully unmapped. The read and its paired mate are unaligned. Probably not human genome, could be virus genome.
-- Half-mapped. One read of the pair is unmapped and its mate is aligned to the host genome. This could be a fragment spanning a virus genome integration site.
-- Clipped (min 30b), if there is no supplementary alignment to a human contig. This could be a fragment spanning a virus genome integration site.
-- Virus decoy contig. Some reference genomes have contigs which purposely contain virus genomes. E.g. GRCh38 with `chrEBV` contig. These are known virus sequence.
+- Half-mapped. One read of the pair is unmapped and its mate is aligned to the host genome. This could be a fragment spanning a virus genome
+  integration site.
+- Clipped (min 30b), if there is no supplementary alignment to a human contig. This could be a fragment spanning a virus genome integration
+  site.
+- Virus decoy contig. Some reference genomes have contigs which purposely contain virus genomes. E.g. GRCh38 with `chrEBV` contig. These are
+  known virus sequence.
 
 Virus decoy contigs of these genome assemblies have built-in support: GRCh38, GDC GRCh38.d1.vd1, GRCh37 hs37d5, GATK b37.
 Other contigs may be specified with the `extra_virus_decoy_contigs` parameter.
@@ -109,24 +116,30 @@ In addition, these types of fragments/reads are excluded:
 `candidate_read_source` parameter selects which subset of read types are considered, mostly for performance reasons:
 
 - `ALL`: All the read types listed above. Slow on a large BAM.
-- `FULLY_UNMAPPED_AND_DECOY`: Reads which are fully unmapped and reads aligned to virus decoy contigs. These types can be extracted without scanning the entire tumor BAM, which is much faster.
+- `FULLY_UNMAPPED_AND_DECOY`: Reads which are fully unmapped and reads aligned to virus decoy contigs. These types can be extracted without
+  scanning the entire tumor BAM, which is much faster.
 
 `FULLY_UNMAPPED_AND_DECOY` is the recommended configuration because it allows efficient read extraction which avoids reading the entire BAM.
-The theoretical downside is missing the integration site fragments; however, we have not observed this to be problematic during our validation.
+The theoretical downside is missing the integration site fragments; however, we have not observed this to be problematic during our
+validation.
 
 #### 2. Read filtering
 
-If the `kmer_filter` argument is provided, Viridian filters the candidate viral reads extracted from the tumor BAM, before virus genome alignment, purely as a performance improvement.
+If the `kmer_filter` argument is provided, Viridian filters the candidate viral reads extracted from the tumor BAM, before virus genome
+alignment, purely as a performance improvement.
 The filter efficiently passes only reads which share a 19-mer exact match with any virus genome, using a bloom filter.
 
-The performance benefit of the k-mer filter may differ between samples, depending on how many reads are identified as candidates but not actually containing viral sequence.
+The performance benefit of the k-mer filter may differ between samples, depending on how many reads are identified as candidates but not
+actually containing viral sequence.
 
 #### 3. Read alignment
 
-Candidate viral reads are aligned to virus genomes using BWA-MEM [[3]](#references), with mostly default parameters and a minimum aligner score of 30.
+Candidate viral reads are aligned to virus genomes using BWA-MEM [[3]](#references), with mostly default parameters and a minimum aligner
+score of 30.
 
 BWA-MEM runs in `-a` mode, which produces all possible alignments for each sequence.
-Multiple alignment allows intelligent selection of a single genome which best represents the sample virus overall (described in the next section).
+Multiple alignment allows intelligent selection of a single genome which best represents the sample virus overall (described in the next
+section).
 
 Alignments which clip over the ends of the virus genome are discarded to reduce bias from linearisation origin selection.
 Virus genomes are usually circular, but must be linearised to represent in FASTA.
@@ -135,24 +148,30 @@ The simplest fix to make the alignment data more comparable is to drop the affec
 
 #### 4. Representative genome selection
 
-Within each virus group, each read "votes" for virus genomes depending on the alignment quality, and then the most voted genome is selected as the "representative genome".
+Within each virus group, each read "votes" for virus genomes depending on the alignment quality, and then the most voted genome is selected
+as the "representative genome".
 
-Each read gives a total of one vote, which is split between virus genomes according to the edit distance of the read sequence from the genome.
+Each read gives a total of one vote, which is split between virus genomes according to the edit distance of the read sequence from the
+genome.
 As edit distance increases, the vote to that genome decreases (distributed to the other aligned genomes).
 Each extra base different multiplies the genome's weight by 1/4.
 Example: if a read aligned to two genomes, one perfectly and one with a mismatch, then the votes would be 0.8 and 0.2.
 
-This voting methodology is important because genomes of the same virus group are often highly similar (upwards of 95%), such that choosing the best genome in isolation per-read may understate the virus group's overall support.
+This voting methodology is important because genomes of the same virus group are often highly similar (upwards of 95%), such that choosing
+the best genome in isolation per-read may understate the virus group's overall support.
 The effects of genome selection and sequencing errors would be amplified.
 With voting, the genome with the highest overall similarity is more likely to be chosen.
 
 Note that tools like VirusBreakend try to construct a consensus virus genome, which Viridian intentionally does not do.
-Validation demonstrated that the Viridian read voting approach maintains high reporting concordance with VirusBreakend while reducing conceptual complexity and improving performance.
+Validation demonstrated that the Viridian read voting approach maintains high reporting concordance with VirusBreakend while reducing
+conceptual complexity and improving performance.
 
 #### 5. Read assignment
 
-Each read is assigned to the single representative genome it aligns to best, across all virus groups, so each read supports at most one virus.
-The representative genome's depth and coverage are then measured from its assigned reads only, and this data flows to the virus reporting logic.
+Each read is assigned to the single representative genome it aligns to best, across all virus groups, so each read supports at most one
+virus.
+The representative genome's depth and coverage are then measured from its assigned reads only, and this data flows to the virus reporting
+logic.
 
 ### Integration Calling
 
@@ -161,23 +180,26 @@ Viridian ingests insertion-like structural variants from ESVEE and aligns them t
 Candidate variants are all those with insert sequence >= 30b, which captures novel insertions unattributed to the human genome.
 In practice, most viral integrations are SGL variants, since ESVEE is not able to resolve the viral part of the sequence.
 
-Reuse of ESVEE variants demonstrated high overall reporting concordance with VirusBreakend, while reducing integration calls revealed to be tenuous by ESVEE's methodology.
+Reuse of ESVEE variants demonstrated high overall reporting concordance with VirusBreakend, while reducing integration calls revealed to be
+tenuous by ESVEE's methodology.
 
 Variant insert sequences are aligned to the virus genomes with BWA-MEM.
 Default parameters and a minimum aligner score of 30 are used.
 If an alignment is found, the variant is considered a viral integration.
 
-Currently, there are no other filters on the alignment quality because the possible characteristics of the integrations are largely unknown, and no filter showed value during validation.
+Currently, there are no other filters on the alignment quality because the possible characteristics of the integrations are largely unknown,
+and no filter showed value during validation.
 
 ### Reporting
 
-As the final step, Viridian gathers each virus detected via read profiling or integrations, and marks them as "reported" or "not reported" (i.e. likely to be significant for this tumor).
+As the final step, Viridian gathers each virus detected via read profiling or integrations, and marks them as "reported" or "not reported" (
+i.e. likely to be significant for this tumor).
 
 To be reported, the virus group must:
 
 - Be a reportable virus (see below), AND
-  - Have at least 1 viral integration, OR
-  - Be clonal, at least 0.5 copies per tumor cell
+    - Have at least 1 viral integration, OR
+    - Be clonal, at least 0.5 copies per tumor cell
 
 Reportable viruses are currently: HPV, HBV, EBV, HHV-8, MCV.
 
@@ -189,11 +211,13 @@ copiesPerTumorCell = virusMeanDepth / expectedViralDepthPerCopy
 clonal = copiesPerTumorCell >= 0.5
 ```
 
-If the Purple QC status is `FAIL_NO_TUMOR` or `FAIL_CONTAMINATION`, the clonality is not calculated and the virus can only be reported from viral integrations.
-The success or failure of the clonality calculation is noted in the reporting output file `clonality_status` field.
+If the Purple QC status is `FAIL_NO_TUMOR` or `FAIL_CONTAMINATION`, the clonality is not calculated and the virus can only be reported from
+viral integrations.
+The success or failure of the clonality calculation is noted in the reporting output file `clonalityStatus` field.
 
 In the reporting output, the virus displayed is the consensus of the read profiling and integration calling.
-If the two paths indicate different viruses in the virus group, this is noted in the reporting output file `qcStatus` field with the value `AMBIGUOUS_VIRUS`.
+If the two paths indicate different viruses in the virus group, this is noted in the reporting output file `qcStatus` field with the value
+`AMBIGUOUS_VIRUS`.
 
 ## Output
 
@@ -207,18 +231,18 @@ Main output:
 
 `report.tsv` file fields:
 
-| Field                  | Type    | Description                                                                                     |
-|------------------------|---------|-------------------------------------------------------------------------------------------------|
-| name                   | String  | Human readable name of the called virus.                                                        |
-| qcStatus               | String  | `NO_ABNORMALITIES` / `AMBIGUOUS_VIRUS`                                                          |
-| integrations           | Integer | Count of viral integrations.                                                                    |
-| interpretation         | String  | Reporting type used by hmftools downstream.                                                     |
-| percentageCovered      | Number  | Proportion of representative virus genome bases aligned in reads, 0-1.                          |
-| meanCoverage           | Number  | Average depth of representative virus genome.                                                   |
-| reported               | Boolean | True if significant virus presence.                                                             |
-| clonality_status       | String  | `CLONAL` / `NOT_CLONAL` / `NOT_PROFILED` / `PURPLE_FAIL_NO_TUMOR` / `PURPLE_FAIL_CONTAMINATION` |
-| copies_per_tumor_cell  | Number  | Average number of copies of the representative virus genome in each tumor cell.                 |
-| virus_group            | String  | The virus group of this call.                                                                   |
+| Field              | Type    | Description                                                                                     |
+|--------------------|---------|-------------------------------------------------------------------------------------------------|
+| name               | String  | Human readable name of the called virus.                                                        |
+| qcStatus           | String  | `NO_ABNORMALITIES` / `AMBIGUOUS_VIRUS`                                                          |
+| integrations       | Integer | Count of viral integrations.                                                                    |
+| interpretation     | String  | Reporting type used by hmftools downstream.                                                     |
+| percentageCovered  | Number  | Proportion of representative virus genome bases aligned in reads, 0-1.                          |
+| meanCoverage       | Number  | Average depth of representative virus genome.                                                   |
+| reported           | Boolean | True if significant virus presence.                                                             |
+| clonalityStatus    | String  | `CLONAL` / `NOT_CLONAL` / `NOT_PROFILED` / `PURPLE_FAIL_NO_TUMOR` / `PURPLE_FAIL_CONTAMINATION` |
+| copiesPerTumorCell | Number  | Average number of copies of the representative virus genome in each tumor cell.                 |
+| virusGroup         | String  | The virus group of this call.                                                                   |
 
 Informational/visualisation/debugging outputs:
 
@@ -237,13 +261,15 @@ Informational/visualisation/debugging outputs:
 - Alignments clipping over the endpoints of the virus genome are excluded, reducing support statistics.
 - Alignments to virus genomes are not filtered on alignment score, MAPQ, or anything like that.
 - Viral integrations on contigs which are not primary chromosomes are not detected since they are intentionally not called by ESVEE.
-- Viral integrations with two fragments support where the second fragment soft clip is too short, will not be called, despite evidence that the fragment sequence is viral.
+- Viral integrations with two fragments support where the second fragment soft clip is too short, will not be called, despite evidence that
+  the fragment sequence is viral.
 - Structural variants are not filtered on ESVEE VCF filter (perhaps important for variants marked `PON`).
 - Observed possibility that if multiple viral integrations occur at the same location, ESVEE may only call one.
 - Observed possibility that sometimes ESVEE doesn't call a viral integration junction supported by only two fragments.
 - REDUX doesn't mark duplicate fragments where the mates align to different homologous regions in `chrEBV`.
 - Purple QC failure means viruses cannot be reported from clonality alone, even if the virus genome depth is high in absolute numbers.
-- Since read profiling and integration calling are done separately, a read participating in an integration sort of counts twice. It's assumed that the proportion of integration reads is not high enough to affect reporting outcome.
+- Since read profiling and integration calling are done separately, a read participating in an integration sort of counts twice. It's
+  assumed that the proportion of integration reads is not high enough to affect reporting outcome.
 
 ## References
 
