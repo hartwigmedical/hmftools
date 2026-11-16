@@ -105,7 +105,7 @@ public class IsofoxConfig
     private static final String FILTER_READS_FILE = "filter_reads_file";
 
     public final String SampleId;
-    public final String TumorId; // required for neoepitope reading
+    public final String DnaTumorId; // required for neoepitope reading
 
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
@@ -233,7 +233,7 @@ public class IsofoxConfig
         }
 
         NeoDir = configBuilder.getValue(NEO_DIR_CFG);
-        TumorId = configBuilder.getValue(TUMOR);
+        DnaTumorId = configBuilder.getValue(TUMOR);
         PanelTpmNormFile = configBuilder.getValue(PANEL_TPM_NORM_FILE);
 
         ApplyFragmentLengthAdjust = ExpCountsFile != null;
@@ -353,7 +353,7 @@ public class IsofoxConfig
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
         NeoDir = null;
-        TumorId = null;
+        DnaTumorId = null;
         PanelTpmNormFile = null;
 
         WriteTypes = Lists.newArrayList();
@@ -401,7 +401,7 @@ public class IsofoxConfig
         configBuilder.addPath(EXP_COUNTS_FILE, false, "File with generated expected expression rates per transcript");
         configBuilder.addPath(EXP_GC_RATIOS_FILE, false, "File with generated expected GC ratios per transcript");
         configBuilder.addPath(NEO_DIR_CFG, false, NEO_DIR_DESC);
-        configBuilder.addConfigItem(TUMOR, TUMOR_DESC);
+        configBuilder.addConfigItem(TUMOR, "DNA tumor sample ID, used to read neoepitope file for annotation");
         configBuilder.addPath(PANEL_TPM_NORM_FILE, false, "Panel TPM normalisation file");
         configBuilder.addInteger(READ_LENGTH, "Sample sequencing read length, if 0 then is inferred from reads", 0);
         configBuilder.addInteger(SINGLE_MAP_QUAL, "Map quality for reads mapped to a single location", DEFAULT_SINGLE_MAP_QUALITY);
