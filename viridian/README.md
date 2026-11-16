@@ -1,8 +1,8 @@
 # Viridian
 
 Viridian detects the presence of oncology-related viruses in samples from whole genome sequencing data.
-The application functions by identifying reads with viral sequences and identifying integrations of the virus genome into the human genome (
-via structural variants).
+The application functions by identifying reads with viral sequences and identifying integrations of the virus genome into the human
+genome (via structural variants).
 Viridian runs downstream of ESVEE, Purple and BamMetrics.
 
 Viridian was initially designed to be a replacement for the VirusBreakend [[1]](#references) and Virus Interpreter [[2]](#references) tools.
@@ -192,8 +192,8 @@ and no filter showed value during validation.
 
 ### Reporting
 
-As the final step, Viridian gathers each virus detected via read profiling or integrations, and marks them as "reported" or "not reported" (
-i.e. likely to be significant for this tumor).
+As the final step, Viridian gathers each virus detected via read profiling or integrations, and marks them as "reported" or "not reported"
+(i.e. likely to be significant for this tumor).
 
 To be reported, the virus group must:
 
