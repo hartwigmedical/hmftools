@@ -139,6 +139,7 @@ public record PipelineToolDirectories(
             "bamtools/*",
             "bamtools/*",
             "vchord",  // not yet implemented in this version
+            "viridian",
             "virusbreakend",
             "virusinterpreter",
             "qsee");
