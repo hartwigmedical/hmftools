@@ -75,7 +75,7 @@ public class VirusReporter
         GenomeStats stats = profile != null ? profile.representativeStats() : null;
         return new VirusReport(
                 virus.name(), virus.group().name(), qcStatus, info.reportingType(), integrations,
-                stats != null ? 100 * stats.coverageFraction() : 0, stats != null ? stats.depth().mean() : 0,
+                stats != null ? stats.coverageFraction() : 0, stats != null ? stats.depth().mean() : 0,
                 clonality.copiesPerTumorCell(), clonality.status(), isReported);
     }
 

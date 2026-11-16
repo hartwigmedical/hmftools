@@ -18,10 +18,10 @@ public class VirusReportFileTest
         List<VirusReport> reports = List.of(
                 new VirusReport(
                         "Human gammaherpesvirus 8", "Human gammaherpesvirus 8", ReportQcStatus.AMBIGUOUS_VIRUS, VirusType.HHV8,
-                        2, 91.614, 19.8877, 2.6517, ClonalityStatus.CLONAL, true),
+                        2, 0.9161, 19.8877, 2.6517, ClonalityStatus.CLONAL, true),
                 new VirusReport(
                         "JC polyomavirus", "JC polyomavirus", ReportQcStatus.NO_ABNORMALITIES, null,
-                        0, 83.5478, 14.9107, null, ClonalityStatus.PURPLE_FAIL_NO_TUMOR, false));
+                        0, 0.8355, 14.9107, null, ClonalityStatus.PURPLE_FAIL_NO_TUMOR, false));
 
         File file = File.createTempFile("virus_report", ".tsv");
         file.deleteOnExit();

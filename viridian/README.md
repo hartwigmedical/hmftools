@@ -213,7 +213,7 @@ Main output:
 | qcStatus               | String  | `NO_ABNORMALITIES` / `AMBIGUOUS_VIRUS`                                                          |
 | integrations           | Integer | Count of viral integrations.                                                                    |
 | interpretation         | String  | Reporting type used by hmftools downstream.                                                     |
-| percentageCovered      | Number  | Percentage of representative virus genome bases aligned in reads, 0-100.                        |
+| percentageCovered      | Number  | Proportion of representative virus genome bases aligned in reads, 0-1.                          |
 | meanCoverage           | Number  | Average depth of representative virus genome.                                                   |
 | reported               | Boolean | True if significant virus presence.                                                             |
 | clonality_status       | String  | `CLONAL` / `NOT_CLONAL` / `NOT_PROFILED` / `PURPLE_FAIL_NO_TUMOR` / `PURPLE_FAIL_CONTAMINATION` |
