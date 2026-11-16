@@ -13,22 +13,22 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 public class CohortFeaturesWriter
 {
     // Feature matrix is written transposed: rows as features, columns as samples
 
-    private final QseePrepConfig mConfig;
+    private final QseeConfig mConfig;
     private final SampleType mSampleType;
     private String mOutputFile;
     private BufferedWriter mWriter;
 
-    public CohortFeaturesWriter(QseePrepConfig config, SampleType sampleType)
+    public CohortFeaturesWriter(QseeConfig config, SampleType sampleType)
     {
         mConfig = config;
         mSampleType = sampleType;

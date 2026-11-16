@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.plot.QseePlot;
 import com.hartwig.hmftools.qsee.plot.QseePlotConfig;
 import com.hartwig.hmftools.qsee.prep.QseePrep;
-import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 public class QseeApplication
 {
@@ -19,7 +18,7 @@ public class QseeApplication
 
     public void run()
     {
-        QseePrepConfig prepConfig = new QseePrepConfig(mConfig);
+        QseeConfig prepConfig = new QseeConfig(mConfig);
         QseePrep qseePrep = new QseePrep(prepConfig);
         qseePrep.run();
 
@@ -30,7 +29,7 @@ public class QseeApplication
 
     public static void main(String[] args){
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        QseePrepConfig.registerConfig(configBuilder);
+        QseeConfig.registerConfig(configBuilder);
         QseePlotConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 

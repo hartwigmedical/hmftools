@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.NumberFormat;
-import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.VisSampleData;
 
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +32,7 @@ public class QcStatusFile
         return QseeFileCommon.generateFilename(basePath, sampleId, "status", outputId, "tsv.gz");
     }
 
-    public static String generateFilename(QseePrepConfig config)
+    public static String generateFilename(QseeConfig config)
     {
         String sampleId = config.isSinglePatient() ?
                 config.getSampleIds(SampleType.TUMOR).get(0) :

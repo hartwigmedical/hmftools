@@ -8,19 +8,23 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeaturePrep;
+import com.hartwig.hmftools.qsee.feature.SampleFeatures;
+import com.hartwig.hmftools.qsee.plot.VisDataFile;
 import com.hartwig.hmftools.qsee.status.QcStatusFile;
 
 import org.jetbrains.annotations.Nullable;
 
 public class QseePrep
 {
-    private final QseePrepConfig mConfig;
+    private final QseeConfig mConfig;
 
-    public QseePrep(QseePrepConfig config)
+    public QseePrep(QseeConfig config)
     {
         mConfig = config;
     }
@@ -95,10 +99,10 @@ public class QseePrep
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        QseePrepConfig.registerConfig(configBuilder);
+        QseeConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        QseePrepConfig config = new QseePrepConfig(configBuilder);
+        QseeConfig config = new QseeConfig(configBuilder);
         new QseePrep(config).run();
     }
 }
