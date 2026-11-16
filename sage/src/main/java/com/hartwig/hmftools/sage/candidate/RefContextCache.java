@@ -19,7 +19,6 @@ import com.hartwig.hmftools.sage.select.PanelSelector;
 
 public class RefContextCache
 {
-    private final SageConfig mConfig;
     private final EvictingArray mEvictingArray;
     private final PanelSelector mPanelSelector;
     private final List<ReadContextCandidate> mSavedCandidates;
@@ -27,7 +26,6 @@ public class RefContextCache
 
     public RefContextCache(final SageConfig config, final List<SimpleVariant> hotspots, final List<BaseRegion> panel)
     {
-        mConfig = config;
         mPanelSelector = new PanelSelector(panel);
         mSavedCandidates = Lists.newArrayList();
 

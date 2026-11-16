@@ -25,7 +25,8 @@ public class RegionBlock extends BaseRegion
 
     private int mDepth;
 
-    public RegionBlock(final int posStart, final int posEnd, final ReadPanelStatus panelStatus, final Set<Integer> hotspotPositions,
+    public RegionBlock(
+            final int posStart, final int posEnd, final ReadPanelStatus panelStatus, final Set<Integer> hotspotPositions,
             final boolean applyEventPenalty, final int depthLimit)
     {
         super(posStart, posEnd);
@@ -45,9 +46,8 @@ public class RegionBlock extends BaseRegion
     public boolean isHotspot(int position) { return mHotspotPositions.contains(position); }
     public boolean coversHotspot(int readStart, int readEnd)
     {
-        return mHotspotPositions.stream().anyMatch(x -> positionWithin(x, readStart, readEnd)); }
-
-    public Set<Integer> hotspotPositions() { return mHotspotPositions; }
+        return mHotspotPositions.stream().anyMatch(x -> positionWithin(x, readStart, readEnd));
+    }
 
     public boolean applyEventPenalty() { return mApplyEventPenalty; }
 
