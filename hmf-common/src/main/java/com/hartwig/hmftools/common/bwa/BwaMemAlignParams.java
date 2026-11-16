@@ -47,7 +47,7 @@ public record BwaMemAlignParams(
             throw new IllegalArgumentException("Invalid seedLengthMin");
         }
 
-        if(seed3MaxOccurrence <= 0 || memMaxOccurrence <= 0 || memReseedFactor <= 0 || chainOverlapFactor <= 0 || bandWidth <= 0
+        if(seed3MaxOccurrence <= 0 || memMaxOccurrence <= 0 || memReseedFactor <= 0 || chainOverlapFactor < 0 || bandWidth <= 0
                 || zDropoff <= 0 || minAlignScore < 0)
         {
             throw new IllegalArgumentException("Invalid parameters");

@@ -73,6 +73,9 @@ public class ViridianConstants
     // Minimum alignment score for reads aligning to virus genomes.
     public static final int VIRAL_READ_MIN_ALIGN_SCORE = 30;
 
+    // Above 0, BWA-MEM drops weak secondary alignments, which is undesirable because we want all possible alignments to virus genomes.
+    public static final float VIRAL_READ_CHAIN_OVERLAP_FACTOR = 0;
+
     // Candidate reads submitted to BWA per alignment call (bounds memory usage).
     public static final int VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
 
@@ -128,6 +131,10 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(VIRAL_READ_MIN_ALIGN_SCORE >= 19))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_READ_CHAIN_OVERLAP_FACTOR >= 0.0 && VIRAL_READ_CHAIN_OVERLAP_FACTOR < 1.0))
         {
             throw new IllegalStateException();
         }
