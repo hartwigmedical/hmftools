@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.emit;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
@@ -18,7 +18,13 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
-import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
+import com.hartwig.hmftools.tars.liftback.AlignmentKey;
+import com.hartwig.hmftools.tars.liftback.ExcludedRegions;
+import com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer;
+import com.hartwig.hmftools.tars.liftback.LiftBackStats;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -234,7 +240,7 @@ public final class BamRecordEmitter
         return !result.hasPlacement() || exceedsMappingCap(record, result);
     }
 
-    static boolean exceedsMappingCap(final SAMRecord record, final LiftedRecord result)
+    public static boolean exceedsMappingCap(final SAMRecord record, final LiftedRecord result)
     {
         return record.getMappingQuality() == 0 && result.numXaAlts() == 0 && result.hasPlacement()
                 && !result.primaryAlignment().FromTxContig;

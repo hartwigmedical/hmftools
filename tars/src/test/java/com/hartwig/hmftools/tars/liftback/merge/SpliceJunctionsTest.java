@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback.merge;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
@@ -10,7 +10,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
-import com.hartwig.hmftools.tars.liftback.features.SpliceJunctions.Tier;
+import com.hartwig.hmftools.tars.liftback.merge.SpliceJunctions.Tier;
 
 import org.junit.Test;
 

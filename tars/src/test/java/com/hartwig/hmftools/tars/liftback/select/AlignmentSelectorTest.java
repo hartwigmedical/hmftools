@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.select;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
@@ -17,6 +17,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
 
 import org.junit.Test;
 

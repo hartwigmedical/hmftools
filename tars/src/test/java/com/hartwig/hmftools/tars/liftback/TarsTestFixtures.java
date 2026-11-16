@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.tars.common.ContigEntry;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;

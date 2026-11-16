@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
 import htsjdk.samtools.SAMRecord;
 
 // Built per record on one worker thread, so the lazily filled reverse complement needs no synchronisation.
-final class ReadBases
+public final class ReadBases
 {
     private final byte[] mForward;
     private final boolean mRecordForward;
@@ -19,7 +18,7 @@ final class ReadBases
     }
 
     // null when the record carries no sequence, which leaves nothing to score or gate against
-    static ReadBases of(final SAMRecord record)
+    public static ReadBases of(final SAMRecord record)
     {
         byte[] forward = record.getReadBases();
         if(forward == null || forward.length == 0)
@@ -30,7 +29,7 @@ final class ReadBases
         return new ReadBases(forward, !record.getReadNegativeStrandFlag());
     }
 
-    byte[] forAlignment(final LiftedAlignment alignment)
+    public byte[] forAlignment(final LiftedAlignment alignment)
     {
         if(alignment.ForwardStrand == mRecordForward)
         {

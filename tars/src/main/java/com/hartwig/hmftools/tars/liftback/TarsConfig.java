@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
 
 public class TarsConfig
 {

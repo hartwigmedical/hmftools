@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.mergeAdjacentSameOp;
 
@@ -8,8 +8,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
-import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
-import com.hartwig.hmftools.tars.liftback.LiftedRecord;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

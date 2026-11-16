@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.select;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
@@ -21,7 +21,13 @@ import java.util.Set;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.tars.common.ContigEntry;
-import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.AlignmentKey;
+import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.translate.AlignmentLifter;
+import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -35,23 +41,23 @@ public final class AlignmentSelector
 
     private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
 
-    AlignmentSelector(final List<ContigEntry> entries)
+    public AlignmentSelector(final List<ContigEntry> entries)
     {
         this(entries, null);
     }
 
-    AlignmentSelector(final List<ContigEntry> entries, final EnsemblAnnotationIndex annotationIndex)
+    public AlignmentSelector(final List<ContigEntry> entries, final EnsemblAnnotationIndex annotationIndex)
     {
         mAlignmentLifter = new AlignmentLifter(entries);
         mEnsemblAnnotationIndex = annotationIndex;
     }
 
-    ContigTranslator contigTranslator()
+    public ContigTranslator contigTranslator()
     {
         return mAlignmentLifter.translator();
     }
 
-    LiftedRecord resolve(final SAMRecord record)
+    public LiftedRecord resolve(final SAMRecord record)
     {
         return resolve(record, null, null);
     }
@@ -76,19 +82,19 @@ public final class AlignmentSelector
         return selectPrimaryAlignment(record, alignments.liftedAlignments(), mate);
     }
 
-    LiftedRecord liftPrimaryAlignments(final SAMRecord record, final OverhangGate overhangGate)
+    public LiftedRecord liftPrimaryAlignments(final SAMRecord record, final OverhangGate overhangGate)
     {
         return mAlignmentLifter.liftPrimary(record, overhangGate);
     }
 
-    LiftedRecord selectPrimaryAlignment(
+    public LiftedRecord selectPrimaryAlignment(
             final SAMRecord record, final List<LiftedAlignment> allAlignments, final LiftedRecord mate)
     {
         Selection selection = choosePrimaryAlignment(record, allAlignments, mate);
         return selectPrimaryAlignment(record, allAlignments, selection);
     }
 
-    Selection choosePrimaryAlignment(
+    public Selection choosePrimaryAlignment(
             final SAMRecord record, final List<LiftedAlignment> allAlignments, final LiftedRecord mate)
     {
         boolean hasMergeableSupplementary = hasMergeableSupplementary(allAlignments);
@@ -97,7 +103,7 @@ public final class AlignmentSelector
                 record.getMappingQuality() != 0 && !hasMergeableSupplementary, mate);
     }
 
-    PairSelection chooseMatePair(
+    public PairSelection chooseMatePair(
             final SAMRecord first, final List<LiftedAlignment> firstAlignments,
             final SAMRecord second, final List<LiftedAlignment> secondAlignments)
     {
@@ -111,7 +117,7 @@ public final class AlignmentSelector
                 readSeed(first.getReadName()));
     }
 
-    LiftedRecord selectPrimaryAlignment(
+    public LiftedRecord selectPrimaryAlignment(
             final SAMRecord record, final List<LiftedAlignment> allAlignments, final Selection selection)
     {
         int inputMapQuality = record.getMappingQuality();
@@ -241,7 +247,7 @@ public final class AlignmentSelector
         return alignedBases;
     }
 
-    static boolean usesGenomicScore(final List<LiftedAlignment> alignments, final int inputMapQuality)
+    public static boolean usesGenomicScore(final List<LiftedAlignment> alignments, final int inputMapQuality)
     {
         return !isConcordant(alignments) && (inputMapQuality == 0 || hasMergeableSupplementary(alignments));
     }
@@ -267,12 +273,12 @@ public final class AlignmentSelector
         return existing + ";" + note;
     }
 
-    LiftedRecord liftSupplementaryAlignment(final SAMRecord record, final OverhangGate overhangGate)
+    public LiftedRecord liftSupplementaryAlignment(final SAMRecord record, final OverhangGate overhangGate)
     {
         return mAlignmentLifter.liftSupplementary(record, overhangGate);
     }
 
-    static LiftedRecord finaliseSupplementary(final LiftedRecord alignment)
+    public static LiftedRecord finaliseSupplementary(final LiftedRecord alignment)
     {
         if(alignment.hasPlacement() && alignment.updatedMapQuality() == 0 && alignment.xaTag() == null)
         {
@@ -378,11 +384,11 @@ public final class AlignmentSelector
         return hasRef && hasTx && loci.size() == 1 && distinctCigars.size() == 1;
     }
 
-    record Selection(int alignmentIndex, LiftedAlignment alignment, String reason)
+    public record Selection(int alignmentIndex, LiftedAlignment alignment, String reason)
     {
     }
 
-    record PairSelection(Selection first, Selection second)
+    public record PairSelection(Selection first, Selection second)
     {
     }
 
@@ -581,7 +587,7 @@ public final class AlignmentSelector
         }
     }
 
-    static List<RecordAlignment> selectSupplementaryAlignments(
+    public static List<RecordAlignment> selectSupplementaryAlignments(
             final String primaryChromosome, final boolean primaryForwardStrand,
             final int primaryStart, final String primaryCigar, final byte[] readBases,
             final List<RecordAlignment> supplementaries)

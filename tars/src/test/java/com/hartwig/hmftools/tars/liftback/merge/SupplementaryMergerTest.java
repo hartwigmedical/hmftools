@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback.merge;
 
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 
@@ -16,14 +16,14 @@ import java.util.Set;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
-import com.hartwig.hmftools.tars.liftback.AlignmentSelector.RecordAlignment;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.Placement;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.Result;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.Placement;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.RejectReason;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.Result;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector.RecordAlignment;
 
 import org.junit.Test;
 

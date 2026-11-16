@@ -31,7 +31,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.RejectReason;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import org.junit.Rule;
 import org.junit.Test;

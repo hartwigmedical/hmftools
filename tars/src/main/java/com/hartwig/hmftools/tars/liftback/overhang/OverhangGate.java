@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback.overhang;
 
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.common.BwaScoring.maxScoringPrefix;
@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.ReadBases;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

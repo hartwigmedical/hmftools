@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.emit;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STR
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import htsjdk.samtools.SAMRecord;
 

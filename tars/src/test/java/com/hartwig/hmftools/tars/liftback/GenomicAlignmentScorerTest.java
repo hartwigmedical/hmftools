@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.tars.common.BwaScoring;
-import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;

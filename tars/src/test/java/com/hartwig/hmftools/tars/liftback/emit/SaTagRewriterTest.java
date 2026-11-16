@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.emit;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
@@ -12,6 +12,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+
+import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.translate;
 
 import java.util.ArrayList;
 import java.util.List;

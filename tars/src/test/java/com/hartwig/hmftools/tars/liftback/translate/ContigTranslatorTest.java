@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.translate;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -16,6 +16,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
 import org.junit.Test;
 

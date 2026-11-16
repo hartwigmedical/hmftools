@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.RejectReason;
 
 // The three deliberate unmapping routes are normal outcomes, kept apart from LiftFailed which alone signals a
 // sidecar/FASTA mismatch.

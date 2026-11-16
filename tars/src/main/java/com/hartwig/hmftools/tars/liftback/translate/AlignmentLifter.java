@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.translate;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
@@ -10,25 +10,28 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.tars.common.ContigEntry;
-import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.AlignmentKey;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
 
 import htsjdk.samtools.SAMRecord;
 
-final class AlignmentLifter
+public final class AlignmentLifter
 {
     private final ContigTranslator mTranslator;
 
-    AlignmentLifter(final List<ContigEntry> entries)
+    public AlignmentLifter(final List<ContigEntry> entries)
     {
         mTranslator = new ContigTranslator(entries);
     }
 
-    ContigTranslator translator()
+    public ContigTranslator translator()
     {
         return mTranslator;
     }
 
-    LiftedRecord liftPrimary(final SAMRecord record, final OverhangGate overhangGate)
+    public LiftedRecord liftPrimary(final SAMRecord record, final OverhangGate overhangGate)
     {
         if(record.getReadUnmappedFlag())
         {
@@ -51,7 +54,7 @@ final class AlignmentLifter
         return new LiftedRecord(record.getMappingQuality(), 0, "", 0, alignments);
     }
 
-    LiftedRecord liftSupplementary(final SAMRecord record, final OverhangGate overhangGate)
+    public LiftedRecord liftSupplementary(final SAMRecord record, final OverhangGate overhangGate)
     {
         LiftedAlignment self = liftSelf(record);
         if(self == null)

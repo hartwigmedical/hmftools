@@ -4,10 +4,10 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
-import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 // A factory rather than a plain holder because htsjdk's indexed FASTA reader is not thread-safe: each worker gets its
 // own ref genome handle and its own copy of everything holding one.

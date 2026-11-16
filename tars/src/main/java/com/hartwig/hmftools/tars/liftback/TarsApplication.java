@@ -28,7 +28,8 @@ import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.RejectReason;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;

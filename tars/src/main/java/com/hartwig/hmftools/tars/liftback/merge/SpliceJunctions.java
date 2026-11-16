@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback.merge;
 
 import static com.hartwig.hmftools.tars.common.BwaScoring.refWindow;
 

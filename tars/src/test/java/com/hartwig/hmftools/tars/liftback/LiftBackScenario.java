@@ -19,9 +19,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
-import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import htsjdk.samtools.SAMRecord;
 

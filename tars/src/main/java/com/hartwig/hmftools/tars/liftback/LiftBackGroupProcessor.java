@@ -13,9 +13,12 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
-import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.emit.BamRecordEmitter;
+import com.hartwig.hmftools.tars.liftback.emit.LiftedMatePair;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryAlignmentResolver;
+import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import htsjdk.samtools.SAMRecord;
 

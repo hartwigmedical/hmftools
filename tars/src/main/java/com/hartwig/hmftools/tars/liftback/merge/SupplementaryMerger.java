@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.features;
+package com.hartwig.hmftools.tars.liftback.merge;
 
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
@@ -13,10 +13,10 @@ import java.util.Set;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.liftback.AlignmentSelector;
-import com.hartwig.hmftools.tars.liftback.AlignmentSelector.RecordAlignment;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector.RecordAlignment;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

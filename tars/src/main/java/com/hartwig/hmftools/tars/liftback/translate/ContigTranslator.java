@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.translate;
 
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampLeadingReferenceToSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampTrailingReferenceToSoftClip;
@@ -18,6 +18,8 @@ import java.util.Set;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.liftback.AlignmentKey;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;

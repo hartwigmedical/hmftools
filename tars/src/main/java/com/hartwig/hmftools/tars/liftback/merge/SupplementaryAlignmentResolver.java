@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback;
+package com.hartwig.hmftools.tars.liftback.merge;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -6,19 +6,23 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.AlignmentKey;
+import com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer;
+import com.hartwig.hmftools.tars.liftback.LiftBackStats;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import htsjdk.samtools.SAMRecord;
 
 // Owns Step 2 from lifted supplementary placements through merge candidates and final supplementary records.
-final class SupplementaryAlignmentResolver
+public final class SupplementaryAlignmentResolver
 {
     private final SupplementaryMerger mMerger;
     private final GenomicAlignmentScorer mAlignmentScorer;
     private final LiftBackStats mStats;
 
-    SupplementaryAlignmentResolver(
+    public SupplementaryAlignmentResolver(
             final SupplementaryMerger merger, final GenomicAlignmentScorer alignmentScorer,
             final LiftBackStats stats)
     {
@@ -27,12 +31,12 @@ final class SupplementaryAlignmentResolver
         mStats = stats;
     }
 
-    boolean enabled()
+    public boolean enabled()
     {
         return mMerger != null;
     }
 
-    LiftedRecord addSupportedAlignments(
+    public LiftedRecord addSupportedAlignments(
             final List<SAMRecord> records, final LiftedRecord primaryAlignments,
             final List<LiftedRecord> liftedRecords, final List<ChrBaseRegion> mateHintIntrons)
     {
@@ -94,7 +98,7 @@ final class SupplementaryAlignmentResolver
         return primaryAlignments.withLiftedAlignments(List.copyOf(expanded));
     }
 
-    Resolution finish(
+    public Resolution finish(
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
             final LiftedRecord primaryResult)
     {
@@ -278,10 +282,10 @@ final class SupplementaryAlignmentResolver
                 && primaryResult.primaryAlignment().hasSupplementaryMerge();
     }
 
-    record Resolution(
+    public record Resolution(
             List<LiftedRecord> liftedRecords, Set<Integer> absorbedSupplementaries)
     {
-        Resolution
+        public Resolution
         {
             liftedRecords = List.copyOf(liftedRecords);
             absorbedSupplementaries = Set.copyOf(absorbedSupplementaries);
