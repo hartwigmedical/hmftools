@@ -82,7 +82,7 @@ public final class BamRecordEmitter
                 }
             }
 
-            applyResultToRecord(record, result, matePair, unmapDecided);
+            applyResultToRecord(record, result, matePair);
             if(record.getReadUnmappedFlag() && record.getSupplementaryAlignmentFlag())
             {
                 willEmit[i] = false;
@@ -179,21 +179,14 @@ public final class BamRecordEmitter
         consumer.accept(record);
     }
 
-    static void applyResultToRecord(
-            final SAMRecord record, final LiftedRecord result, final LiftedMatePair matePair, final boolean unmapDecided)
+    static void applyResultToRecord(final SAMRecord record, final LiftedRecord result, final LiftedMatePair matePair)
     {
         if(!result.hasPlacement())
         {
-            if(record.getReadUnmappedFlag())
+            if(!record.getReadUnmappedFlag())
             {
-                return;
+                matePair.unmapRead(record);
             }
-            if(unmapDecided)
-            {
-                markPrimaryUnmapped(record, matePair);
-                return;
-            }
-            matePair.unmapRead(record);
             return;
         }
 
@@ -234,11 +227,6 @@ public final class BamRecordEmitter
         {
             record.setAttribute(XS_ATTRIBUTE, result.transcriptStrand() > 0 ? Character.valueOf('+') : Character.valueOf('-'));
         }
-    }
-
-    static void markPrimaryUnmapped(final SAMRecord record, final LiftedMatePair matePair)
-    {
-        matePair.unmapRead(record);
     }
 
     static boolean willBeUnmapped(final SAMRecord record, final LiftedRecord result)

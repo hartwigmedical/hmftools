@@ -33,7 +33,7 @@ public class BamRecordEmitterTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertLifted(record, CHR_1, 150, "50M100N50M");
         assertNull(record.getStringAttribute(XA_TAG));
@@ -45,7 +45,7 @@ public class BamRecordEmitterTest
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertTrue(record.getReadUnmappedFlag());
         assertEquals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME, record.getReferenceName());
@@ -62,7 +62,7 @@ public class BamRecordEmitterTest
         record.setAttribute(XA_TAG, TX_CONTIG + ",+1,50M,0;");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertEquals(CHR_1, record.getReferenceName());
         assertEquals(1000, record.getAlignmentStart());
@@ -77,7 +77,7 @@ public class BamRecordEmitterTest
         record.setReadUnmappedFlag(true);
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertTrue(record.getReadUnmappedFlag());
     }
@@ -122,7 +122,7 @@ public class BamRecordEmitterTest
         record.setAttribute("MC", "50M");
         record.setMappingQuality(60);
 
-        BamRecordEmitter.markPrimaryUnmapped(record, new LiftedMatePair());
+        new LiftedMatePair().unmapRead(record);
 
         assertTrue(record.getReadUnmappedFlag());
         assertTrue("REDUX preserves the alignment strand flag", record.getReadNegativeStrandFlag());
@@ -143,7 +143,7 @@ public class BamRecordEmitterTest
         SAMRecord record = newRecord(TX_CONTIG, 200, "50M");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertLifted(record, CHR_1, 399, "1M100N49M");
     }
@@ -155,7 +155,7 @@ public class BamRecordEmitterTest
         record.setAttribute(XA_TAG, CHR_1 + ",+150,50M50S,0;");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertLifted(record, CHR_1, 150, "50M100N50M");
         assertNull(record.getStringAttribute(XA_TAG));
@@ -167,7 +167,7 @@ public class BamRecordEmitterTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertTrue("expected N in lifted cigar", record.getCigarString().contains("N"));
         assertEquals(Character.valueOf('+'), record.getAttribute("XS"));
@@ -179,7 +179,7 @@ public class BamRecordEmitterTest
         SAMRecord record = newRecord(CHR_1, 1000, "100M");
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertFalse("expected no N in lifted cigar", record.getCigarString().contains("N"));
         assertNull(record.getAttribute("XS"));
@@ -206,7 +206,7 @@ public class BamRecordEmitterTest
                 .build();
         assertFalse("precondition: swap flips strand to forward", result.negativeStrand());
 
-        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair());
 
         assertFalse(record.getReadNegativeStrandFlag());
         assertLifted(record, CHR_1, 150, "50M100N50M");
@@ -223,7 +223,7 @@ public class BamRecordEmitterTest
         record.setReadBases(("A".repeat(99) + "C").getBytes());
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertFalse(record.getReadNegativeStrandFlag());
         assertEquals("A".repeat(99) + "C", record.getReadString());
@@ -238,7 +238,7 @@ public class BamRecordEmitterTest
         alignment.GenomicScore = 42;
         LiftedRecord result = TarsTestFixtures.recordBuilder().alignments(List.of(alignment)).build();
 
-        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair());
 
         assertEquals(Integer.valueOf(42), record.getIntegerAttribute("AS"));
     }
@@ -251,7 +251,7 @@ public class BamRecordEmitterTest
         LiftedAlignment alignment = new LiftedAlignment(CHR_1, 100, "45M5S", 0, false, true, 0);
         LiftedRecord result = TarsTestFixtures.recordBuilder().alignments(List.of(alignment)).build();
 
-        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair());
 
         assertNull(record.getAttribute("AS"));
     }
@@ -263,7 +263,7 @@ public class BamRecordEmitterTest
         record.setAttribute("AS", 100);
         AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair());
 
         assertEquals(Integer.valueOf(100), record.getIntegerAttribute("AS"));
     }
