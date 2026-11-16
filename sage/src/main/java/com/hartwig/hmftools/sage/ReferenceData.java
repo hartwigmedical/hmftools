@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInv
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptAminoAcidData;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
@@ -207,7 +208,7 @@ public class ReferenceData
         if(mConfig.Hotspots.isEmpty())
             return;
 
-        ListMultimap<Chromosome,SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotVcf(mConfig.Hotspots);
+        ListMultimap<Chromosome,SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotFile(mConfig.Hotspots);
 
         for(SimpleVariant variant : hotspotMap.values())
         {
