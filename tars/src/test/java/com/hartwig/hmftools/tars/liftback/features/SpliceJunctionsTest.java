@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -76,10 +76,5 @@ public class SpliceJunctionsTest
                 ContigEntry.annotationOnly(
                         "g", "gn", "tn", CHR_1, -1,
                         List.of(new BaseRegion(100, 199), new BaseRegion(300, 399)))));
-    }
-
-    private static byte[] bases(final String bases)
-    {
-        return bases.getBytes(StandardCharsets.US_ASCII);
     }
 }

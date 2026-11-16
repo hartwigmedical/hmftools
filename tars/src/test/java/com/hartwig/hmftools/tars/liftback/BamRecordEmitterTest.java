@@ -194,7 +194,9 @@ public class BamRecordEmitterTest
         record.setReadBases(("A".repeat(99) + "C").getBytes());
         byte[] quals = new byte[100];
         for(int i = 0; i < 100; ++i)
+        {
             quals[i] = (byte) (i % 40);
+        }
         record.setBaseQualities(quals.clone());
         record.setAttribute(XA_TAG, TX_CONTIG + ",+51,100M,0;");
 

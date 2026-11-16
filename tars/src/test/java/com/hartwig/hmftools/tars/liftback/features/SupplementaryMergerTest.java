@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.repeatedBase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -15,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;

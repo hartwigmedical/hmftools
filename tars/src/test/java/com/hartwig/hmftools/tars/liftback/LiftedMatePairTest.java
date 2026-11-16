@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.liftedRecordAt;
-
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
@@ -12,7 +13,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
@@ -35,7 +35,7 @@ public class ContigTranslatorTest
     @Test
     public void testReadEntirelyInFirstExon()
     {
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigar("50M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigarFromStr("50M"));
 
         assertNotNull(result);
         assertEquals(CHR_1, result.chromosome());
@@ -47,7 +47,7 @@ public class ContigTranslatorTest
     @Test
     public void testReadEntirelyInLastExon()
     {
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 201, cigar("30M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 201, cigarFromStr("30M"));
 
         assertNotNull(result);
         assertEquals(500, result.genomicStart());
@@ -59,7 +59,7 @@ public class ContigTranslatorTest
     public void testReadCrossingOneJunction()
     {
         // contig 51..150 spans the exon1/exon2 boundary: 50 bp of exon1 from chr1 150, then intron1 as 100N, then 50 bp of exon2.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 51, cigar("100M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 51, cigarFromStr("100M"));
 
         assertNotNull(result);
         assertEquals(150, result.genomicStart());
@@ -72,7 +72,7 @@ public class ContigTranslatorTest
     public void testReadCrossingTwoJunctions()
     {
         // contig 91..220 spans both boundaries: 10 bp of exon1 from chr1 190, intron1 100N, all of exon2, intron2 100N, 20 bp of exon3.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 91, cigar("130M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 91, cigarFromStr("130M"));
 
         assertNotNull(result);
         assertEquals(190, result.genomicStart());
@@ -85,7 +85,7 @@ public class ContigTranslatorTest
     @Test
     public void testReadWithInsertion()
     {
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigar("30M5I20M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigarFromStr("30M5I20M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -96,7 +96,7 @@ public class ContigTranslatorTest
     @Test
     public void testReadWithDeletion()
     {
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigar("30M5D20M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigarFromStr("30M5D20M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -108,7 +108,7 @@ public class ContigTranslatorTest
     public void testReadExactlyFillingFirstExon()
     {
         // guards against a spurious trailing N
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigar("100M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 1, cigarFromStr("100M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -120,7 +120,7 @@ public class ContigTranslatorTest
     public void testReadExtendingPastLastSpanIsClampedToTrailingSoftClip()
     {
         // only 20 bp remain to contigEnd(250), so the 30 bp overhang past the last span becomes a trailing soft-clip.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 231, cigar("50M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 231, cigarFromStr("50M"));
 
         assertNotNull(result);
         assertEquals(530, result.genomicStart());
@@ -130,14 +130,14 @@ public class ContigTranslatorTest
     @Test
     public void testContigPosBeyondContigLengthReturnsNull()
     {
-        assertNull(ContigTranslator.translate(threeExonContig(), 251, cigar("10M")));
+        assertNull(ContigTranslator.translate(threeExonContig(), 251, cigarFromStr("10M")));
     }
 
     @Test
     public void testLeadingOverhangClampedToSoftClip()
     {
         // pos 0 is one base before contigStart.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 0, cigar("10M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 0, cigarFromStr("10M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -148,7 +148,7 @@ public class ContigTranslatorTest
     public void testLeadingOverhangExceedsLeadingMReturnsNull()
     {
         // 6 bases before contigStart with only 4M leading, so the overhang cannot be absorbed into a soft-clip.
-        assertNull(ContigTranslator.translate(threeExonContig(), -5, cigar("4M10S")));
+        assertNull(ContigTranslator.translate(threeExonContig(), -5, cigarFromStr("4M10S")));
     }
 
     @Test
@@ -156,7 +156,7 @@ public class ContigTranslatorTest
     {
         // 11 bases before contigStart with only 7M leading: the 4D supplies the remaining 4 reference bases, so the
         // clamp still lands on contigStart. Seen on real data as 7M4D144M.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -10, cigar("7M4D80M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -10, cigarFromStr("7M4D80M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -168,7 +168,7 @@ public class ContigTranslatorTest
     {
         // 8 bases before contigStart, led by 6M1I: the insertion adds read bases but no reference, so 2 more come from
         // the next M and all three elements fold into the clip. Seen on real data as 6M1I144M.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -7, cigar("6M1I80M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -7, cigarFromStr("6M1I80M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -180,7 +180,7 @@ public class ContigTranslatorTest
     {
         // read ends 5 bases past contigEnd(250) with only 4M trailing; the preceding 1D supplies the fifth. Seen on
         // real data as 147M1D4M.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 211, cigar("40M1D4M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 211, cigarFromStr("40M1D4M"));
 
         assertNotNull(result);
         assertEquals(510, result.genomicStart());
@@ -192,13 +192,13 @@ public class ContigTranslatorTest
     {
         // the overhang is absorbed exactly by 3M, leaving a deletion at the clip boundary. Dropping it would start the
         // alignment past contigStart, so the lift is declined rather than misplaced.
-        assertNull(ContigTranslator.translate(threeExonContig(), -2, cigar("3M1D80M")));
+        assertNull(ContigTranslator.translate(threeExonContig(), -2, cigarFromStr("3M1D80M")));
     }
 
     @Test
     public void testReadAtLastBaseOfContig()
     {
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 250, cigar("1M"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 250, cigarFromStr("1M"));
 
         assertNotNull(result);
         assertEquals(549, result.genomicStart());
@@ -209,7 +209,7 @@ public class ContigTranslatorTest
     public void testReadWithLeadingAndTrailingSoftClips()
     {
         // a leading soft-clip does not shift the genomic start; both clips survive the lift.
-        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 51, cigar("10S100M10S"));
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 51, cigarFromStr("10S100M10S"));
 
         assertNotNull(result);
         assertEquals(150, result.genomicStart());
@@ -220,13 +220,13 @@ public class ContigTranslatorTest
     public void testDeletionCrossingBoundaryLeftIntact()
     {
         // translate() emits a deletion abutting the junction intact after the N; absorbing it is mergeDeletionsIntoSplice's job.
-        ContigTranslateResult small = ContigTranslator.translate(threeExonContig(), 91, cigar("10M5D5M"));
+        ContigTranslateResult small = ContigTranslator.translate(threeExonContig(), 91, cigarFromStr("10M5D5M"));
         assertNotNull(small);
         assertEquals(190, small.genomicStart());
         assertEquals("10M100N5D5M", small.genomicCigar().toString());
         assertEquals(1, small.impliedIntrons().size());
 
-        ContigTranslateResult large = ContigTranslator.translate(threeExonContig(), 91, cigar("10M10D5M"));
+        ContigTranslateResult large = ContigTranslator.translate(threeExonContig(), 91, cigarFromStr("10M10D5M"));
         assertEquals("10M100N10D5M", large.genomicCigar().toString());
     }
 
@@ -239,12 +239,12 @@ public class ContigTranslatorTest
                 List.of(new BaseRegion(100, 149), new BaseRegion(200, 249)));
 
         // fills exon1 exactly: no spurious trailing N
-        ContigTranslateResult result = ContigTranslator.translate(twoExon, 1, cigar("50M"));
+        ContigTranslateResult result = ContigTranslator.translate(twoExon, 1, cigarFromStr("50M"));
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
         assertEquals("50M", result.genomicCigar().toString());
 
-        result = ContigTranslator.translate(twoExon, 50, cigar("51M"));
+        result = ContigTranslator.translate(twoExon, 50, cigarFromStr("51M"));
         assertNotNull(result);
         assertEquals(149, result.genomicStart());
         assertEquals("1M50N50M", result.genomicCigar().toString());
@@ -274,7 +274,7 @@ public class ContigTranslatorTest
                 "ensG_X_T", 1, 100, "G", "X", "T", CHR_1, 1,
                 List.of(new BaseRegion(100, 149), new BaseRegion(150, 199)));
 
-        ContigTranslateResult result = ContigTranslator.translate(contiguous, 1, cigar("100M"));
+        ContigTranslateResult result = ContigTranslator.translate(contiguous, 1, cigarFromStr("100M"));
 
         assertNotNull(result);
         assertEquals(100, result.genomicStart());
@@ -287,7 +287,7 @@ public class ContigTranslatorTest
     public void testDropZeroLengthElementsAndMergeFlankingIntrons()
     {
         // a 0-length interior element (a 0M for a zero-span exon between two introns) is dropped, then the flanking introns merge
-        List<CigarElement> elements = cigar("72M102N0M2538N79M").getCigarElements();
+        List<CigarElement> elements = cigarFromStr("72M102N0M2538N79M").getCigarElements();
         Cigar result = new Cigar(TarsCigarUtils.normalize(elements));
         assertEquals("72M2640N79M", result.toString());
     }
@@ -342,11 +342,7 @@ public class ContigTranslatorTest
 
     private static String mergeDeletions(final String cigarString)
     {
-        return new Cigar(ContigTranslator.mergeDeletionsIntoSplice(cigar(cigarString).getCigarElements())).toString();
+        return new Cigar(ContigTranslator.mergeDeletionsIntoSplice(cigarFromStr(cigarString).getCigarElements())).toString();
     }
 
-    private static Cigar cigar(final String cigarString)
-    {
-        return CigarUtils.cigarFromStr(cigarString);
-    }
 }

@@ -7,7 +7,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -78,11 +77,11 @@ public class EnsemblAnnotationIndexTest
     @Test
     public void testContainsJunctionByValue()
     {
-        EnsemblAnnotationIndex annotationIndex = junctionIndex(intron(CHR_1, 200, 299));
+        EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions(Set.of(new ChrBaseRegion(CHR_1, 200, 299)));
 
-        assertTrue(annotationIndex.containsJunction(intron(CHR_1, 200, 299)));
-        assertFalse(annotationIndex.containsJunction(intron(CHR_1, 200, 300)));
-        assertFalse(annotationIndex.containsJunction(intron(CHR_2, 200, 299)));
+        assertTrue(annotationIndex.containsJunction(new ChrBaseRegion(CHR_1, 200, 299)));
+        assertFalse(annotationIndex.containsJunction(new ChrBaseRegion(CHR_1, 200, 300)));
+        assertFalse(annotationIndex.containsJunction(new ChrBaseRegion(CHR_2, 200, 299)));
     }
 
     @Test
@@ -91,7 +90,7 @@ public class EnsemblAnnotationIndexTest
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions((Set<ChrBaseRegion>) null);
 
         assertEquals(0, annotationIndex.junctionCount());
-        assertFalse(annotationIndex.containsJunction(intron(CHR_1, 200, 299)));
+        assertFalse(annotationIndex.containsJunction(new ChrBaseRegion(CHR_1, 200, 299)));
     }
 
     @Test
@@ -153,20 +152,12 @@ public class EnsemblAnnotationIndexTest
     {
         List<BaseRegion> spans = new ArrayList<>();
         for(int[] span : exonSpans)
+        {
             spans.add(new BaseRegion(span[0], span[1]));
+        }
 
         ContigEntry entry = ContigEntry.annotationOnly("gene", "GENE", "trans", V38.versionedChromosome(chromosome), 1, spans);
         return EnsemblAnnotationIndex.fromContigEntries(List.of(entry));
-    }
-
-    private static EnsemblAnnotationIndex junctionIndex(final ChrBaseRegion... introns)
-    {
-        return EnsemblAnnotationIndex.fromJunctions(new HashSet<>(List.of(introns)));
-    }
-
-    private static ChrBaseRegion intron(final String chromosome, final int start, final int end)
-    {
-        return new ChrBaseRegion(chromosome, start, end);
     }
 
     private static ContigEntry entry(final String chromosome, final int[]... exons)

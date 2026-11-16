@@ -92,7 +92,9 @@ public class ShardedChunkProducerTest
 
         assertFalse(ranges.isEmpty());
         for(ShardRange range : ranges)
+        {
             assertFalse("EOF used as a shard start", range.startVptr() == ShardedChunkProducer.EOF);
+        }
 
         List<SAMRecord> actual = new ArrayList<>();
         for(ShardRange range : ranges)
@@ -100,7 +102,9 @@ public class ShardedChunkProducerTest
             try(ShardRecordIterator iterator = new ShardRecordIterator(bam, header, range))
             {
                 while(iterator.hasNext())
+                {
                     actual.add(iterator.next());
+                }
             }
         }
 
@@ -116,11 +120,6 @@ public class ShardedChunkProducerTest
         List<ShardRange> ranges = ShardedChunkProducer.computeSplits(bam, header, 1);
         assertEquals(1, ranges.size());
         assertTrue(ranges.get(0).endVptr() == ShardedChunkProducer.EOF);
-    }
-
-    private static SAMRecord read(final String name)
-    {
-        return unpairedRecord(name);
     }
 
     private static List<List<SAMRecord>> chunk(final List<SAMRecord> records, final int targetReads) throws InterruptedException
@@ -147,9 +146,9 @@ public class ShardedChunkProducerTest
         List<SAMRecord> records = new ArrayList<>();
         for(int fragment = 0; fragment < 5; ++fragment)
         {
-            records.add(read("frag" + fragment));
-            records.add(read("frag" + fragment));
-            records.add(read("frag" + fragment));
+            records.add(unpairedRecord("frag" + fragment));
+            records.add(unpairedRecord("frag" + fragment));
+            records.add(unpairedRecord("frag" + fragment));
         }
 
         List<List<SAMRecord>> chunks = chunk(records, 2);
@@ -161,7 +160,7 @@ public class ShardedChunkProducerTest
     @Test
     public void testEmitsSingleChunkUnderTarget() throws InterruptedException
     {
-        List<SAMRecord> records = List.of(read("a"), read("a"), read("b"));
+        List<SAMRecord> records = List.of(unpairedRecord("a"), unpairedRecord("a"), unpairedRecord("b"));
         List<List<SAMRecord>> chunks = chunk(records, 5000);
         assertEquals(1, chunks.size());
         assertEquals(3, chunks.get(0).size());
@@ -173,9 +172,9 @@ public class ShardedChunkProducerTest
         List<SAMRecord> records = new ArrayList<>();
         for(int i = 0; i < 10; ++i)
         {
-            records.add(read("big"));
+            records.add(unpairedRecord("big"));
         }
-        records.add(read("next"));
+        records.add(unpairedRecord("next"));
 
         List<List<SAMRecord>> chunks = chunk(records, 3);
         assertWholeFragments(chunks);
@@ -370,7 +369,7 @@ public class ShardedChunkProducerTest
     @Test
     public void testReadCounterIncludesTheFinalPartialChunk() throws Exception
     {
-        List<SAMRecord> records = List.of(read("a"), read("a"), read("b"));
+        List<SAMRecord> records = List.of(unpairedRecord("a"), unpairedRecord("a"), unpairedRecord("b"));
         BlockingQueue<List<SAMRecord>> queue = new LinkedBlockingQueue<>();
         LongAdder counter = new LongAdder();
         ShardedChunkProducer.streamChunks(records.iterator(), 2, queue, counter);

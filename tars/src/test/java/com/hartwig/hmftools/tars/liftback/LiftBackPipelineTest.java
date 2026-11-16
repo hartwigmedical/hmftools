@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.tars.liftback.LiftBackScenario.ReadRole.PRIMA
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.nameGroupedHeader;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.pairedRecord;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryConfig;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.writeBam;
 

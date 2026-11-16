@@ -34,11 +34,6 @@ public class AlignmentSelectorTest
         return TarsTestFixtures.mappedRecord("read", contig, pos, cigar);
     }
 
-    private static SAMRecord newUnmappedRecord()
-    {
-        return TarsTestFixtures.unmappedRecord("read");
-    }
-
     @Test
     public void testSingleEndPrimaryLifted()
     {
@@ -67,7 +62,7 @@ public class AlignmentSelectorTest
     public void testUnmapped()
     {
         AlignmentSelector selector = new AlignmentSelector(contigMap());
-        LiftedRecord result = selector.resolve(newUnmappedRecord());
+        LiftedRecord result = selector.resolve(TarsTestFixtures.unmappedRecord("read"));
 
         assertFalse(result.hasPlacement());
         assertTrue(result.liftedAlignments().isEmpty());
