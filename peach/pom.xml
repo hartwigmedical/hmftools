@@ -12,7 +12,7 @@
     <artifactId>peach</artifactId>
     <packaging>jar</packaging>
     <version>${peach.version}</version>
-    <name>HMF Tools - PEACH</name>
+    <name>HMF Tools - Peach</name>
 
     <dependencies>
         <dependency>
