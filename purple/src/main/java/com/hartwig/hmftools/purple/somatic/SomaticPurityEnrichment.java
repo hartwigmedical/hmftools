@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_BASE_ERROR_RATE;
-import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
+import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE_old;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER_I;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_THRESHOLD_PARAMETER_II;
 
@@ -98,7 +98,7 @@ public class SomaticPurityEnrichment
 
     private static double probabilityLoh(double minorAlleleCopyNumber)
     {
-        double probabilityLoh = 1 - 1 / (1 + exp(-BIALLELIC_LOH_GROWTH_RATE * (minorAlleleCopyNumber - 0.5)));
+        double probabilityLoh = 1 - 1 / (1 + exp(-BIALLELIC_LOH_GROWTH_RATE_old * (minorAlleleCopyNumber - 0.5)));
         return probabilityLoh;
     }
 
