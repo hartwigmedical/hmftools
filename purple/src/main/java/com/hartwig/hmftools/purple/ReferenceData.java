@@ -179,10 +179,10 @@ public class ReferenceData
         try
         {
             SomaticHotspots.putAll(somaticHotspotVcf.equals(Strings.EMPTY) ?
-                    ArrayListMultimap.create() : VariantHotspotFile.loadHotspotVcf(somaticHotspotVcf));
+                    ArrayListMultimap.create() : VariantHotspotFile.loadHotspotFile(somaticHotspotVcf));
 
             GermlineHotspots.putAll(germlineHotspotVcf.equals(Strings.EMPTY) ?
-                    ArrayListMultimap.create() : VariantHotspotFile.loadHotspotVcf(germlineHotspotVcf));
+                    ArrayListMultimap.create() : VariantHotspotFile.loadHotspotFile(germlineHotspotVcf));
         }
         catch(IOException e)
         {

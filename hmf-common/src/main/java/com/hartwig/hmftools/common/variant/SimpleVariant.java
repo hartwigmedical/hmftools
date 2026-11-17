@@ -7,13 +7,13 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferHeaderDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -143,15 +143,14 @@ public class SimpleVariant extends BasePosition
         return variants;
     }
 
-    public static List<SimpleVariant> loadSimpleVariants(final String filename) throws Exception
+    public static List<SimpleVariant> loadSimpleVariants(final String filename) throws IOException
     {
         List<SimpleVariant> sampleVariants = Lists.newArrayList();
 
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(filename));
-            String header = lines.get(0);
-            lines.remove(0);
+            BufferedReader reader = createBufferedReader(filename);
+            String header = reader.readLine();
 
             String delim = inferHeaderDelimiter(header);
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
@@ -161,9 +160,11 @@ public class SimpleVariant extends BasePosition
             int refIndex = fieldsIndexMap.get(FLD_REF);
             int altIndex = fieldsIndexMap.get(FLD_ALT);
 
-            for(String line : lines)
+            String line;
+
+            while((line = reader.readLine()) != null)
             {
-                String[] values = line.split(CSV_DELIM, -1);
+                String[] values = line.split(delim, -1);
 
                 String ref = values[refIndex];
                 String alt = values[altIndex];
@@ -171,10 +172,10 @@ public class SimpleVariant extends BasePosition
                 sampleVariants.add(new SimpleVariant(values[chrIndex], Integer.parseInt(values[posIndex]), ref, alt));
             }
         }
-        catch(Exception e)
+        catch(IOException e)
         {
             e.printStackTrace();
-            throw new Exception(format("failed to load variants file(%s)", filename));
+            throw new IOException(format("failed to load variants file(%s)", filename));
         }
 
         return sampleVariants;
