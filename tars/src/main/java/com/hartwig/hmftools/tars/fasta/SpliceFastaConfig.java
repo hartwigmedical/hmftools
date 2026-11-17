@@ -24,7 +24,8 @@ public record SpliceFastaConfig(
         String refGenomeFile,
         RefGenomeVersion refGenVersion,
         String outputDir,
-        @Nullable String outputId)
+        @Nullable String outputId
+)
 {
     public static SpliceFastaConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {

@@ -462,8 +462,9 @@ public class AlignmentSelectorTest
 
         for(MapQualityCase test : cases)
         {
-            assertEquals(test.name(), test.expected(), AlignmentSelector.decidePrimaryMapQuality(
-                    test.input(), test.loci(), test.hiddenTie(), test.fromTx(), test.inExon(), test.randomTie()));
+            assertEquals(
+                    test.name(), test.expected(), AlignmentSelector.decidePrimaryMapQuality(
+                            test.input(), test.loci(), test.hiddenTie(), test.fromTx(), test.inExon(), test.randomTie()));
         }
     }
 

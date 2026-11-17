@@ -88,7 +88,8 @@ public class ShardedChunkProducer extends Thread
 
             mPeakMemoryMb.accumulateAndGet(MemoryCalcs.calcMemoryUsage(), Math::max);
 
-            TARS_LOGGER.info("liftback read {} reads from {} input BAM(s), peak memory({}mb)",
+            TARS_LOGGER.info(
+                    "liftback read {} reads from {} input BAM(s), peak memory({}mb)",
                     readsCounter.sum(), mInputBams.size(), mPeakMemoryMb.get());
 
             for(int i = 0; i < mWorkerCount; ++i)

@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.RejectReason;
@@ -134,7 +134,8 @@ public class LiftBackPipelineTest
             for(int repeat = 0; repeat < 2; ++repeat)
             {
                 PipelineOutput output = runPipeline(input, ref, workers, workers, 9_000);
-                assertEquals("record contents for workers=" + workers + " repeat=" + repeat,
+                assertEquals(
+                        "record contents for workers=" + workers + " repeat=" + repeat,
                         sortedSamStrings(control.Records), sortedSamStrings(output.Records));
                 assertEquals("counters for workers=" + workers + " repeat=" + repeat, control.Counters, output.Counters);
             }
@@ -182,10 +183,12 @@ public class LiftBackPipelineTest
                 .set(CHR_1, 300, readBases.substring(50))
                 .set(CHR_1, 800, "C".repeat(50));
         File ref = mFolder.newFile("genome.fa");
-        Files.writeString(ref.toPath(), ">" + CHR_1 + "\n" + genome.asRefGenome().getBaseString(CHR_1, 1, 2_000) + "\n",
+        Files.writeString(
+                ref.toPath(), ">" + CHR_1 + "\n" + genome.asRefGenome().getBaseString(CHR_1, 1, 2_000) + "\n",
                 StandardCharsets.US_ASCII);
         FastaSequenceIndexCreator.create(ref.toPath(), true);
-        Files.writeString(mFolder.newFile("genome.dict").toPath(),
+        Files.writeString(
+                mFolder.newFile("genome.dict").toPath(),
                 "@HD\tVN:1.6\n@SQ\tSN:" + CHR_1 + "\tLN:2000\n", StandardCharsets.US_ASCII);
 
         return ref;
@@ -325,6 +328,12 @@ public class LiftBackPipelineTest
 
     private static List<String> sortedSamStrings(final List<SAMRecord> records)
     {
-        return records.stream().map(SAMRecord::getSAMString).sorted().collect(Collectors.toList());
+        List<String> samStrings = new ArrayList<>();
+        for(SAMRecord record : records)
+        {
+            samStrings.add(record.getSAMString());
+        }
+        Collections.sort(samStrings);
+        return samStrings;
     }
 }

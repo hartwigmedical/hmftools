@@ -218,20 +218,30 @@ public class SupplementaryMergerTest
     {
         SupplementaryMerger merger = defaultMerger(annotated(new ChrBaseRegion(CHR1, 1095, 1499)));
 
-        assertRejected(RejectReason.NO_TERMINAL_SOFTCLIP, merger,
-                placement(CHR1, true, READ_LEN, 1000, "151M",
+        assertRejected(
+                RejectReason.NO_TERMINAL_SOFTCLIP, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1000, "151M",
                         supp(0, CHR1, true, 2000, "90S61M", 60)));
-        assertRejected(RejectReason.DIFFERENT_CHROMOSOME, merger,
-                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+        assertRejected(
+                RejectReason.DIFFERENT_CHROMOSOME, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1001, "94M57S",
                         supp(0, CHR2, true, 1500, "90S61M", 60)));
-        assertRejected(RejectReason.OPPOSITE_STRAND, merger,
-                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+        assertRejected(
+                RejectReason.OPPOSITE_STRAND, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1001, "94M57S",
                         supp(0, CHR1, false, 1500, "90S61M", 60)));
-        assertRejected(RejectReason.INTRON_TOO_SHORT, merger,
-                placement(CHR1, true, READ_LEN, 1000, "94M57S",
+        assertRejected(
+                RejectReason.INTRON_TOO_SHORT, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1000, "94M57S",
                         supp(0, CHR1, true, 1100, "94S57M", 60)));
-        assertRejected(RejectReason.INTRON_TOO_LONG, merger,
-                placement(CHR1, true, READ_LEN, 1000, "94M57S",
+        assertRejected(
+                RejectReason.INTRON_TOO_LONG, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1000, "94M57S",
                         supp(0, CHR1, true, 2_001_095, "94S57M", 60)));
     }
 
@@ -299,28 +309,43 @@ public class SupplementaryMergerTest
                 new ChrBaseRegion(CHR1, 1095, 1199),
                 new ChrBaseRegion(CHR1, 1095, 1499)));
 
-        assertRejected(RejectReason.COMPLEX_CIGAR_SHAPE, merger,
-                placement(CHR1, true, READ_LEN, 1000, "10H94M57S",
+        assertRejected(
+                RejectReason.COMPLEX_CIGAR_SHAPE, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1000, "10H94M57S",
                         supp(0, CHR1, true, 1200, "90S61M", 60)));
-        assertRejected(RejectReason.COMPLEX_CIGAR_SHAPE, merger,
-                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+        assertRejected(
+                RejectReason.COMPLEX_CIGAR_SHAPE, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1001, "94M57S",
                         supp(0, CHR1, true, 1200, "5H90S61M", 60)));
-        assertRejected(RejectReason.COMPLEX_CIGAR_SHAPE, merger,
-                placement(CHR1, true, READ_LEN, 1000, "90M4I57S",
+        assertRejected(
+                RejectReason.COMPLEX_CIGAR_SHAPE, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1000, "90M4I57S",
                         supp(0, CHR1, true, 1200, "94S57M", 60)));
-        assertRejected(RejectReason.READ_COVERAGE_OVERLAP, merger,
-                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+        assertRejected(
+                RejectReason.READ_COVERAGE_OVERLAP, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1001, "94M57S",
                         supp(0, CHR1, true, 1500, "80S71M", 60)));
-        assertRejected(RejectReason.READ_COVERAGE_GAP, merger,
-                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+        assertRejected(
+                RejectReason.READ_COVERAGE_GAP, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1001, "94M57S",
                         supp(0, CHR1, true, 1500, "110S41M", 60)));
-        assertRejected(RejectReason.READ_COVERAGE_OVERLAP, merger,
-                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+        assertRejected(
+                RejectReason.READ_COVERAGE_OVERLAP, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1001, "94M57S",
                         supp(0, CHR1, true, 1080, "94S57M", 60)));
-        assertRejected(RejectReason.NO_MATCHING_SUPP, merger,
+        assertRejected(
+                RejectReason.NO_MATCHING_SUPP, merger,
                 placement(CHR1, true, READ_LEN, 1000, "94M57S"));
-        assertRejected(RejectReason.NO_MATCHING_SUPP, merger,
-                placement(CHR1, true, READ_LEN, 1000, "94M57S",
+        assertRejected(
+                RejectReason.NO_MATCHING_SUPP, merger,
+                placement(
+                        CHR1, true, READ_LEN, 1000, "94M57S",
                         supp(0, CHR1, true, 1200, "61M90S", 60)));
     }
 

@@ -14,10 +14,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -154,7 +154,7 @@ public class ShardedChunkProducerTest
         List<List<SAMRecord>> chunks = chunk(records, 2);
 
         assertWholeFragments(chunks);
-        assertEquals(records, chunks.stream().flatMap(List::stream).collect(Collectors.toList()));
+        assertEquals(records, flatten(chunks));
     }
 
     @Test
@@ -179,7 +179,7 @@ public class ShardedChunkProducerTest
         List<List<SAMRecord>> chunks = chunk(records, 3);
         assertWholeFragments(chunks);
         assertEquals(10, chunks.get(0).size());
-        assertEquals(records, chunks.stream().flatMap(List::stream).collect(Collectors.toList()));
+        assertEquals(records, flatten(chunks));
     }
 
     @Test(timeout = 15_000)
@@ -187,7 +187,7 @@ public class ShardedChunkProducerTest
     {
         SAMFileHeader header = header();
         File bam = writeNameGroupedBam(header, 50);
-        assertRecordCounts(records(50), produce(List.of(bam)));
+        assertEquals(samStringCounts(records(50)), samStringCounts(produce(List.of(bam))));
     }
 
     @Test(timeout = 15_000)
@@ -199,7 +199,7 @@ public class ShardedChunkProducerTest
 
         List<SAMRecord> expected = new ArrayList<>(records(50));
         expected.addAll(records(30));
-        assertRecordCounts(expected, produce(List.of(firstBam, secondBam)));
+        assertEquals(samStringCounts(expected), samStringCounts(produce(List.of(firstBam, secondBam))));
     }
 
     private List<SAMRecord> produce(final List<File> bams) throws Exception
@@ -246,7 +246,7 @@ public class ShardedChunkProducerTest
                 assertTrue(chunk.get(i + 1).getSecondOfPairFlag());
             }
         }
-        return chunks.stream().flatMap(List::stream).collect(Collectors.toList());
+        return flatten(chunks);
     }
 
     private static List<String> samStrings(final List<SAMRecord> records)
@@ -254,11 +254,24 @@ public class ShardedChunkProducerTest
         return records.stream().map(SAMRecord::getSAMString).collect(Collectors.toList());
     }
 
-    private static void assertRecordCounts(final List<SAMRecord> expected, final List<SAMRecord> actual)
+    private static Map<String, Integer> samStringCounts(final List<SAMRecord> records)
     {
-        assertEquals(
-                samStrings(expected).stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting())),
-                samStrings(actual).stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting())));
+        Map<String, Integer> counts = new HashMap<>();
+        for(SAMRecord record : records)
+        {
+            counts.merge(record.getSAMString(), 1, Integer::sum);
+        }
+        return counts;
+    }
+
+    private static List<SAMRecord> flatten(final Collection<List<SAMRecord>> chunks)
+    {
+        List<SAMRecord> records = new ArrayList<>();
+        for(List<SAMRecord> chunk : chunks)
+        {
+            records.addAll(chunk);
+        }
+        return records;
     }
 
     @Test(timeout = 15_000)
@@ -290,7 +303,7 @@ public class ShardedChunkProducerTest
             }
         }
         assertEquals(samStrings(expected), samStrings(actual));
-        assertRecordCounts(expected, produce(List.of(bam)));
+        assertEquals(samStringCounts(expected), samStringCounts(produce(List.of(bam))));
     }
 
     @Test
@@ -317,7 +330,7 @@ public class ShardedChunkProducerTest
             shards.add(records);
         }
         assertWholeFragments(shards);
-        assertEquals(samStrings(expected), samStrings(shards.stream().flatMap(List::stream).collect(Collectors.toList())));
+        assertEquals(samStrings(expected), samStrings(flatten(shards)));
     }
 
     private static List<SAMRecord> readShard(final File bam, final SAMFileHeader header, final ShardRange range)
@@ -375,6 +388,6 @@ public class ShardedChunkProducerTest
         ShardedChunkProducer.streamChunks(records.iterator(), 2, queue, counter);
 
         assertEquals(3, counter.sum());
-        assertEquals(records, queue.stream().flatMap(List::stream).collect(Collectors.toList()));
+        assertEquals(records, flatten(queue));
     }
 }

@@ -42,7 +42,8 @@ public record TarsConfig(
         String outputDir,
         @Nullable String outputId,
         String bamToolPath,
-        int threads)
+        int threads
+)
 {
     // output file id, e.g. <sample>.tars.bam (mirrors Redux's FILE_ID)
     private static final String FILE_ID = "tars";

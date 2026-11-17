@@ -108,8 +108,13 @@ public class LiftBackGroupProcessorTest
 
         // both mates lift to chr1:100, inside the excluded region
         processor.processNameGroup(
-                List.of(primaryRecord(TX_CONTIG, 1, "50M"), secondMateRecord(TX_CONTIG, 1, "50M")), record -> { });
-        processor.processNameGroup(List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record -> { });
+                List.of(primaryRecord(TX_CONTIG, 1, "50M"), secondMateRecord(TX_CONTIG, 1, "50M")), record ->
+                {
+                });
+        processor.processNameGroup(
+                List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record ->
+                {
+                });
 
         LiftBackStats stats = processor.stats();
         assertEquals(3, stats.RecordsSeen);
@@ -125,8 +130,14 @@ public class LiftBackGroupProcessorTest
     {
         LiftBackGroupProcessor first = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
         LiftBackGroupProcessor second = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
-        first.processNameGroup(List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record -> { });
-        second.processNameGroup(List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record -> { });
+        first.processNameGroup(
+                List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record ->
+                {
+                });
+        second.processNameGroup(
+                List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record ->
+                {
+                });
 
         LiftBackStats totals = new LiftBackStats();
         totals.add(first.stats());
@@ -670,7 +681,10 @@ public class LiftBackGroupProcessorTest
 
         LiftBackGroupProcessor processor = processor(
                 new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, null, null);
-        processor.processNameGroup(List.of(primary, supplementary), record -> { });
+        processor.processNameGroup(
+                List.of(primary, supplementary), record ->
+                {
+                });
 
         assertEquals(1, processor.stats().SupplementaryMergeAttempts);
         assertEquals(0, processor.stats().SupplementaryMergeSuccessfulCandidates);

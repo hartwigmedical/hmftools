@@ -78,12 +78,28 @@ public final class CigarUtils
 
     public static int cigarBaseLength(final List<CigarElement> elements)
     {
-        return elements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+        int length = 0;
+        for(CigarElement element : elements)
+        {
+            if(element.getOperator().consumesReadBases())
+            {
+                length += element.getLength();
+            }
+        }
+        return length;
     }
 
     public static int cigarAlignedLength(final List<CigarElement> elements)
     {
-        return elements.stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
+        int length = 0;
+        for(CigarElement element : elements)
+        {
+            if(element.getOperator().consumesReferenceBases())
+            {
+                length += element.getLength();
+            }
+        }
+        return length;
     }
 
     public static int calcCigarAlignedLength(final String cigarStr)

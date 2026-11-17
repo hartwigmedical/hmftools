@@ -53,7 +53,8 @@ public class GenomicAlignmentScorerTest
         SequenceUtil.reverseComplement(reverseComplement);
 
         assertEquals(50, self.GenomicScore);
-        assertEquals(BwaScoring.genomicScore(genome.asRefGenome(), CHR_1, 2000, "50M", reverseComplement),
+        assertEquals(
+                BwaScoring.genomicScore(genome.asRefGenome(), CHR_1, 2000, "50M", reverseComplement),
                 oppositeStrandAlt.GenomicScore);
         assertTrue(BwaScoring.genomicScore(genome.asRefGenome(), CHR_1, 2000, "50M", forward)
                 < oppositeStrandAlt.GenomicScore);

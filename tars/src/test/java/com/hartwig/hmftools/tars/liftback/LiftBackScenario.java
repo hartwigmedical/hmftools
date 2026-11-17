@@ -125,10 +125,12 @@ public final class LiftBackScenario
         List<SAMRecord> emitted = new ArrayList<>();
         for(List<SAMRecord> group : groupByReadName())
         {
-            processor.processNameGroup(group, record -> {
-                LiftBackWorker.sanitizeForOutput(record);
-                emitted.add(record);
-            });
+            processor.processNameGroup(
+                    group, record ->
+                    {
+                        LiftBackWorker.sanitizeForOutput(record);
+                        emitted.add(record);
+                    });
         }
         return new Result(emitted);
     }

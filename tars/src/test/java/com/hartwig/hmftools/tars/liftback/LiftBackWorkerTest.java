@@ -50,8 +50,9 @@ public class LiftBackWorkerTest
     @Test
     public void testSanitizeValidRecordUnchanged()
     {
-        SAMRecord record = mappedRecordWithSeq(new Cigar(List.of(
-                new CigarElement(10, CigarOperator.S), new CigarElement(40, CigarOperator.M))), 50);
+        SAMRecord record = mappedRecordWithSeq(
+                new Cigar(List.of(
+                        new CigarElement(10, CigarOperator.S), new CigarElement(40, CigarOperator.M))), 50);
 
         sanitizeForOutput(record);
 
