@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 
@@ -211,6 +213,16 @@ public final class BamRecordEmitter
             if(qualities != null && qualities.length > 0)
             {
                 record.setBaseQualities(reverseArray(qualities));
+            }
+            byte[] tpValues = record.getByteArrayAttribute(ULTIMA_TP_TAG);
+            if(tpValues != null)
+            {
+                record.setAttribute(ULTIMA_TP_TAG, reverseArray(tpValues));
+            }
+            String t0Values = record.getStringAttribute(ULTIMA_T0_TAG);
+            if(t0Values != null)
+            {
+                record.setAttribute(ULTIMA_T0_TAG, new StringBuilder(t0Values).reverse().toString());
             }
         }
 

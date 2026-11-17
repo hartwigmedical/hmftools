@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.tars.liftback.emit;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.assertLifted;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.mappedRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -221,6 +225,37 @@ public class BamRecordEmitterTest
         byte[] outQuals = record.getBaseQualities();
         assertEquals(quals[99], outQuals[0]);
         assertEquals(quals[0], outQuals[99]);
+    }
+
+    @Test
+    public void testStrandSwapReversesUltimaTpAndT0()
+    {
+        SAMRecord record = newRecord(CHR_1, 5000, "100M");
+        record.setReadNegativeStrandFlag(true);
+        record.setMappingQuality(0);
+        byte[] tpValues = new byte[100];
+        StringBuilder t0Values = new StringBuilder();
+        for(int i = 0; i < 100; ++i)
+        {
+            tpValues[i] = (byte) (i % 3 - 1);
+            t0Values.append((char) ('!' + i % 40));
+        }
+        record.setAttribute(ULTIMA_TP_TAG, tpValues.clone());
+        record.setAttribute(ULTIMA_T0_TAG, t0Values.toString());
+        record.setAttribute(XA_TAG, TX_CONTIG + ",+51,100M,0;");
+
+        LiftedRecord result = TarsTestFixtures.recordBuilder()
+                .alignments(List.of(
+                        new LiftedAlignment(CHR_1, 5000, "100M", 0, false, false, 0),
+                        new LiftedAlignment(CHR_1, 150, "50M100N50M", 0, true, true, 1)))
+                .primaryIndex(1)
+                .build();
+
+        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair());
+
+        assertFalse(record.getReadNegativeStrandFlag());
+        assertArrayEquals(reverseArray(tpValues), record.getByteArrayAttribute(ULTIMA_TP_TAG));
+        assertEquals(t0Values.reverse().toString(), record.getStringAttribute(ULTIMA_T0_TAG));
     }
 
     @Test
