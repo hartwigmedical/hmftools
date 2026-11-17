@@ -30,7 +30,19 @@ import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
 
-public class TarsConfig
+import org.jetbrains.annotations.Nullable;
+
+public record TarsConfig(
+        String sampleId,
+        List<String> inputBams,
+        String refGenomeFile,
+        String contigSidecarFile,
+        SupplementaryConfig supplementary,
+        @Nullable String rnaUnmapRegionsFile,
+        String outputDir,
+        @Nullable String outputId,
+        String bamToolPath,
+        int threads)
 {
     // output file id, e.g. <sample>.tars.bam (mirrors Redux's FILE_ID)
     private static final String FILE_ID = "tars";
@@ -51,56 +63,48 @@ public class TarsConfig
             "Curated excluded regions (Chromosome/PosStart/PosEnd), e.g. RNA rRNA / 7SL / multi-map zones; "
                     + "a read lifting into any region is excluded post-lift (primary unmapped, supplementaries dropped)";
 
-    public final String SampleId;
-    public final List<String> InputBams;
-    public final String RefGenomeFile;
-    public final String ContigSidecarFile;
-    public final SupplementaryConfig Supplementary;
-    public final String RnaUnmapRegionsFile;
-    public final String OutputDir;
-    public final String OutputId;
-    public final String BamToolPath;
-    public final int Threads;
-
-    public TarsConfig(final ConfigBuilder configBuilder)
+    public static TarsConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
-        SampleId = configBuilder.getValue(SAMPLE);
-        InputBams = Arrays.stream(configBuilder.getValue(INPUT_BAM).split(CONFIG_FILE_DELIM, -1))
-                .collect(Collectors.toList());
-        RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
-        Supplementary = new SupplementaryConfig(
-                configBuilder.getInteger(SUPP_IMPLIED_MIN_INTRON_LENGTH),
-                configBuilder.getInteger(SUPP_IMPLIED_MAX_INTRON_LENGTH),
-                MAX_SUPP_MERGES,
-                false,
-                MAX_SUPP_READ_OVERLAP);
-        RnaUnmapRegionsFile = configBuilder.getValue(RNA_UNMAP_REGIONS);
-        OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
-        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
-        Threads = parseThreads(configBuilder);
+        String outputDir = parseOutputDir(configBuilder);
+        String bamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
-        if(OutputDir == null || BamToolPath == null)
+        if(outputDir == null || bamToolPath == null)
         {
-            TARS_LOGGER.error("missing config: outputDir({}) bamTool({})", OutputDir != null, BamToolPath != null);
+            TARS_LOGGER.error("missing config: outputDir({}) bamTool({})", outputDir != null, bamToolPath != null);
             System.exit(1);
         }
 
-        if(!checkCreateOutputDir(OutputDir))
+        if(!checkCreateOutputDir(outputDir))
         {
-            TARS_LOGGER.error("failed to create output directory: {}", OutputDir);
+            TARS_LOGGER.error("failed to create output directory: {}", outputDir);
             System.exit(1);
         }
+
+        return new TarsConfig(
+                configBuilder.getValue(SAMPLE),
+                Arrays.stream(configBuilder.getValue(INPUT_BAM).split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList()),
+                configBuilder.getValue(REF_GENOME),
+                configBuilder.getValue(CONTIG_SIDECAR),
+                new SupplementaryConfig(
+                        configBuilder.getInteger(SUPP_IMPLIED_MIN_INTRON_LENGTH),
+                        configBuilder.getInteger(SUPP_IMPLIED_MAX_INTRON_LENGTH),
+                        MAX_SUPP_MERGES,
+                        false,
+                        MAX_SUPP_READ_OVERLAP),
+                configBuilder.getValue(RNA_UNMAP_REGIONS),
+                outputDir,
+                configBuilder.getValue(OUTPUT_ID),
+                bamToolPath,
+                parseThreads(configBuilder));
     }
 
     // common output stem; also namespaces the per-worker shard files so repeated runs into one dir don't clobber each other
     public String filePrefix()
     {
-        String prefix = OutputDir + SampleId + "." + FILE_ID;
-        if(OutputId != null)
+        String prefix = outputDir + sampleId + "." + FILE_ID;
+        if(outputId != null)
         {
-            prefix += "." + OutputId;
+            prefix += "." + outputId;
         }
         return prefix;
     }

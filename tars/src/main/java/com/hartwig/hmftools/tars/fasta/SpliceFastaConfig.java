@@ -17,39 +17,43 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-public class SpliceFastaConfig
+import org.jetbrains.annotations.Nullable;
+
+public record SpliceFastaConfig(
+        String ensemblDataDir,
+        String refGenomeFile,
+        RefGenomeVersion refGenVersion,
+        String outputDir,
+        @Nullable String outputId)
 {
-    public final String EnsemblDataDir;
-    public final String RefGenomeFile;
-    public final RefGenomeVersion RefGenVersion;
-    public final String OutputDir;
-    public final String OutputId;
-
-    public SpliceFastaConfig(final ConfigBuilder configBuilder)
+    public static SpliceFastaConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
-        EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
-        RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenVersion = configBuilder.hasValue(REF_GENOME_VERSION) ? from(configBuilder) : RefGenomeVersion.V38;
-        OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
+        String outputDir = parseOutputDir(configBuilder);
 
-        if(OutputDir == null)
+        if(outputDir == null)
         {
             TARS_LOGGER.error("missing config: outputDir");
             System.exit(1);
         }
 
-        if(!checkCreateOutputDir(OutputDir))
+        if(!checkCreateOutputDir(outputDir))
         {
-            TARS_LOGGER.error("failed to create output directory: {}", OutputDir);
+            TARS_LOGGER.error("failed to create output directory: {}", outputDir);
             System.exit(1);
         }
+
+        return new SpliceFastaConfig(
+                configBuilder.getValue(ENSEMBL_DATA_DIR),
+                configBuilder.getValue(REF_GENOME),
+                configBuilder.hasValue(REF_GENOME_VERSION) ? from(configBuilder) : RefGenomeVersion.V38,
+                outputDir,
+                configBuilder.getValue(OUTPUT_ID));
     }
 
     public String formFilename(final String fileId)
     {
-        String prefix = OutputId != null ? OutputId : "ref_genome_v" + RefGenVersion.identifier() + "_rna_contigs";
-        return OutputDir + prefix + fileId;
+        String prefix = outputId != null ? outputId : "ref_genome_v" + refGenVersion.identifier() + "_rna_contigs";
+        return outputDir + prefix + fileId;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

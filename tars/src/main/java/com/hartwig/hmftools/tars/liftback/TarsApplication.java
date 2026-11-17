@@ -47,15 +47,15 @@ public class TarsApplication
 
     public TarsApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = new TarsConfig(configBuilder);
+        mConfig = TarsConfig.fromConfigBuilder(configBuilder);
     }
 
     public void run()
     {
         long startTimeMs = System.currentTimeMillis();
 
-        List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
-        SAMFileHeader inputHeader = BamMerger.buildCombinedHeader(mConfig.InputBams, mConfig.RefGenomeFile);
+        List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.contigSidecarFile());
+        SAMFileHeader inputHeader = BamMerger.buildCombinedHeader(mConfig.inputBams(), mConfig.refGenomeFile());
 
         LiftBackResources resources = buildResources(contigEntries, inputHeader);
         SAMFileHeader outputHeader = buildOutputHeader(inputHeader);
@@ -95,7 +95,7 @@ public class TarsApplication
     private List<LiftBackWorker> runChunkStream(
             final LiftBackResources resources, final SAMFileHeader outputHeader, final List<String> shardBams)
     {
-        int workerCount = Math.max(mConfig.Threads, 1);
+        int workerCount = Math.max(mConfig.threads(), 1);
         BlockingQueue<List<SAMRecord>> chunkQueue =
                 new ArrayBlockingQueue<>(Math.max(workerCount * CHUNK_QUEUE_DEPTH_PER_THREAD, 2));
 
@@ -103,7 +103,7 @@ public class TarsApplication
         // read-name-group boundaries; a handful saturates the bounded queue, hence the low cap.
         int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
         ShardedChunkProducer producer = new ShardedChunkProducer(
-                mConfig.InputBams, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
+                mConfig.inputBams(), mConfig.refGenomeFile(), chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
 
         List<LiftBackWorker> workers = new ArrayList<>();
         List<Thread> threadTasks = new ArrayList<>();
@@ -135,15 +135,15 @@ public class TarsApplication
         validateBamAgainstSidecar(inputHeader, alignmentSelector.contigTranslator().contigNames());
 
         ExcludedRegions excludedRegions = null;
-        if(mConfig.RnaUnmapRegionsFile != null)
+        if(mConfig.rnaUnmapRegionsFile() != null)
         {
-            excludedRegions = ExcludedRegions.load(mConfig.RnaUnmapRegionsFile);
-            TARS_LOGGER.info("loaded excluded regions from {}", mConfig.RnaUnmapRegionsFile);
+            excludedRegions = ExcludedRegions.load(mConfig.rnaUnmapRegionsFile());
+            TARS_LOGGER.info("loaded excluded regions from {}", mConfig.rnaUnmapRegionsFile());
         }
 
         return new LiftBackResources(
-                alignmentSelector, annotationIndex, mConfig.RefGenomeFile,
-                mConfig.Supplementary, excludedRegions);
+                alignmentSelector, annotationIndex, mConfig.refGenomeFile(),
+                mConfig.supplementary(), excludedRegions);
     }
 
     // an alt contig missing from the sidecar cannot be lifted and would leak its _tx name into the output, so fail fast
@@ -166,7 +166,7 @@ public class TarsApplication
 
         TARS_LOGGER.error(
                 "BAM/sidecar mismatch: {} alt contig(s) in BAM @SQ are absent from sidecar {} - first few: {}",
-                missing.size(), mConfig.ContigSidecarFile,
+                missing.size(), mConfig.contigSidecarFile(),
                 missing.stream().limit(5).collect(Collectors.joining(",")));
         System.exit(1);
     }
@@ -284,18 +284,18 @@ public class TarsApplication
 
     private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
     {
-        BamToolName toolName = fromPath(mConfig.BamToolPath);
+        BamToolName toolName = fromPath(mConfig.bamToolPath());
         TARS_LOGGER.info("concatenating {} liftback shards via {}", shardBams.size(), toolName);
         // samtools cat is a plain BGZF block concat and rejects -@, so pass threads=1.
-        return BamOperations.concatenateBams(toolName, mConfig.BamToolPath, unsortedBam, shardBams, 1);
+        return BamOperations.concatenateBams(toolName, mConfig.bamToolPath(), unsortedBam, shardBams, 1);
     }
 
     private boolean sortAndIndex(final String unsortedBam, final String sortedBam)
     {
-        BamToolName toolName = fromPath(mConfig.BamToolPath);
+        BamToolName toolName = fromPath(mConfig.bamToolPath());
         TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
 
-        if(!BamOperations.sortBam(toolName, mConfig.BamToolPath, unsortedBam, sortedBam, mConfig.Threads))
+        if(!BamOperations.sortBam(toolName, mConfig.bamToolPath(), unsortedBam, sortedBam, mConfig.threads()))
         {
             return false;
         }
@@ -303,7 +303,7 @@ public class TarsApplication
         // sambamba sort indexes inline; only samtools needs the explicit index pass.
         if(toolName == BamToolName.SAMTOOLS)
         {
-            if(!BamOperations.indexBam(toolName, mConfig.BamToolPath, sortedBam, mConfig.Threads))
+            if(!BamOperations.indexBam(toolName, mConfig.bamToolPath(), sortedBam, mConfig.threads()))
             {
                 return false;
             }
