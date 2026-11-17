@@ -17,6 +17,8 @@ public record BwaMemAlignParams(
         int clipPenalty,
         // Length of exact match seed. CLI: -k
         int seedLengthMin,
+        // In the 2nd round of seeding, only seeds with at most this many occurrences are reseeded. Also known as split_width. CLI: -s
+        int seed2MaxOccurrence,
         // In the 3rd round of seeding, seeds with more than this many occurrences are dropped. Also known as max_mem_intv. CLI: -y
         int seed3MaxOccurrence,
         // CLI: -c
@@ -47,8 +49,8 @@ public record BwaMemAlignParams(
             throw new IllegalArgumentException("Invalid seedLengthMin");
         }
 
-        if(seed3MaxOccurrence <= 0 || memMaxOccurrence <= 0 || memReseedFactor <= 0 || chainOverlapFactor <= 0 || bandWidth <= 0
-                || zDropoff <= 0 || minAlignScore < 0)
+        if(seed2MaxOccurrence <= 0 || seed3MaxOccurrence <= 0 || memMaxOccurrence <= 0 || memReseedFactor <= 0
+                || chainOverlapFactor < 0 || bandWidth <= 0 || zDropoff <= 0 || minAlignScore < 0)
         {
             throw new IllegalArgumentException("Invalid parameters");
         }
@@ -58,68 +60,83 @@ public record BwaMemAlignParams(
     {
         return new BwaMemAlignParams(
                 matchReward, value, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff,
-                minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withGapOpenPenalty(int value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, value, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff,
-                minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withMinAlignScore(int value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, value);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, value);
     }
 
     public BwaMemAlignParams withSeedLengthMin(int value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                value, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+                value, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
+    }
+
+    public BwaMemAlignParams withSeed2MaxOccurrence(int value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, value, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withSeed3MaxOccurrence(int value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, value, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, value, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withMemMaxOccurrence(int value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, value, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, value, memReseedFactor, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withMemReseedFactor(float value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, value, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, value, chainOverlapFactor,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withChainOverlapFactor(float value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, value, bandWidth, zDropoff, minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, value,
+                bandWidth, zDropoff, minAlignScore);
     }
 
     public BwaMemAlignParams withBandWidth(int value)
     {
         return new BwaMemAlignParams(
                 matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, value, zDropoff, minAlignScore);
+                seedLengthMin, seed2MaxOccurrence, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor,
+                value, zDropoff, minAlignScore);
     }
 
     public static final BwaMemAlignParams DEFAULT = new BwaMemAlignParams(
             1, 4, 1, 6, 1, 5, 19,
-            20, 500, 1.5f, 0.5f, 100, 100, 30);
+            10, 20, 500, 1.5f, 0.5f, 100, 100, 30);
 }
