@@ -46,6 +46,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DES
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -333,6 +334,7 @@ public class OrangeConfig
         configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
         configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
         configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
+        configBuilder.addPath(VIRIDIAN_DIR_CFG, false, VIRIDIAN_DIR_DESC);
 
         configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
         configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);

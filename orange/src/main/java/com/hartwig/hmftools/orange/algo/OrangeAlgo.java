@@ -325,7 +325,7 @@ public class OrangeAlgo
 
             List<VirusReport> virusReports = Lists.newArrayList();
 
-            for(AnnotatedVirus annotatedVirus : virusData.reportableViruses())
+            for(AnnotatedVirus annotatedVirus : virusData.allViruses())
             {
                 VirusReport virusReport = new VirusReport(
                         annotatedVirus.name(),
@@ -333,11 +333,11 @@ public class OrangeAlgo
                         annotatedVirus.qcStatus() == NO_ABNORMALITIES ? ReportQcStatus.NO_ABNORMALITIES : ReportQcStatus.AMBIGUOUS_VIRUS,
                         annotatedVirus.interpretation(),
                         annotatedVirus.integrations(),
-                        annotatedVirus.percentageCovered(),
+                        annotatedVirus.percentageCovered() * 0.01,
                         annotatedVirus.meanCoverage(),
                         null,
                         ClonalityStatus.NOT_PROFILED,
-                        true);
+                        annotatedVirus.reported());
 
                 virusReports.add(virusReport);
             }
