@@ -58,14 +58,14 @@ public class LimitOfDetectionCalcs
         return mvlhWeightedMean;
     }
 
-    public static double calcMinTumorVafToDetectVariant(Map<DepthRange,Integer> depthCounts, double tumorPurity)
+    public static double calcMinSampleVafToDetectVariant(Map<DepthRange,Integer> depthCounts)
     {
         // Inverse of the missed variant likelihood calculation: finds the VAF that gives the target missed variant likelihood.
         // Missed variant likelihood (y) slopes monotonically downward as VAF (x) increases, so bisection can quickly find 'x' given 'y'.
 
         double minAchievableMvlh = calcMissedVariantLikelihood(depthCounts, 1);
         if(minAchievableMvlh > LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
-            return 1.0 / tumorPurity;
+            return 1.0;
 
         double lowerVaf = 0.0;
         double upperVaf = 1.0;
@@ -83,7 +83,6 @@ public class LimitOfDetectionCalcs
             midVaf = (lowerVaf + upperVaf) / 2;
         }
 
-        double sampleVafLod = midVaf;
-        return sampleVafLod / tumorPurity;
+        return midVaf;
     }
 }

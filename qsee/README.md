@@ -34,6 +34,7 @@ Qsee accepts the below pipeline files as input:
   - `.bam_metric.flag_counts.tsv`: tumor (mandatory), normal
   - `.bam_metric.frag_length.tsv`: tumor, normal
   - `.bam_metric.gene_coverage.tsv`: tumor, normal
+  - `.bam_metric.exon_coverage.tsv`: tumor, normal
 - [**COBALT**](https://github.com/hartwigmedical/hmftools/tree/master/cobalt)
   - `.cobalt.gc.median.tsv`: tumor, normal
 - [**ESVEE**](https://github.com/hartwigmedical/hmftools/tree/master/esvee)
@@ -73,6 +74,10 @@ java -jar qsee.jar \
 
 This will generate the following files:
 - `TUMOR_ID.qsee.status.tsv.gz`: QC status (PASS/WARN/FAIL) per sample and per feature with a QC threshold defined
+- `TUMOR_ID.qsee.gene_lod.tsv.gz`: Limit of detection (LoD) per exon in reportable driver genes. `TumorVafLod` is the minimum tumor VAF
+  (i.e. sample VAF / tumor purity) at which a variant is theoretically supported by >= 3 alt reads >= 99% of the time given the exon's depth
+  distribution, or `Inf` if not reachable. `DetectableClonalVariants` (assuming a diploid genome) is `HOM_AND_HET` if LoD <= 0.5,
+  `HOM_ONLY` if LoD <= 1, and `NONE` otherwise
 - `TUMOR_ID.qsee.vis.data.tsv.gz`: Visualisation raw data
 - `TUMOR_ID.qsee.vis.report.{png,pdf}`: Visualisation comparing samples to an existing cohort, and highlighting samples not meeting QC thresholds (see [**example**](#visualisation))
 

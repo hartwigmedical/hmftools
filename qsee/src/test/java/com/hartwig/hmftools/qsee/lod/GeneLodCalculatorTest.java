@@ -42,6 +42,7 @@ public class GeneLodCalculatorTest
                 { 0.5, 2, 2.0, VariantDetectabilityStatus.FAIL }, // Depth too low
                 { 0.3, 1, 0.816, VariantDetectabilityStatus.WARN_HET_UNRELIABLE },
                 { 0.3, 2, 3.333, VariantDetectabilityStatus.FAIL },
+                { 0.2, 1, 1.224, VariantDetectabilityStatus.FAIL }, // Purity adjusted VAF > 1
         };
 
         for(Object[] expectedRow : expectedRows)
