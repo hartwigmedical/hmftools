@@ -15,8 +15,10 @@ Example:
       version.
 """
 import re
+import shlex
 import subprocess
 from typing import BinaryIO
+from pathlib import Path
 
 import requests
 import sys
@@ -36,6 +38,25 @@ logger.setLevel(logging.INFO)
 
 SEMVER_REGEX = re.compile(
     r'^([a-z-]+)-v([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-(?:alpha|beta|rc)\.[0-9]+)?(?:_(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$')
+REPO_ROOT = Path(__file__).resolve().parent
+TOOL_ALIASES = {
+    'bam-tools': 'bamtools',
+    'virus-interpreter': 'virusinterpreter',
+}
+
+
+def pixi_environments(manifest_path=REPO_ROOT / 'containers' / 'pixi.toml'):
+    """Read environment names without requiring a TOML package in Cloud Build."""
+    environments = set()
+    in_environments = False
+    with open(manifest_path) as manifest:
+        for raw_line in manifest:
+            line = raw_line.split('#', 1)[0].strip()
+            if line.startswith('['):
+                in_environments = line == '[environments]'
+            elif in_environments and '=' in line:
+                environments.add(line.split('=', 1)[0].strip().strip('"\''))
+    return environments
 
 class Maven:
     def __init__(self, pom_path, name=''):
@@ -62,21 +83,41 @@ class Docker:
         self.module = module
         self.version = version
         self.is_external_release = is_external_release
+        self.is_containerized = module in pixi_environments()
         self.internal_image = f'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/{self.module}:{self.version}'
         self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
 
     def build(self):
         logger.info('Starting Docker build')
+        if not self.is_containerized:
+            with open("/workspace/docker.sh", "w") as output:
+                output.write('echo "No container configuration for this module"\n')
+            return
+
         with open("/workspace/entrypoint_template.sh", "r") as template, \
            open(f"/workspace/{self.module}/target/entrypoint.sh", "w") as output:
                for line in template:
                    output.write(line.rstrip().replace("__JAR_PATH__", f"/usr/share/java/{self.module}_v{self.version}.jar") + '\n')
 
+        build_command = [
+            'docker', 'buildx', 'build',
+            '--add-host', 'metadata.google.internal:169.254.169.254',
+            '--file', 'containers/Dockerfile',
+            '--build-context', f'tool={self.module}',
+            '--platform', 'linux/amd64',
+            '--build-arg', f'TOOL_NAME={self.module}',
+            '--build-arg', f'TOOL_ALIAS={TOOL_ALIASES.get(self.module, self.module)}',
+            '--build-arg', f'VERSION={self.version}',
+            '--load',
+            '--tag', self.internal_image,
+            '--tag', self.external_image,
+            'containers',
+        ]
+
         with open("/workspace/docker.sh", "w") as output:
             output.write('set -e\n')
-            output.write(f'[ ! -f {self.module}/Dockerfile ] && echo "No Dockerfile for {self.module}" && exit 0\n')
             output.write('docker buildx create --name builder --driver docker-container --driver-opt network=cloudbuild --use\n')
-            output.write(f'docker buildx build --add-host metadata.google.internal:169.254.169.254 {self.module} --load -t {self.internal_image} -t {self.external_image} --build-arg VERSION={self.version}\n')
+            output.write(' '.join(shlex.quote(argument) for argument in build_command) + '\n')
             output.write(f'docker push {self.internal_image}\n')
             if self.is_external_release:
                 output.write(f'cat /workspace/dockerhub.password | docker login -u hartwigmedicalfoundation --password-stdin\n')
