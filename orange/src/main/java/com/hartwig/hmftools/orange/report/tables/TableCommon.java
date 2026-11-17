@@ -6,6 +6,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_COLUMN_BUFFER;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
@@ -233,14 +235,15 @@ public final class TableCommon
     public static void convertWidths(
             final List<TableHeaderData> headers, final String[] columnTexts, final float[] columnWidths, final float[] columnPercentages)
     {
-        double totalWidths = headers.stream().mapToDouble(x -> x.AdjustedWidth).sum();
+        double totalWidths = headers.stream().mapToDouble(x -> x.adjustedWidth()).sum();
 
         for(int c = 0; c < headers.size(); ++c)
         {
             TableHeaderData headerData = headers.get(c);
-            columnWidths[c] = (float)headerData.AdjustedWidth;
+            float columnWidth = (float)headerData.adjustedWidth();
+            columnWidths[c] = columnWidth;
             columnTexts[c] = headerData.Text;
-            columnPercentages[c] = (float)(headerData.AdjustedWidth / totalWidths * 100);
+            columnPercentages[c] = (float)(columnWidth / totalWidths * 100);
         }
     }
 
@@ -284,9 +287,8 @@ public final class TableCommon
             @Nullable final ReportResources reportResources)
     {
         int columnCount = headers.size();
-        float[] maxColumnDataLengths = new float[columnCount];
 
-        float maxHeaderDataLength = 0;
+        double maxHeaderDataLength = 0;
 
         for(int c = 0; c < columnCount; ++c)
         {
@@ -295,36 +297,32 @@ public final class TableCommon
             for(int r = 0; r < tableRowData.size(); r++)
             {
                 float dataLength = calculateTextWidth(tableRowData.get(r).get(c), false, reportResources);
-                maxColumnDataLengths[c] = max(maxColumnDataLengths[c], dataLength);
+                headerData.DataWidth = max(headerData.DataWidth, dataLength);
             }
 
-            float headerLength = calculateTextWidth(headerData.Text, true, reportResources);
-
-            headerData.AdjustedWidth = max(maxColumnDataLengths[c], headerLength);
-            maxHeaderDataLength += headerData.AdjustedWidth;
+            headerData.HeaderWidth = calculateTextWidth(headerData.Text, true, reportResources);
+            maxHeaderDataLength += headerData.adjustedWidth();
         }
 
         if(maxHeaderDataLength > maxTableWidth)
         {
             // first try wrapping each column which can be wrapped, either the header or the data
-            float requiredReduction = maxHeaderDataLength - maxTableWidth;
+            double requiredReduction = maxHeaderDataLength - maxTableWidth;
 
             // first try wrapping just the column header text
             for(int c = 0; c < columnCount; ++c)
             {
                 TableHeaderData headerData = headers.get(c);
 
-                float maxDataLength = maxColumnDataLengths[c];
-
                 if(headerData.WrapAtPercent > 0)
                 {
-                    float headerLength = calculateTextWidth(headerData.Text, true, reportResources);
-                    float minHeaderLength = (float)(headerLength * headerData.WrapAtPercent);
+                    double headerLength = headerData.HeaderWidth;
+                    double minHeaderLength = (float)(headerLength * headerData.WrapAtPercent);
 
-                    if(minHeaderLength >= maxDataLength)
+                    if(minHeaderLength >= headerData.DataWidth)
                     {
-                        double reduction = headerData.length() - minHeaderLength;
-                        headerData.AdjustedWidth = minHeaderLength;
+                        double reduction = headerLength - minHeaderLength;
+                        headerData.HeaderWidth = minHeaderLength;
                         requiredReduction -= reduction;
                     }
 
@@ -339,14 +337,13 @@ public final class TableCommon
                 {
                     TableHeaderData headerData = headers.get(c);
 
-                    float maxDataLength = maxColumnDataLengths[c];
-                    float minHeaderLength = headerData.minLength();
+                    double maxDataLength = headerData.DataWidth;
 
                     if(headerData.CanWrapData)
                     {
-                        double newLength = max(minHeaderLength, maxDataLength * 0.5);
-                        double reduction = headerData.AdjustedWidth - newLength;
-                        headerData.AdjustedWidth = newLength;
+                        double newLength = max(headerData.HeaderWidth, maxDataLength * 0.5);
+                        double reduction = headerData.DataWidth - newLength;
+                        headerData.DataWidth = newLength;
 
                         requiredReduction -= reduction;
 
@@ -357,18 +354,21 @@ public final class TableCommon
             }
         }
 
-        double totalFinalWidth = headers.stream().mapToDouble(x -> x.AdjustedWidth).sum();
+        double totalFinalWidth = headers.stream().mapToDouble(x -> x.adjustedWidth()).sum();
 
         // use excess width to buffer the columns
         if(totalFinalWidth < maxTableWidth)
         {
             double excess = maxTableWidth - totalFinalWidth;
+
+            excess = min(excess, MAX_TABLE_COLUMN_BUFFER * headers.size());
+
             double excessPerColumn = excess / (double)columnCount;
 
             for(int c = 0; c < columnCount; ++c)
             {
                 TableHeaderData headerData = headers.get(c);
-                headerData.AdjustedWidth += excessPerColumn;
+                headerData.ExcessWidth = excessPerColumn;
             }
         }
     }

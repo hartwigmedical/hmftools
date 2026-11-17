@@ -37,9 +37,9 @@ public class TableDataTest
         int maxTableWidth = 30;
         scaleTableWidths(headers, tableRowData, maxTableWidth);
 
-        assertEquals(10, headers.get(0).AdjustedWidth, 1);
-        assertEquals(10, headers.get(1).AdjustedWidth, 1);
-        assertEquals(10, headers.get(2).AdjustedWidth, 1);
+        assertEquals(10, headers.get(0).adjustedWidth(), 1);
+        assertEquals(10, headers.get(1).adjustedWidth(), 1);
+        assertEquals(10, headers.get(2).adjustedWidth(), 1);
 
         // test 2: adjust based on variable table data
         tableRowData.clear();
@@ -49,18 +49,20 @@ public class TableDataTest
         tableRowData.add(List.of(dataLength10, dataLength5, dataLength5));
 
         // test 2: adjust to max data lengths
+        headers.forEach(x -> x.reset());
         scaleTableWidths(headers, tableRowData, maxTableWidth);
 
-        assertEquals(15, headers.get(0).AdjustedWidth, 1);
-        assertEquals(5, headers.get(1).AdjustedWidth, 1);
-        assertEquals(10, headers.get(2).AdjustedWidth, 1);
+        assertEquals(15, headers.get(0).adjustedWidth(), 1);
+        assertEquals(5, headers.get(1).adjustedWidth(), 1);
+        assertEquals(10, headers.get(2).adjustedWidth(), 1);
 
         // test 3: adding buffer from excess
+        headers.forEach(x -> x.reset());
         scaleTableWidths(headers, tableRowData, maxTableWidth + 6);
 
-        assertEquals(17, headers.get(0).AdjustedWidth, 1);
-        assertEquals(7, headers.get(1).AdjustedWidth, 1);
-        assertEquals(12, headers.get(2).AdjustedWidth, 1);
+        assertEquals(17, headers.get(0).adjustedWidth(), 1);
+        assertEquals(7, headers.get(1).adjustedWidth(), 1);
+        assertEquals(12, headers.get(2).adjustedWidth(), 1);
 
         // test 4: data columns wrapped
         headers.clear();
@@ -78,9 +80,9 @@ public class TableDataTest
         maxTableWidth = 40;
         scaleTableWidths(headers, tableRowData, maxTableWidth);
 
-        assertEquals(10, headers.get(0).AdjustedWidth, 1);
-        assertEquals(20, headers.get(1).AdjustedWidth, 1);
-        assertEquals(10, headers.get(2).AdjustedWidth, 1);
+        assertEquals(10, headers.get(0).adjustedWidth(), 1);
+        assertEquals(20, headers.get(1).adjustedWidth(), 1);
+        assertEquals(10, headers.get(2).adjustedWidth(), 1);
 
         // test 5: wrap headers while still keeping larger than row text
         headers.clear();
@@ -96,10 +98,11 @@ public class TableDataTest
         tableRowData.add(List.of(dataLength20, dataLength5, dataLength5));
 
         maxTableWidth = 50;
+        headers.forEach(x -> x.reset());
         scaleTableWidths(headers, tableRowData, maxTableWidth);
 
-        assertEquals(20, headers.get(0).AdjustedWidth, 1);
-        assertEquals(10, headers.get(1).AdjustedWidth, 1);
-        assertEquals(20, headers.get(2).AdjustedWidth, 1);
+        assertEquals(20, headers.get(0).adjustedWidth(), 1);
+        assertEquals(10, headers.get(1).adjustedWidth(), 1);
+        assertEquals(20, headers.get(2).adjustedWidth(), 1);
     }
 }
