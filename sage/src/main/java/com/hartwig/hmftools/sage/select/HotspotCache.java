@@ -110,6 +110,9 @@ public class HotspotCache
             if(variant.tier() == VariantTier.HOTSPOT)
                 continue;
 
+            if(!variant.isPassing()) // as per the criteria (PON aside) when this annotation was done in Purple
+                continue;
+
             if(isNearHotspot(variant.variant()))
                 variant.setNearHotspot();
         }
