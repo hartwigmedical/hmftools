@@ -45,6 +45,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -228,7 +229,16 @@ public class OrangeConfig
         CuppaDir = pathResolver.resolveOptionalToolDirectory(CUPPA_DIR_CFG, defaultToolDirectories.cuppaDir());
         PeachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, defaultToolDirectories.peachDir());
         SigsDir = pathResolver.resolveOptionalToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
-        VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
+
+        if(configBuilder.hasValue(VIRUS_DIR_CFG))
+        {
+            // backwards compatibilty for VirusInterpreter until after OA v3.1
+            VirusDir = checkAddDirSeparator(configBuilder.getValue(VIRUS_DIR_CFG));
+        }
+        else
+        {
+            VirusDir = pathResolver.resolveOptionalToolDirectory(VIRIDIAN_DIR_CFG, defaultToolDirectories.virusDir());
+        }
 
         // RNA data can be in the appended Sage VCF and/or from Isofox
         RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);

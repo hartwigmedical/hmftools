@@ -4,21 +4,15 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
-import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
 import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
 public final class OrangeConversion
 {
@@ -53,22 +47,6 @@ public final class OrangeConversion
     public static OrangeDoidNode convert(final DoidNode doidNode)
     {
         return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
-    }
-
-    public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus annotatedVirus)
-    {
-        VirusType interpretation = annotatedVirus.interpretation();
-        return ImmutableVirusInterpreterEntry.builder()
-                .name(annotatedVirus.name())
-                .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
-                .integrations(annotatedVirus.integrations())
-                .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.name()) : null)
-                .percentageCovered(annotatedVirus.percentageCovered())
-                .meanCoverage(annotatedVirus.meanCoverage())
-                .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
-                .reported(annotatedVirus.reported())
-                .driverInterpretation(DriverInterpretation.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
-                .build();
     }
 
     public static ChordRecord convert(final ChordData chordData)

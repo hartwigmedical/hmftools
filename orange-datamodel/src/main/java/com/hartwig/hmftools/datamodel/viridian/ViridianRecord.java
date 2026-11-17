@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.virus;
+package com.hartwig.hmftools.datamodel.viridian;
 
 import java.util.List;
 
@@ -10,11 +10,11 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface VirusInterpreterData
+public interface ViridianRecord
 {
     @NotNull
-    List<VirusInterpreterEntry> allViruses();
+    List<VirusReport> allViruses();
 
     @NotNull
-    List<VirusInterpreterEntry> reportableViruses();
+    List<VirusReport> reportableViruses();
 }

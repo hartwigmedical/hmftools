@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.datamodel.virus;
-
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+package com.hartwig.hmftools.datamodel.viridian;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -10,13 +8,16 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface VirusInterpreterEntry
+public interface VirusReport
 {
     @NotNull
     String name();
 
     @NotNull
-    VirusBreakendQCStatus qcStatus();
+    String virusGroup();
+
+    @NotNull
+    ReportQcStatus qcStatus();
 
     int integrations();
 
@@ -27,11 +28,11 @@ public interface VirusInterpreterEntry
 
     double meanCoverage();
 
-    @Nullable
-    Double expectedClonalCoverage();
-
     boolean reported();
 
     @NotNull
-    DriverInterpretation driverInterpretation();
+    ClonalityStatus clonalityStatus();
+
+    @Nullable
+    Double copiesPerTumorCell();
 }

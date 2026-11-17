@@ -2,11 +2,11 @@ package com.hartwig.hmftools.orange.algo;
 
 import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateQseeVisPlot;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
+import static com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus.NO_ABNORMALITIES;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader.checkRnaVsTumorId;
 import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,6 +22,12 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
+import com.hartwig.hmftools.common.viridian.ClonalityStatus;
+import com.hartwig.hmftools.common.viridian.ReportQcStatus;
+import com.hartwig.hmftools.common.viridian.VirusReport;
+import com.hartwig.hmftools.common.viridian.VirusReportFile;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
@@ -62,7 +68,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
-import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
+import com.hartwig.hmftools.orange.algo.virus.ViridianInterpreter;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
@@ -101,7 +107,7 @@ public class OrangeAlgo
         LinxData linxData = loadLinxData(config);
         ChordData chord = loadChordAnalysis(config);
         LilacRecord lilac = loadLilacData(config);
-        VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
+        List<VirusReport> virusReports = loadVirusData(config);
         CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
@@ -143,7 +149,7 @@ public class OrangeAlgo
                 .isofox(isofox)
                 .lilac(lilac)
                 .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
+                .viridian(virusReports != null ? ViridianInterpreter.interpret(virusReports) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
@@ -302,15 +308,44 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static VirusInterpreterData loadVirusInterpreterData(final OrangeConfig config) throws IOException
+    private static List<VirusReport> loadVirusData(final OrangeConfig config) throws IOException
     {
         if(config.VirusDir == null || !Files.exists(Paths.get(config.VirusDir)))
         {
-            LOGGER.trace("skipping Virus annotations as no input has been provided");
+            LOGGER.trace("skipping reportable viruses as no input has been provided");
             return null;
         }
 
-        return VirusInterpreterDataLoader.load(config.VirusDir, config.TumorId);
+        // backwards compatibility for VirusInterpreter until after OA v3.1
+        String virusInterpreterFile = AnnotatedVirusFile.generateFileName(config.VirusDir, config.TumorId);
+
+        if(Files.exists(Paths.get(virusInterpreterFile)))
+        {
+            VirusInterpreterData virusData = VirusInterpreterDataLoader.load(virusInterpreterFile);
+
+            List<VirusReport> virusReports = Lists.newArrayList();
+
+            for(AnnotatedVirus annotatedVirus : virusData.reportableViruses())
+            {
+                VirusReport virusReport = new VirusReport(
+                        annotatedVirus.name(),
+                        annotatedVirus.name(),
+                        annotatedVirus.qcStatus() == NO_ABNORMALITIES ? ReportQcStatus.NO_ABNORMALITIES : ReportQcStatus.AMBIGUOUS_VIRUS,
+                        annotatedVirus.interpretation(),
+                        annotatedVirus.integrations(),
+                        annotatedVirus.percentageCovered(),
+                        annotatedVirus.meanCoverage(),
+                        null,
+                        ClonalityStatus.NOT_PROFILED,
+                        true);
+
+                virusReports.add(virusReport);
+            }
+
+            return virusReports;
+        }
+
+        return VirusReportFile.read(VirusReportFile.generateFilename(config.VirusDir, config.TumorId));
     }
 
     @Nullable
