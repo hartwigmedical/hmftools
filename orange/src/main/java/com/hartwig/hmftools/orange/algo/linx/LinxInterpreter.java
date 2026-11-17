@@ -67,6 +67,8 @@ public class LinxInterpreter
     public static String findReportableLinxPlot(final List<String> linxPlots, final int clusterId)
     {
         String plotPrefix = formVisPlotClusterPrefix(String.valueOf(clusterId));
+
+
         return linxPlots.stream().filter(x -> x.contains(plotPrefix)).findFirst().orElse(null);
     }
 

@@ -83,8 +83,7 @@ public class SmallVariantFactory implements VariantContextFilter
         return fromVCFFile(tumor, null, null, vcfFile);
     }
 
-    public List<SmallVariant> fromVCFFile(final String tumor, @Nullable final String reference,
-            final String vcfFile) throws IOException
+    public List<SmallVariant> fromVCFFile(final String tumor, @Nullable final String reference, final String vcfFile) throws IOException
     {
         final List<SmallVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, null, vcfFile, true, result::add);

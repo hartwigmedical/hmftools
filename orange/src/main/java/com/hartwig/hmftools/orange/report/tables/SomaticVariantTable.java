@@ -3,13 +3,14 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_WIDTH;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COPIES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HGVS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.convertWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentageField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_AF;
@@ -20,11 +21,9 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HOTSPOT;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SL;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DP;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.scaleTableWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,36 +55,28 @@ public final class SomaticVariantTable
             return createEmptyTable(docCtx, title, width, reportResources);
         }
 
-        Cells cells = new Cells(reportResources);
+        List<TableHeaderData> headers = Lists.newArrayList();
 
-        List<Float> widths = Lists.newArrayList();
-        List<String> headers = Lists.newArrayList();
-
-        addEntry(widths, headers, 1.5, COL_GENE);
-        addEntry(widths, headers, 2, COL_POSITION);
-        addEntry(widths, headers, 3, COL_HGVS);
-        addEntry(widths, headers, 1, COL_AF);
-        addEntry(widths, headers, 1, COL_DP);
-        addEntry(widths, headers, 1, COL_COPIES);
-        // addEntry(widths, headers, 1, COL_MACN);
-        addEntry(widths, headers, 1.25, COL_HOTSPOT);
-        addEntry(widths, headers, 1, COL_BIALLELIC);
-        addEntry(widths, headers, 1.25, COL_CL);
+        headers.add(new TableHeaderData(COL_GENE, 0, false));
+        headers.add(new TableHeaderData(COL_POSITION, 0, false));
+        headers.add(new TableHeaderData(COL_HGVS, 0, true));
+        headers.add(new TableHeaderData(COL_AF, 0, false));
+        headers.add(new TableHeaderData(COL_DP, 0, false));
+        headers.add(new TableHeaderData(COL_COPIES, 0, false));
+        headers.add(new TableHeaderData(COL_HOTSPOT, 0, false));
+        headers.add(new TableHeaderData(COL_BIALLELIC, 0, false));
+        headers.add(new TableHeaderData(COL_CL, 0, false));
 
         if(tumorOnly)
-        {
-            addEntry(widths, headers, 1.25, COL_SL);
-        }
+            headers.add(new TableHeaderData(COL_SL, 0, false));
 
         if(hasRna)
-        {
-            addEntry(widths, headers, 1, COL_RNA);
-        }
+            headers.add(new TableHeaderData(COL_RNA, 0, false));
 
-        addEntry(widths, headers, 1, COL_DRIVER);
+        headers.add(new TableHeaderData(COL_DRIVER, 0, false));
 
-        BaseTable table = createStandardTable(docCtx, title, width, floatArray(widths), stringArray(headers), reportResources);
-        float[] pcts = toPercentages(floatArray(widths));
+        List<List<String>> tableRowData = Lists.newArrayList();
+        List<Boolean> shadeVariantData = Lists.newArrayList();
 
         for(PurpleVariant variant : sort(variants))
         {
@@ -94,39 +85,57 @@ public final class SomaticVariantTable
 
             for(PurpleTranscriptImpact transcriptImpact : transcriptImpacts)
             {
-                List<String> rowCells = Lists.newArrayList();
+                List<String> rowData = Lists.newArrayList();
+                tableRowData.add(rowData);
 
-                rowCells.add(cells.createContent(variant.gene()));
-                rowCells.add(cells.createContent(locationDisplay(variant)));
-                rowCells.add(cells.createContent(hgvsDisplay(transcriptImpact)));
-                rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
-                rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
-                rowCells.add(cells.createContent(copyNumberDisplay(variant)));
-                // rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-                rowCells.add(cells.createContent(hotspotDisplay(variant)));
-                rowCells.add(cells.createContent(formatPercentageField(variant.biallelicProbability())));
+                rowData.add(variant.gene());
+                rowData.add(locationDisplay(variant));
+                rowData.add(hgvsDisplay(transcriptImpact));
+                rowData.add(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency()));
+                rowData.add(String.valueOf(variant.tumorDepth().totalReadCount()));
+                rowData.add(copyNumberDisplay(variant));
+                rowData.add(hotspotDisplay(variant));
+                rowData.add(formatPercentageField(variant.biallelicProbability()));
 
-                rowCells.add(cells.createContent(clonalLikelihood(variant)));
+                rowData.add(clonalLikelihood(variant));
 
                 if(tumorOnly)
                 {
-                    rowCells.add(cells.createContent(variant.somaticLikelihood().toString()));
+                    rowData.add(variant.somaticLikelihood().toString());
                 }
 
                 if(hasRna)
                 {
-                    rowCells.add(cells.createContent(rnaDisplay(variant)));
+                    rowData.add(rnaDisplay(variant));
                 }
 
-                rowCells.add(cells.createContent(formatPercentageField(variant.driverLikelihood())));
+                rowData.add(formatPercentageField(variant.driverLikelihood()));
 
-                List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+                shadeVariantData.add(isCandidateLikelihood(variant.driverLikelihood()));
+            }
+        }
 
-                if(isCandidateLikelihood(variant.driverLikelihood()))
-                {
-                    reportResources.shadeCandidateCells(createdCells);
-                }
+        scaleTableWidths(headers, tableRowData, MAX_TABLE_WIDTH, reportResources);
 
+        int columnCount = headers.size();
+        String[] columnTexts = new String[columnCount];
+        float[] columnWidths = new float[columnCount];
+        float[] columnPercentages = new float[columnCount];
+
+        convertWidths(headers, columnTexts, columnWidths, columnPercentages);
+
+        BaseTable table = createStandardTable(docCtx, title, width, columnWidths, columnTexts, reportResources);
+
+        Cells cells = new Cells(reportResources);
+
+        for(int r = 0; r < tableRowData.size(); ++r)
+        {
+            List<String> rowData = tableRowData.get(r);
+            List<Cell<PDPage>> createdCells = cells.addRow(table, columnPercentages, rowData);
+
+            if(shadeVariantData.get(r))
+            {
+                reportResources.shadeCandidateCells(createdCells);
             }
         }
 

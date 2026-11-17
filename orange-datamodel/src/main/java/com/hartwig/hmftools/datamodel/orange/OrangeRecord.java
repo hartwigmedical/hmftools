@@ -31,6 +31,9 @@ public interface OrangeRecord
     @Nullable
     String referenceId();
 
+    @Nullable
+    String rnaId();
+
     @NotNull
     LocalDate samplingDate();
 
@@ -45,6 +48,12 @@ public interface OrangeRecord
 
     @Nullable
     String pipelineVersion();
+
+    @Nullable
+    String panelName();
+
+    @NotNull
+    OrangeSequencingType sequencingType();
 
     @NotNull
     PurpleRecord purple();

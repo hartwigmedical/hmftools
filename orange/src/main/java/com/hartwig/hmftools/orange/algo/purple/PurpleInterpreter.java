@@ -176,8 +176,12 @@ public class PurpleInterpreter
     {
         Arm arm = geneCopyNumber.ChromosomeBand.startsWith(Arm.P.toString().toLowerCase()) ? Arm.P : Arm.Q;
 
+        // handle missing chr arms which can be the case for the short arms
         return armCopyNumbers.stream()
-                .filter(x -> x.chromosome().matches(geneCopyNumber.chromosome()) && x.arm() == arm).findFirst().orElse(null);
+                .filter(x -> x.chromosome().matches(geneCopyNumber.chromosome()) && x.arm() == arm).findFirst()
+                .orElse(new ChrArmCopyNumber(
+                        HumanChromosome.fromString(geneCopyNumber.Chromosome), arm,
+                        0, 0, 0, 0));
     }
 
     private static PurpleGainDeletion toGainDel(

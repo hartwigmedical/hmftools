@@ -2,19 +2,18 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_WIDTH;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNCTIONS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA_FRAGS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.convertWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.scaleTableWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,10 +24,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 
-import be.quodlibet.boxable.Cell;
 import be.quodlibet.boxable.BaseTable;
-
-import org.apache.pdfbox.pdmodel.PDPage;
 
 import com.hartwig.hmftools.orange.report.DocumentContext;
 
@@ -48,53 +44,59 @@ public final class DnaFusionTable
             return createEmptyTable(docCtx, title, width, reportResources);
         }
 
-        Cells cells = new Cells(reportResources);
+        List<TableHeaderData> headers = Lists.newArrayList();
 
-        List<Float> widths = Lists.newArrayList();
-        List<String> headers = Lists.newArrayList();
+        headers.add(new TableHeaderData(COL_FUSION, 0, false));
+        headers.add(new TableHeaderData(COL_JUNCTIONS, 0, false));
+        headers.add(new TableHeaderData(COL_JCN, 0, false));
+        headers.add(new TableHeaderData(COL_PHASING, 0, false));
+        headers.add(new TableHeaderData(COL_TYPE, 0, false));
 
         boolean hasRna = fusions.stream().anyMatch(x -> x.rnaSupport() != null);
 
-        addEntry(widths, headers, 2, COL_FUSION);
-        addEntry(widths, headers, 5, COL_JUNCTIONS);
-        addEntry(widths, headers, 1, COL_JCN);
-        addEntry(widths, headers, 1, COL_PHASING);
-        addEntry(widths, headers, 3, COL_TYPE);
-
         if(hasRna)
-        {
-            addEntry(widths, headers, 1, COL_RNA_FRAGS);
-        }
+            headers.add(new TableHeaderData(COL_RNA_FRAGS, 0, false));
 
-        addEntry(widths, headers, 1, COL_DRIVER);
+        headers.add(new TableHeaderData(COL_DRIVER, 0, false));
 
-        BaseTable table = createStandardTable(docCtx, title, width, floatArray(widths), stringArray(headers), reportResources);
-        float[] pcts = toPercentages(floatArray(widths));
+        List<List<String>> tableRowData = Lists.newArrayList();
 
         for(LinxFusion fusion : sortLinxFusions(fusions))
         {
-            List<String> rowCells = Lists.newArrayList();
+            List<String> rowData = Lists.newArrayList();
+            tableRowData.add(rowData);
 
-            rowCells.add(cells.createContent(fusionDisplay(fusion)));
-            rowCells.add(cells.createContent(transcriptJunctions(fusion)));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
-            rowCells.add(cells.createContent(display(fusion.phased())));
-            rowCells.add(cells.createContent(fusion.reportedType().toString()));
+            rowData.add(fusionDisplay(fusion));
+            rowData.add(transcriptJunctions(fusion));
+            rowData.add(formatSingleDigitDecimal(fusion.junctionCopyNumber()));
+            rowData.add(display(fusion.phased()));
+            rowData.add(fusion.reportedType().toString());
 
             if(hasRna)
             {
-                rowCells.add(cells.createContent(String.valueOf(fusion.rnaSupport().alleleReadCount())));
+                rowData.add(String.valueOf(fusion.rnaSupport().alleleReadCount()));
             }
 
-            rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
+            rowData.add(fusion.driverInterpretation().toString());
+        }
 
-            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+        scaleTableWidths(headers, tableRowData, MAX_TABLE_WIDTH, reportResources);
 
-            if(fusion.driverInterpretation() == DriverInterpretation.LOW)
-            {
-                reportResources.shadeCandidateCells(createdCells);
-            }
+        int columnCount = headers.size();
+        String[] columnTexts = new String[columnCount];
+        float[] columnWidths = new float[columnCount];
+        float[] columnPercentages = new float[columnCount];
 
+        convertWidths(headers, columnTexts, columnWidths, columnPercentages);
+
+        BaseTable table = createStandardTable(docCtx, title, width, columnWidths, columnTexts, reportResources);
+
+        Cells cells = new Cells(reportResources);
+
+        for(int r = 0; r < tableRowData.size(); ++r)
+        {
+            List<String> rowData = tableRowData.get(r);
+            cells.addRow(table, columnPercentages, rowData);
         }
 
         return table;
@@ -121,16 +123,6 @@ public final class DnaFusionTable
         };
     }
 
-    /*
-    private static String rnaSupportField(final AllelicDepth rnaSupport)
-    {
-        if(rnaSupport == null)
-            return ReportResources.NOT_AVAILABLE;
-        else
-            return formatSupportField(rnaSupport.alleleReadCount(), rnaSupport.totalReadCount());
-    }
-    */
-
     private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
@@ -152,5 +144,4 @@ public final class DnaFusionTable
             }
         }).collect(Collectors.toList());
     }
-
 }

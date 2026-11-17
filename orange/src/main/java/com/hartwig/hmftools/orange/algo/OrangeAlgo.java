@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo;
 import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateQseeVisPlot;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader.checkRnaVsTumorId;
 import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
 
 import java.io.File;
@@ -24,7 +25,9 @@ import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlot;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.OrangePlot;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.immuno.LilacInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
@@ -133,6 +136,8 @@ public class OrangeAlgo
                 .configuredPrimaryTumor(primaryTumorDoids)
                 .refGenomeVersion(config.orangeRefGenomeVersion())
                 .pipelineVersion(pipelineVersion)
+                .panelName(config.PanelName)
+                .sequencingType(config.orangeSequencingType())
                 .purple(purple)
                 .linx(linx)
                 .isofox(isofox)
@@ -155,16 +160,6 @@ public class OrangeAlgo
 
         if(!config.PrimaryTumorDoids.isEmpty())
         {
-            /* currently unused
-            DoidEntry doidEntry = null;
-
-            if(config.DoidJsonFile != null)
-            {
-                LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
-                doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
-            }
-            */
-
             LOGGER.debug("determining configured primary tumor");
 
             Set<DoidNode> nodes = Sets.newHashSet();
@@ -216,12 +211,10 @@ public class OrangeAlgo
         if(pipelineVersion != null)
         {
             LOGGER.info("determined pipeline version to be 'v{}'", pipelineVersion);
-        }
-        else
-        {
-            LOGGER.warn("no pipeline version determined from {}", pipelineVersionFile);
+            return pipelineVersion;
         }
 
+        LOGGER.warn("no pipeline version determined from {}", pipelineVersionFile);
         return defaultPipelineVersion;
     }
 
@@ -283,7 +276,15 @@ public class OrangeAlgo
             return null;
         }
 
-        return IsofoxDataLoader.load(config.TumorId, config.IsofoxDir);
+        String rnaSampleId = checkRnaVsTumorId(config.RnaSampleId, config.TumorId, config.IsofoxDir);
+
+        if(rnaSampleId == null)
+        {
+            LOGGER.warn(" invalid RNA sample ID");
+            return null;
+        }
+
+        return IsofoxDataLoader.load(rnaSampleId, config.IsofoxDir);
     }
 
     @Nullable
@@ -372,9 +373,6 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(final OrangeConfig config) throws IOException
     {
-        if(!config.hasReference() || config.RunType == ExperimentType.TARGETED)
-            return null;
-
         if(config.SigsDir == null || !Files.exists(Paths.get(config.SigsDir)))
         {
             LOGGER.debug("skipping Signature loading as no input has been provided");
@@ -414,11 +412,15 @@ public class OrangeAlgo
                 mPlotManager.processPlotFile(variant.plotFilename());
         }
 
-        List<String> linxDriverPlots = Lists.newArrayList();
+        List<OrangePlot> linxDriverPlots = Lists.newArrayList();
 
-        for(String linxPlot : linxData.reportableEventPlots())
+        for(int i = 0; i < linxData.reportableEventPlots().size(); ++i)
         {
-            linxDriverPlots.add(mPlotManager.processPlotFile(linxPlot));
+            String linxPlot = linxData.reportableEventPlots().get(i);
+            String linxPlotTitle = linxData.reportableEventPlotTitles().get(i);
+            String plotPath = mPlotManager.processPlotFile(linxPlot);
+
+            linxDriverPlots.add(ImmutableOrangePlot.builder().filename(plotPath).title(linxPlotTitle).build());
         }
 
         plotBuilder.linxDriverPlots(linxDriverPlots);

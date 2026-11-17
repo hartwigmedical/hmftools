@@ -37,7 +37,7 @@ public interface OrangePlots
     String purpleRainfallPlot();
 
     @NotNull
-    List<String> linxDriverPlots();
+    List<OrangePlot> linxDriverPlots();
 
     @Nullable
     String cuppaSummaryPlot();

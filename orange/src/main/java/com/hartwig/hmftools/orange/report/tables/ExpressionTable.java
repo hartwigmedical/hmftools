@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,8 +32,8 @@ import org.apache.logging.log4j.util.Strings;
 
 public final class ExpressionTable
 {
-    private static String COL_PERCENTILE = "Percentile";
-    private static String COL_FOLD_CHANGE = "Fold Change";
+    protected static String COL_PERCENTILE = "Percentile";
+    protected static String COL_FOLD_CHANGE = "Fold Change";
 
     public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<GeneExpression> expressions, boolean sortAscending,
@@ -66,12 +66,12 @@ public final class ExpressionTable
 
             if(expression.percentileCancer() != null && expression.medianTpmCancer() != null)
             {
-                rowValues.add(formatPercentileField(expression.percentileCancer()));
+                rowValues.add(formatPercentage(expression.percentileCancer()));
                 rowValues.add(Expressions.formatFoldChangeCancer(expression));
             }
             else
             {
-                rowValues.add(formatPercentileField(expression.percentileCohort()));
+                rowValues.add(formatPercentage(expression.percentileCohort()));
                 rowValues.add(Expressions.formatFoldChange(expression));
             }
 

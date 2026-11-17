@@ -40,6 +40,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.orange.OrangeSequencingType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -75,6 +76,7 @@ public final class TestOrangeReportFactory
                 .samplingDate(LocalDate.of(2021, 11, 19))
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
+                .sequencingType(OrangeSequencingType.ILLUMINA)
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxRecordFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().build())
@@ -97,6 +99,7 @@ public final class TestOrangeReportFactory
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .pipelineVersion(PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT.toString())
+                .sequencingType(OrangeSequencingType.ILLUMINA)
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
                 .isofox(createTestIsofoxData())
@@ -104,15 +107,6 @@ public final class TestOrangeReportFactory
                 .immuneEscape(createTestImmuneEscapeRecord())
                 .virusInterpreter(createTestVirusInterpreterData())
                 .peach(createTestPeachData())
-                .build();
-    }
-
-    @NotNull
-    private static OrangeSample createMinimalOrangeSample()
-    {
-        return ImmutableOrangeSample.builder()
-                .metrics(OrangeConversion.convert(BamMetricsTestFactory.createMinimalTestWGSMetrics()))
-                .flagstat(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()))
                 .build();
     }
 
