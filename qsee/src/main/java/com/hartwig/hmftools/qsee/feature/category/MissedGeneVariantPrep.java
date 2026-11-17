@@ -53,8 +53,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return PurplePurity.read(purityFile);
     }
 
-    @VisibleForTesting
-    static List<String> getReportableGenes(List<DriverGene> driverGenes, SampleType sampleType)
+    public static List<String> getReportableGenes(List<DriverGene> driverGenes, SampleType sampleType)
     {
         List<String> reportableGenes = new ArrayList<>();
 
