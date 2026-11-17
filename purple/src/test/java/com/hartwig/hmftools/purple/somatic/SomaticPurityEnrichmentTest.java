@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.purple.MiscTestUtils.REF_SAMPLE_ID;
 import static com.hartwig.hmftools.purple.MiscTestUtils.SAMPLE_ID;
+import static com.hartwig.hmftools.purple.somatic.BiallelicModel.calcBiallelicProbability;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
@@ -25,7 +26,23 @@ import junit.framework.TestCase;
 public class SomaticPurityEnrichmentTest extends TestCase
 {
     @Test
-    public void testCalculateBiallelic()
+    public void testBiallelicCalculations()
+    {
+        double samplePurity = 0.34;
+        int alleleReadCount = 869;
+        int depth = 1932;
+        double vaf = alleleReadCount / (double)depth;
+        double segmentCN = 4.04;
+        double variantCN = 3.56;
+        double majorAlleleCN = 2;
+
+        double probability = calcBiallelicProbability(samplePurity, alleleReadCount, depth, vaf, segmentCN, variantCN, majorAlleleCN);
+
+        assertEquals(0.7136, probability, 0.001);
+    }
+
+    @Test
+    public void testCalculateBiallelicOld()
     {
         // 27.06.2024: New unit tests due to model changes
         
