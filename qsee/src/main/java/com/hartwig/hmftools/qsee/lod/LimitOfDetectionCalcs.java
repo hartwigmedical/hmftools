@@ -12,6 +12,9 @@ public class LimitOfDetectionCalcs
 {
     private static final int MIN_ALT_READS = 3;
 
+    private static final int LOD_VAF_BISECTION_ITERATIONS = 20; // VAF precision 1 / 2^20 = ~1e-6
+    private static final double LOD_TARGET_MISSED_VARIANT_LIKELIHOOD = 0.01;
+
     public static final double REF_SAMPLE_PURITY = 1.0;  // Assume no contamination from other samples
 
     public static double calcTheoreticalVafMutationOnOneAllele(double purity, HumanChromosome chromosome, Gender gender)
@@ -53,5 +56,34 @@ public class LimitOfDetectionCalcs
         }
 
         return mvlhWeightedMean;
+    }
+
+    public static double calcMinTumorVafToDetectVariant(Map<DepthRange,Integer> depthCounts, double tumorPurity)
+    {
+        // Inverse of the missed variant likelihood calculation: finds the VAF that gives the target missed variant likelihood.
+        // Missed variant likelihood (y) slopes monotonically downward as VAF (x) increases, so bisection can quickly find 'x' given 'y'.
+
+        double minAchievableMvlh = calcMissedVariantLikelihood(depthCounts, 1);
+        if(minAchievableMvlh > LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
+            return 1.0 / tumorPurity;
+
+        double lowerVaf = 0.0;
+        double upperVaf = 1.0;
+        double midVaf   = 0.5;
+
+        for(int iteration = 0; iteration < LOD_VAF_BISECTION_ITERATIONS; ++iteration)
+        {
+            double currentMvlh = calcMissedVariantLikelihood(depthCounts, midVaf);
+
+            if(currentMvlh <= LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
+                upperVaf = midVaf;
+            else
+                lowerVaf = midVaf;
+
+            midVaf = (lowerVaf + upperVaf) / 2;
+        }
+
+        double sampleVafLod = midVaf;
+        return sampleVafLod / tumorPurity;
     }
 }
