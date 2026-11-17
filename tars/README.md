@@ -4,10 +4,11 @@
 transcriptome added using `bwa-mem2`, then rewrites the result back to genome coordinates. The output is an ordinary genomic RNA
 BAM (no transcript contigs, spliced reads carried as `N` gaps) ready for REDUX and ISOFOX.
 
+TARS runs between the aligner and REDUX. It is designed to replace STAR in the RNA pipeline.
+
 ## Contents
 
 * [What TARS does](#what-tars-does)
-* [How to Run TARS](#how-to-run-tars)
 * [What a read goes through](#what-a-read-goes-through)
     * [Step 0: Translate transcriptome alignments to reference genome](#step-0-translate-transcriptome-alignments-to-reference-genome)
     * [Step 1: Score short overhangs against the reference genome, collapse weak scoring ones](#step-1-score-short-overhangs-against-the-reference-genome-collapse-weak-scoring-ones)
@@ -17,6 +18,10 @@ BAM (no transcript contigs, spliced reads carried as `N` gaps) ready for REDUX a
         * [Step 2.2b: On a successful resolve](#step-22b-on-a-successful-resolve)
     * [Step 3: Decide which alignments to keep for a read](#step-3-decide-which-alignments-to-keep-for-a-read)
     * [Step 4: Emit records](#step-4-emit-records)
+* [Pipeline by sequencing platform](#pipeline-by-sequencing-platform)
+* [Configuration](#configuration)
+* [Example Usage](#example-usage)
+* [Output](#output)
 
 ## What TARS does
 
@@ -25,98 +30,18 @@ introns are, so a read that jumps over one gets cut short or placed in the wrong
 
 TARS fixes this without changing the aligner:
 
-1. **`SpliceFastaBuilder`** (run once per Ensembl release) concatenates each multi-exon transcript's exon sequences into
-   a transcript contig (`*_tx`, introns removed); these contigs are the transcriptome. It also writes a sidecar TSV
-   mapping each contig's intervals back to their genomic exon spans.
+1. **`SpliceFastaBuilder`** (run once per Ensembl release) joins each multi-exon transcript's exon sequences (introns
+   removed) and packs a chromosome's transcripts into one contig (`chr1_tx`, `chr2_tx`, ...), with 500 `N` bases between
+   transcripts; these contigs are the transcriptome. It also writes a sidecar TSV mapping each transcript's interval in
+   its contig back to its genomic exon spans.
 2. Append the transcriptome to the genome FASTA and index with `bwa-mem2`.
-3. Align the RNA reads with `bwa-mem2` as usual. A read that jumps an intron now has a continuous place to land.
+3. Align the RNA reads with `bwa-mem2` as usual (UA for Ultima). A read that jumps an intron now has a continuous place
+   to land.
 4. **`TarsApplication`** lifts each read back to its real genome position, marks the skipped intron as a gap (`N`), fixes
    things up (tags, mate info, confidence), and writes a sorted, indexed BAM.
 5. Feed the new splice-aware records BAM file into REDUX (dedup), then ISOFOX.
 
 ![TARS pipeline](doc/tars.svg)
-
-## How to Run TARS
-
-### Build the transcript reference (SpliceFastaBuilder)
-
-```
-java -cp tars.jar com.hartwig.hmftools.tars.fasta.SpliceFastaBuilder
-    -ensembl_data_dir /ref_data/ensembl_data_cache/38/
-    -ref_genome /path_to_fasta/genome.fasta
-    -ref_genome_version V38
-    -output_dir /path_to_output/
-```
-
-Two files are written:
-
-* `ref_genome_v38_rna_contigs.fasta` - the transcript contigs.
-* `ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv` - the contig sidecar (intervals mapped back to genomic exon spans).
-
-Concatenate the FASTA onto the genome FASTA and `bwa-mem2 index` the result before aligning.
-
-### Run TARS (TarsApplication)
-
-```
-java -jar tars.jar
-    -sample COLO829T
-    -input_bam COLO829T.lane_01.bwa_tx.namegrouped.bam,COLO829T.lane_02.bwa_tx.namegrouped.bam
-    -ref_genome /path_to_fasta/genome_plus_tx.fasta
-    -contig_sidecar /path_to/ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv
-    -rna_unmap_regions /ref_data/rna/38/rna_excluded_regions.38.tsv
-    -bamtool /path/to/samtools
-    -output_dir /path_to_output/
-    -threads 24
-```
-
-### Output files
-
-Every file is named `<sample>.tars.<...>`. Two are written by default:
-
-* `<sample>.tars.bam` (+ `.bai`) - the lifted, coordinate-sorted genomic BAM, ready for REDUX.
-* `<sample>.tars.summary.tsv` - a counts summary of what liftback did.
-
-`-output_id chr1_slice` inserts the token into every name: `<sample>.tars.chr1_slice.bam`.
-
-### Flags
-
-**Required**
-
-| Flag               | Description                                                                  |
-|--------------------|------------------------------------------------------------------------------|
-| sample             | Sample ID; prefix for each output file (`<sample>.tars.*`)                  |
-| input_bam          | bwa-mem2 output against the combined FASTA, **name-grouped** (not coord-sorted). Separate with `,` for multiple lane BAMs |
-| ref_genome         | The same combined genome + transcript FASTA used at alignment                 |
-| contig_sidecar     | Contig sidecar TSV from `SpliceFastaBuilder` (`*.rna_contigs_mappings.tsv`)    |
-| bamtool            | Path to samtools or sambamba; concatenates, sorts, and indexes the output      |
-| output_dir         | Directory for the lifted BAM and summary file                                     |
-
-**Optional**
-
-| Flag               | Default | Description                                                              |
-|--------------------|---------|--------------------------------------------------------------------------|
-| output_id          | (none)  | ID inserted into every output filename |
-| rna_unmap_regions  | (none)  | Curated excluded regions (rRNA / 7SL / multi-map zones) whose reads are unmapped in the lifted output using REDUX SAM conventions; see [rna_excluded_regions.38.tsv](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:rna/38/rna_excluded_regions.38.tsv) |
-| threads            | 1       | Worker threads; reads process in parallel per read-group |
-
-**Tuning thresholds**
-
-| Flag                            | Default   | Description                                                   |
-|---------------------------------|-----------|---------------------------------------------------------------|
-| supp_implied_min_intron_length  | 21        | Min implied intron length for a primary+supp merge            |
-| supp_implied_max_intron_length  | 1000000   | Max implied intron length for a primary+supp merge            |
-
-Note: no `ensembl_data_dir` - liftback reads exon/junction annotation from the sidecar (only `SpliceFastaBuilder` needs
-Ensembl).
-
-### Upstream bwa-mem2 flags
-
-Not tars config, but liftback depends on them.
-
-| Setting | Value | What it is |
-|---|---|---|
-| `-T` | 19 | bwa-mem2 minimum alignment score to output; set below the default 30 to retain short-anchor supplementaries for Step 2 |
-| `-h` | 75 | bwa-mem2 XA hit cap used by the TARS alignment |
 
 ## What a read goes through
 
@@ -130,6 +55,8 @@ Step 2  Merge       pick one alignment per supplementary record, then try splice
 Step 3  Decide      choose the mate placements together, then keep the remaining XA alternates
 Step 4  Emit        update the records and write the BAM
 ```
+
+Each step's main code is in its own package under `liftback`: `translate`, `overhang`, `merge`, `select` (Step 3) and `emit`.
 
 ### Step 0: Translate transcriptome alignments to reference genome
 
@@ -233,22 +160,165 @@ TARS then finalises each record:
 - unmap unliftable, excluded, over-cap, and `AS < 30` primaries using REDUX conventions
 - skip expected `inter-transcript spacer` misses, log other lift failures
 
-## Tests
+## Pipeline by sequencing platform
 
-Run the JUnit 4 suite with the current shared-library sources and Maven build caching disabled:
+TARS runs the same way on every platform; the input, the aligner and the REDUX settings change. The aligner always runs
+against the genome + transcriptome FASTA, and TARS takes its output as written, without sorting.
 
-```bash
-mvn test -pl tars -am -Dmaven.build.cache.enabled=false \
-    -Dtest='com.hartwig.hmftools.tars.**.*Test' -Dsurefire.failIfNoSpecifiedTests=false
+<details open>
+<summary><b>Illumina</b></summary>
+
+![Illumina pipeline](doc/pipeline_illumina.svg)
+
+Input: paired-end FASTQ.
+
+1. `bwa-mem2 mem -Y -T 19 -h 75` (see [Upstream bwa-mem2 flags](#upstream-bwa-mem2-flags)).
+2. TARS.
+3. REDUX with `-form_consensus`, which merges each group of duplicates into one consensus read.
+4. ISOFOX.
+
+</details>
+
+<details>
+<summary><b>Ultima</b></summary>
+
+![Ultima pipeline](doc/pipeline_ultima.svg)
+
+Input: the CRAM Ultima delivers, single-end reads.
+
+1. `samtools view` streams the CRAM into UA as SAM. Going through SAM rather than FASTQ keeps Ultima's `tp` and `t0`
+   quality tags, which REDUX reads with `-sequencing_type ULTIMA`.
+2. UA (Ultima's aligner, v4.2) with `--soft-clipping --min-score 19 --xa 75`, UA's equivalents of bwa-mem2's
+   `-Y -T 19 -h 75`. `--tp-output-order reference` writes `tp` in the same order as the read bases in the BAM, which is
+   how hmftools reads it.
+3. TARS, same command as Illumina.
+4. REDUX with `-sequencing_type ULTIMA` and no `-form_consensus`, so duplicates are marked but not merged.
+5. ISOFOX.
+
+</details>
+
+<details>
+<summary><b>SBX</b></summary>
+
+To be confirmed.
+
+</details>
+
+## Configuration
+
+### TarsApplication
+
+Required arguments:
+
+| Argument       | Type   | Description                                                                                                 |
+|----------------|--------|-------------------------------------------------------------------------------------------------------------|
+| sample         | String | Sample ID; prefix for each output file (`<sample>.tars.*`)                                                  |
+| input_bam      | Path   | Aligner output against the combined FASTA, **name-grouped** (not coord-sorted). Separate with `,` for multiple lane BAMs |
+| ref_genome     | Path   | The same combined genome + transcript FASTA used at alignment, with its `.fai` and `.dict` beside it        |
+| contig_sidecar | Path   | Contig sidecar TSV from `SpliceFastaBuilder` (`*.rna_contigs_mappings.tsv`)                                 |
+| bamtool        | Path   | Path to samtools or sambamba; concatenates, sorts, and indexes the output                                   |
+| output_dir     | Path   | Directory for the lifted BAM and summary file; created if it does not exist                                 |
+
+Optional arguments:
+
+| Argument                       | Type    | Default | Description                                                              |
+|--------------------------------|---------|---------|--------------------------------------------------------------------------|
+| output_id                      | String  | (none)  | ID inserted into every output filename                                   |
+| rna_unmap_regions              | Path    | (none)  | Curated excluded regions (rRNA / 7SL / multi-map zones) whose reads are unmapped in the lifted output using REDUX SAM conventions; see [rna_excluded_regions.38.tsv](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:rna/38/rna_excluded_regions.38.tsv) |
+| threads                        | Integer | 1       | Worker threads; all records of one read are processed by the same thread |
+| supp_implied_min_intron_length | Integer | 21      | Min implied intron length for a primary+supp merge                       |
+| supp_implied_max_intron_length | Integer | 1000000 | Max implied intron length for a primary+supp merge                       |
+| ref_genome_version             | String  | V37     | Not used by liftback; accepted so existing command lines still run       |
+| log_level                      | String  | INFO    | `ERROR`, `WARN`, `INFO`, `DEBUG` or `TRACE`                              |
+
+There is no `ensembl_data_dir`: liftback reads exon and junction annotation from the sidecar, so only `SpliceFastaBuilder`
+needs Ensembl.
+
+### SpliceFastaBuilder
+
+Required arguments:
+
+| Argument         | Type | Description                                                              |
+|------------------|------|--------------------------------------------------------------------------|
+| ensembl_data_dir | Path | Ensembl data cache directory                                             |
+| ref_genome       | Path | Genome FASTA the transcript sequences are taken from                     |
+| output_dir       | Path | Directory for the contig FASTA and sidecar; created if it does not exist |
+
+Optional arguments:
+
+| Argument           | Type   | Default | Description                                                                              |
+|--------------------|--------|---------|------------------------------------------------------------------------------------------|
+| ref_genome_version | String | V37     | Sets the chromosome names (`chr1` for V38, `1` for V37) and the output file names; always pass it, `V38` for GRCh38 |
+| output_id          | String | (none)  | Replaces the `ref_genome_v38_rna_contigs` prefix of the output files                     |
+| log_level          | String | INFO    | `ERROR`, `WARN`, `INFO`, `DEBUG` or `TRACE`                                              |
+
+### Upstream bwa-mem2 flags
+
+Not tars config, but liftback depends on them.
+
+| Setting | Value | What it is |
+|---|---|---|
+| `-Y` | on | bwa-mem2 soft-clips supplementary alignments instead of hard-clipping them; Steps 1 and 2 skip hard-clipped records |
+| `-T` | 19 | bwa-mem2 minimum alignment score to output; set below the default 30 to retain short-anchor supplementaries for Step 2 |
+| `-h` | 75 | bwa-mem2 XA hit cap used by the TARS alignment |
+
+## Example Usage
+
+Build the transcript contigs, once per Ensembl release:
+
+```shell
+java -cp tars.jar com.hartwig.hmftools.tars.fasta.SpliceFastaBuilder \
+    -ensembl_data_dir /ref_data/ensembl_data_cache/38/ \
+    -ref_genome /ref_data/genome.fasta \
+    -ref_genome_version V38 \
+    -output_dir /ref_data/tars/
 ```
 
-Use `TarsTestFixtures` for synthetic records, transcript geometry, reference genomes, and BAM writing.
-`TestGenome` uses 1-based inclusive coordinates and reports the lengths of its synthetic chromosomes.
-Use `LiftBackScenario` for name-group behavior; each run copies the declared records and applies the worker's output guard.
-Role-based assertions require a unique emitted record and tag assertions compare complete values.
+Add them to the genome FASTA and index the result:
 
-`LiftBackPipelineTest` runs the real producer and workers with a temporary indexed reference and BAM input, validates the
-written BAM records, and compares outputs across worker counts. `ShardedChunkProducerTest` checks complete record preservation
-across BGZF boundaries, oversized name groups, multiple inputs, bounded queues, and end-of-stream signaling.
-The mixed-input pipeline regression compares every record and all liftback counters across repeated runs with 1, 2, and 4
-workers, including read-seeded XA ties, splice lifting, supplementary merges, and low-score unmapping.
+```shell
+cat /ref_data/genome.fasta /ref_data/tars/ref_genome_v38_rna_contigs.fasta > /ref_data/genome_plus_tx.fasta
+samtools faidx /ref_data/genome_plus_tx.fasta
+samtools dict /ref_data/genome_plus_tx.fasta -o /ref_data/genome_plus_tx.dict
+bwa-mem2 index /ref_data/genome_plus_tx.fasta
+```
+
+Align Illumina reads (see [Pipeline by sequencing platform](#pipeline-by-sequencing-platform) for Ultima), then run TARS:
+
+```shell
+bwa-mem2 mem -t 24 -Y -T 19 -h 75 /ref_data/genome_plus_tx.fasta COLO829T_R1.fastq.gz COLO829T_R2.fastq.gz \
+    | samtools view -b -o COLO829T.bwa_tx.namegrouped.bam -
+
+java -jar tars.jar \
+    -sample COLO829T \
+    -input_bam COLO829T.bwa_tx.namegrouped.bam \
+    -ref_genome /ref_data/genome_plus_tx.fasta \
+    -contig_sidecar /ref_data/tars/ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv \
+    -rna_unmap_regions /ref_data/rna/38/rna_excluded_regions.38.tsv \
+    -bamtool /path/to/samtools \
+    -output_dir /sample_data/tars/ \
+    -threads 24
+```
+
+## Output
+
+### TarsApplication
+
+Files are named `<sample>.tars[.<output_id>].<file>`.
+
+| File          | Description                                                                               |
+|---------------|-------------------------------------------------------------------------------------------|
+| `bam` + `bai` | The lifted, coordinate-sorted genomic BAM, ready for REDUX                                |
+| `summary.tsv` | Counts of what liftback did, one row per metric: `Metric`, `Value`, `Pct` and `Basis`     |
+
+If `lift_failed` is above 1% of mapped primaries, TARS logs an error; the usual cause is a sidecar built from a different
+FASTA.
+
+### SpliceFastaBuilder
+
+Files are named `<prefix>.<file>`, where `<prefix>` is `ref_genome_v38_rna_contigs`, or `output_id` when it is set.
+
+| File                       | Description                                                              |
+|----------------------------|--------------------------------------------------------------------------|
+| `fasta`                    | The transcript contigs, one per chromosome (`chr1_tx`, `chr2_tx`, ...)   |
+| `rna_contigs_mappings.tsv` | The contig sidecar: one row per transcript, mapping it back to its exons |
