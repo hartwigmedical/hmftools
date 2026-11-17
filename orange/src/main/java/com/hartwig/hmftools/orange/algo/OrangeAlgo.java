@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.algo;
 
 import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateQseeVisPlot;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
-import static com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus.NO_ABNORMALITIES;
+import static com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterDataLoader.convertToViridianReports;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader.checkRnaVsTumorId;
 import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
@@ -22,11 +22,8 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
-import com.hartwig.hmftools.common.viridian.ClonalityStatus;
-import com.hartwig.hmftools.common.viridian.ReportQcStatus;
 import com.hartwig.hmftools.common.viridian.VirusReport;
 import com.hartwig.hmftools.common.viridian.VirusReportFile;
-import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
 import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
@@ -322,27 +319,7 @@ public class OrangeAlgo
         if(Files.exists(Paths.get(virusInterpreterFile)))
         {
             VirusInterpreterData virusData = VirusInterpreterDataLoader.load(virusInterpreterFile);
-
-            List<VirusReport> virusReports = Lists.newArrayList();
-
-            for(AnnotatedVirus annotatedVirus : virusData.allViruses())
-            {
-                VirusReport virusReport = new VirusReport(
-                        annotatedVirus.name(),
-                        annotatedVirus.name(),
-                        annotatedVirus.qcStatus() == NO_ABNORMALITIES ? ReportQcStatus.NO_ABNORMALITIES : ReportQcStatus.AMBIGUOUS_VIRUS,
-                        annotatedVirus.interpretation(),
-                        annotatedVirus.integrations(),
-                        annotatedVirus.percentageCovered() * 0.01,
-                        annotatedVirus.meanCoverage(),
-                        null,
-                        ClonalityStatus.NOT_PROFILED,
-                        annotatedVirus.reported());
-
-                virusReports.add(virusReport);
-            }
-
-            return virusReports;
+            return convertToViridianReports(virusData);
         }
 
         return VirusReportFile.read(VirusReportFile.generateFilename(config.VirusDir, config.TumorId));
