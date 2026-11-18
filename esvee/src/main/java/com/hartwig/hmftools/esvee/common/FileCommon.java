@@ -129,10 +129,20 @@ public final class FileCommon
 
         for(String sampleId : sampleIds)
         {
+            // first look for a prep BAM with the output ID (as used when running the full Esvee routine), otherwise fall back to one
+            // without this (as would exist when debugging the full prep BAM)
             String bamFile = format("%s%s.%s", outputDir, sampleId, PREP_FILE_ID);
 
             if(outputId != null)
-                bamFile += FILE_NAME_DELIM + outputId;
+            {
+                String bamFileWithId = bamFile + FILE_NAME_DELIM + outputId + BAM_EXTENSION;
+
+                if(Files.exists(Paths.get(bamFileWithId)))
+                {
+                    bamFiles.add(bamFileWithId);
+                    continue;
+                }
+            }
 
             bamFile += BAM_EXTENSION;
 

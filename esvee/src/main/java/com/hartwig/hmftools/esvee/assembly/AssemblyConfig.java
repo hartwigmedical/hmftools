@@ -374,13 +374,6 @@ public class AssemblyConfig
         return formEsveeInputFilename(OutputDir, sampleId(), writeType.fileId(), OutputId);
     }
 
-    private void logReadId(final String readId, final String caller)
-    {
-        // debugging only
-        if(mLogReadIds.contains(readId))
-            SV_LOGGER.debug("caller({}) specific readId({})", caller, readId);
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
