@@ -17,7 +17,7 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     r-cowplot \
     r-magick \
     bioconductor-gviz \
-    circos>=0.69.9 \
+    "circos>=0.69.9" \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
