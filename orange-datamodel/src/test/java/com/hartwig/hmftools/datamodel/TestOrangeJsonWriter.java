@@ -15,7 +15,6 @@ import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 import com.hartwig.hmftools.datamodel.driver.DriverCategory;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
-import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
@@ -64,12 +63,13 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.viridian.ClonalityStatus;
+import com.hartwig.hmftools.datamodel.viridian.ImmutableViridianRecord;
+import com.hartwig.hmftools.datamodel.viridian.ImmutableVirusReport;
+import com.hartwig.hmftools.datamodel.viridian.ReportQcStatus;
+import com.hartwig.hmftools.datamodel.viridian.ViridianRecord;
+import com.hartwig.hmftools.datamodel.viridian.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.viridian.VirusReport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -98,7 +98,7 @@ public class TestOrangeJsonWriter
                 .linx(createLinxRecord())
                 .lilac(createLilacRecord())
                 .immuneEscape(createImmuneEscapeRecord())
-                .virusInterpreter(createVirusInterpreterData())
+                .viridian(createViridianRecord())
                 .chord(ImmutableChordRecord.builder()
                         .brca1Value(0)
                         .brca2Value(0)
@@ -348,31 +348,35 @@ public class TestOrangeJsonWriter
                 .build();
     }
 
-    public static VirusInterpreterData createVirusInterpreterData()
+    public static ViridianRecord createViridianRecord()
     {
-        VirusInterpreterEntry virus1 = ImmutableVirusInterpreterEntry.builder()
-                .name("Human papillomavirus 16")
-                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+        VirusReport virus1 = ImmutableVirusReport.builder()
+                .name("Human papillomavirus type 16")
+                .virusGroup("Human papillomavirus")
+                .qcStatus(ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(1)
                 .interpretation(VirusInterpretation.HPV)
-                .reported(true)
-                .driverInterpretation(DriverInterpretation.HIGH)
                 .percentageCovered(0.9)
-                .meanCoverage(0)
+                .meanCoverage(20)
+                .reported(true)
+                .clonalityStatus(ClonalityStatus.CLONAL)
+                .copiesPerTumorCell(2.5)
                 .build();
 
-        VirusInterpreterEntry virus2 = ImmutableVirusInterpreterEntry.builder()
-                .name("Human betaherpesvirus 6B")
-                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+        VirusReport virus2 = ImmutableVirusReport.builder()
+                .name("JC polyomavirus")
+                .virusGroup("JC polyomavirus")
+                .qcStatus(ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(0)
                 .interpretation(null)     // nullable field
-                .reported(false)
-                .driverInterpretation(DriverInterpretation.LOW)
                 .percentageCovered(0.4)
-                .meanCoverage(0)
+                .meanCoverage(1)
+                .reported(false)
+                .clonalityStatus(ClonalityStatus.PURPLE_FAIL_NO_TUMOR)
+                .copiesPerTumorCell(null)     // nullable field
                 .build();
 
-        return ImmutableVirusInterpreterData.builder()
+        return ImmutableViridianRecord.builder()
                 .allViruses(List.of(virus1, virus2))
                 .reportableViruses(List.of(virus1))
                 .build();
