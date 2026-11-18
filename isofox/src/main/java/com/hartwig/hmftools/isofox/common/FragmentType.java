@@ -8,7 +8,7 @@ public enum FragmentType
     UNSPLICED,
     CHIMERIC,
     DUPLICATE,
-    LOW_MAP_QUAL,
+    MULTI_MAPPED,
     FORWARD_STRAND,
     REVERSE_STRAND;
 }

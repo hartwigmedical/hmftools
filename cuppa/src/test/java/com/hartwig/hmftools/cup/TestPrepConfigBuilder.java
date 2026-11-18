@@ -39,7 +39,7 @@ public class TestPrepConfigBuilder
     private String SampleDataDir = "";
     private String LinxDir = SampleDataDir; // pipeline directories, accepting wildcards
     private String PurpleDir = SampleDataDir;
-    private String VirusDir = SampleDataDir;
+    private String ViridianDir = SampleDataDir;
     private String IsofoxDir = SampleDataDir;
     private String SomaticVariantsDir = TEST_SOMATIC_VARIANTS_DIR;
 
@@ -104,7 +104,7 @@ public class TestPrepConfigBuilder
         SampleDataDir = sampleDataDir;
         PurpleDir = sampleDataDir;
         LinxDir = sampleDataDir;
-        VirusDir = sampleDataDir;
+        ViridianDir = sampleDataDir;
         IsofoxDir = sampleDataDir;
         SomaticVariantsDir = sampleDataDir;
         return this;
@@ -122,9 +122,9 @@ public class TestPrepConfigBuilder
         return this;
     }
 
-    public TestPrepConfigBuilder virusDir(String virusDir)
+    public TestPrepConfigBuilder viridianDir(String viridianDir)
     {
-        VirusDir = virusDir;
+        ViridianDir = viridianDir;
         return this;
     }
 
@@ -160,7 +160,7 @@ public class TestPrepConfigBuilder
                 SampleDataDir,
                 LinxDir,
                 PurpleDir,
-                VirusDir,
+                ViridianDir,
                 IsofoxDir,
                 SomaticVariantsDir,
                 AltSpliceJunctionSites

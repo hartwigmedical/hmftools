@@ -111,7 +111,7 @@ public class UnknownSpliceAnalyser
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
 
-            for(final String line : fileContents)
+            for(String line : fileContents)
             {
                 String[] values = line.split(",");
 

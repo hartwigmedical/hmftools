@@ -18,12 +18,10 @@ import static com.hartwig.hmftools.sage.common.NumberEvents.calcAdjustedNumMutat
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.calcEventPenalty;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -44,7 +42,6 @@ public class RefContextConsumer
     private final RefSequence mRefSequence;
     private final RefContextCache mRefContextCache;
     private final VariantReadContextBuilder mReadContextBuilder;
-    private final Set<Integer> mHotspotPositions;
 
     private final List<RegionBlock> mRegionBlocks;
     private int mCurrentRegionBlockIndex;
@@ -64,9 +61,6 @@ public class RefContextConsumer
         mRefContextCache = refContextCache;
         mReadContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
         mConfig = config;
-
-        mHotspotPositions = Sets.newHashSet();
-        regionHotspots.forEach(x -> mHotspotPositions.add(x.position()));
 
         mRegionBlocks = RegionBlock.buildRegionBlocks(
                 REGION_BLOCK_SIZE, regionBounds, mRefContextCache.panelSelector(), regionHotspots,

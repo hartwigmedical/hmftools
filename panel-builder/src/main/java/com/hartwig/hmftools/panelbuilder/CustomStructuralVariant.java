@@ -57,7 +57,8 @@ public record CustomStructuralVariant(
                 }
                 String extraInfo = row.getString(Columns.ExtraInfo);
                 Double qualityScoreMin = row.getDoubleOrNull(Columns.QualityScoreMin);
-                return new CustomStructuralVariant(startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo, qualityScoreMin);
+                return new CustomStructuralVariant(
+                        startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo, qualityScoreMin);
             }).toList();
 
             LOGGER.debug("Read {} custom structural variants from {}", customSvs.size(), filePath);
@@ -69,7 +70,8 @@ public record CustomStructuralVariant(
     {
         LOGGER.debug("Writing custom structural variants to file: {}", filePath);
 
-        try(DelimFileWriter<CustomStructuralVariant> writer = new DelimFileWriter<>(filePath, Columns.values(), CustomStructuralVariant::writeObj))
+        try(DelimFileWriter<CustomStructuralVariant> writer = new DelimFileWriter<>(
+                filePath, Columns.values(), CustomStructuralVariant::writeObj))
         {
             customSvs.forEach(writer::writeRow);
         }

@@ -18,6 +18,7 @@ public record TargetMetadata(
     public enum Type
     {
         GENE,
+        GENE_RNA,
         CN_BACKBONE,
         CDR3,
         CUSTOM_REGION,

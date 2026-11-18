@@ -14,7 +14,7 @@ public class UnityNormaliser implements ResultsNormaliser
     @Override
     public void recordValue(final BamRatio bamRatio)
     {
-        if(!bamRatio.mChromosome.isAutosome())
+        if(!bamRatio.Chromosome.isAutosome())
         {
             return;
         }

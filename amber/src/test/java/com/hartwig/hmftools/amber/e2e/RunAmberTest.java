@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
@@ -61,7 +60,7 @@ public class RunAmberTest
         ReferenceSample = null;
         TumorBamFile = null;
         ReferenceBamFile = null;
-        var TempDir = new File("/Users/timlavers/work/junk/basura"); //Files.createTempDirectory("amber").toFile();
+        var TempDir = new File("/Users/timlavers/work/junk/muell"); //Files.createTempDirectory("amber").toFile();
         OutputDir = new File(TempDir, "output");
         //noinspection ResultOfMethodCallIgnored
         OutputDir.mkdirs();
@@ -80,12 +79,11 @@ public class RunAmberTest
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
         Map<Chromosome, List<PCFPosition>> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
-        assertEquals(2, pcfData.keySet().size());
+        assertEquals(2, pcfData.size());
         List<PCFPosition> chr1Positions = pcfData.get(_1);
-        // The R program that does segmentation puts a couple of spurious segments
-        // at the start of each chromosome.
-        assertEquals(9, chr1Positions.size());
-        assertEquals(49001, chr1Positions.get(0).Position);
+
+        assertEquals(6, chr1Positions.size());
+        assertEquals(49554, chr1Positions.get(0).Position);
     }
 
     @Test
@@ -162,7 +160,6 @@ public class RunAmberTest
         TumorBamFile = scenario.getTumorBamFile();
         TumorSample = scenario.getTumorSampleName();
         File panelFile = panelFileName == null ? null : scenario.getTestDataFile(panelFileName);
-        File blacklistFile = blacklistFileName == null ? null : scenario.getTestDataFile(blacklistFileName);
 
         int argCount = 6;
         if(TumorBamFile != null)
@@ -182,8 +179,6 @@ public class RunAmberTest
         if(blacklistFileName != null)
         {
             Preconditions.checkNotNull(panelFile, "Blacklist file specified without panel file");
-            Preconditions.checkArgument(blacklistFile.exists(), "Blacklist file does not exist: " + blacklistFile.getAbsolutePath());
-            Preconditions.checkArgument(blacklistFile.isFile(), "Blacklist file is not a file: " + blacklistFile.getAbsolutePath());
             argCount += 2;
         }
         String[] args = new String[argCount];
@@ -212,11 +207,6 @@ public class RunAmberTest
         {
             args[index++] = String.format("-%s", TARGET_REGIONS_BED);
             args[index++] = String.format("%s", panelFile.getAbsolutePath());
-        }
-        if(blacklistFileName != null)
-        {
-            args[index++] = String.format("-%s", BLACKLISTED_SITES);
-            args[index] = String.format("%s", blacklistFile.getAbsolutePath());
         }
 
         AmberApplication.main(args);

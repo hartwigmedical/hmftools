@@ -8,24 +8,23 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
-import org.jetbrains.annotations.NotNull;
-
 @NotThreadSafe
-public class TierSelector extends HotspotSelector
+public class TierSelector
 {
+    private final HotspotCache mHotspotCache;
     private final PanelSelector mPanelRegionSelector;
     private final PanelSelector mHighConfidenceRegionSelector;
 
     public TierSelector(final List<SimpleVariant> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
-        super(hotspots);
+        mHotspotCache = new HotspotCache(hotspots);
         mPanelRegionSelector = new PanelSelector(panel);
         mHighConfidenceRegionSelector = new PanelSelector(highConfidence);
     }
 
     public VariantTier tier(final SimpleVariant variant)
     {
-        if(isHotspot(variant))
+        if(mHotspotCache.isHotspot(variant))
         {
             return VariantTier.HOTSPOT;
         }

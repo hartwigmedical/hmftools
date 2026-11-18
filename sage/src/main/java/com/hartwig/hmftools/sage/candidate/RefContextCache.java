@@ -14,24 +14,22 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.select.HotspotSelector;
+import com.hartwig.hmftools.sage.select.HotspotCache;
 import com.hartwig.hmftools.sage.select.PanelSelector;
 
 public class RefContextCache
 {
-    private final SageConfig mConfig;
     private final EvictingArray mEvictingArray;
     private final PanelSelector mPanelSelector;
     private final List<ReadContextCandidate> mSavedCandidates;
-    private final HotspotSelector mHotspotSelector;
+    private final HotspotCache mHotspotCache;
 
     public RefContextCache(final SageConfig config, final List<SimpleVariant> hotspots, final List<BaseRegion> panel)
     {
-        mConfig = config;
         mPanelSelector = new PanelSelector(panel);
         mSavedCandidates = Lists.newArrayList();
 
-        mHotspotSelector = new HotspotSelector(hotspots);
+        mHotspotCache = new HotspotCache(hotspots);
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
@@ -91,7 +89,7 @@ public class RefContextCache
 
     public boolean passesTumorHardLimits(final AltContext altContext)
     {
-        if(mHotspotSelector.isHotspot(altContext))
+        if(mHotspotCache.isHotspot(altContext))
             return true;
 
         return altContext.hasMinAltSupport();

@@ -333,7 +333,6 @@ public class AssemblyConfig
         mLogReadIds = parseLogReadIds(configBuilder);
 
         DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
-
         DiscordantRateIncrement = configBuilder.getDecimal(DISC_RATE_INCREMENT);
 
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);

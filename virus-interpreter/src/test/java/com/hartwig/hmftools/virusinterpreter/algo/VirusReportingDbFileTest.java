@@ -10,7 +10,7 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 
 import org.junit.Test;
 

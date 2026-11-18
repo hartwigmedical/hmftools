@@ -38,9 +38,11 @@ public class TargetedRangeTest
     @Test
     public void testFromRegionsInvalid()
     {
-        assertThrows(RuntimeException.class,
+        assertThrows(
+                RuntimeException.class,
                 () -> TargetedRange.fromRegions(new ChrBaseRegion("1", 100, 200), new ChrBaseRegion("2", 100, 200)));
-        assertThrows(RuntimeException.class,
+        assertThrows(
+                RuntimeException.class,
                 () -> TargetedRange.fromRegions(new ChrBaseRegion("1", 100, 200), new ChrBaseRegion("1", 201, 300)));
 
     }

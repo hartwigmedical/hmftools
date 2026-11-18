@@ -29,7 +29,7 @@ public class HotspotCache
             if(configBuilder.hasValue(SOMATIC_HOTSPOT_FILE))
             {
                 String hotspotFile = configBuilder.getValue(SOMATIC_HOTSPOT_FILE);
-                mSomaticHotspotMap.putAll(VariantHotspotFile.loadHotspotVcf(hotspotFile));
+                mSomaticHotspotMap.putAll(VariantHotspotFile.loadHotspotFile(hotspotFile));
             }
         }
         catch(Exception e)
@@ -43,7 +43,7 @@ public class HotspotCache
             if(configBuilder.hasValue(GERMLINE_HOTSPOT_FILE))
             {
                 String hotspotFile = configBuilder.getValue(GERMLINE_HOTSPOT_FILE);
-                mGermlineHotspotMap.putAll(VariantHotspotFile.loadHotspotVcf(hotspotFile));
+                mGermlineHotspotMap.putAll(VariantHotspotFile.loadHotspotFile(hotspotFile));
             }
         }
         catch(Exception e)

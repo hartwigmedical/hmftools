@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptAminoAcidData;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
@@ -146,6 +148,15 @@ public class ReferenceData
         {
             if(DriverGenes != null)
             {
+                // validate that driver genes have matching entries in Ensembl
+                List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(DriverGenes, GeneDataCache);
+                if(!invalidDriverGenes.isEmpty())
+                {
+                    SG_LOGGER.error("Invalid non-Ensembl gene names: {}",
+                            invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
+                    System.exit(1);
+                }
+
                 List<String> driverGeneNames = DriverGenes.stream().map(DriverGene::gene).collect(Collectors.toList());
 
                 Map<String, List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
@@ -197,7 +208,7 @@ public class ReferenceData
         if(mConfig.Hotspots.isEmpty())
             return;
 
-        ListMultimap<Chromosome,SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotVcf(mConfig.Hotspots);
+        ListMultimap<Chromosome,SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotFile(mConfig.Hotspots);
 
         for(SimpleVariant variant : hotspotMap.values())
         {

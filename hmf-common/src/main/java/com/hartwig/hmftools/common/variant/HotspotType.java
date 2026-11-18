@@ -15,6 +15,9 @@ public enum HotspotType
 
     public static final String HOTSPOT_DESCRIPTION = "Site is at a known hotspot location";
 
+    public static final int NEAR_HOTSPOT_DISTANCE = 5;
+    public static final String NEAR_HOTSPOT_DESC = "Variant within " + NEAR_HOTSPOT_DISTANCE + " of hotspot";
+
     @NotNull
     public static HotspotType fromVariant(@NotNull final VariantContext context)
     {

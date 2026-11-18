@@ -26,9 +26,12 @@ public class ProbeQualityScorerTest
 
     private static final int BATCH_SIZE = 3;
     private static final int BUFFER_SIZE = 999999;      // I.e. unlimited
+    private static final int PROFILE_MIN_REGION_LENGTH = 40;
 
     private final ProbeQualityScorer mScorer =
-            new ProbeQualityScorer(this::computeQualityProfile, this::computeQualityModel, BATCH_SIZE, BUFFER_SIZE);
+            new ProbeQualityScorer(
+                    this::computeQualityProfile, this::computeQualityModel, PROFILE_MIN_REGION_LENGTH, BATCH_SIZE,
+                    BUFFER_SIZE);
 
     // Helpers for making the test cases more automated.
     private int mProbeCounter = 0;
@@ -46,11 +49,12 @@ public class ProbeQualityScorerTest
         return result.getValue();
     }
 
-    private List<Double> computeQualityModel(final List<String> probes)
+    private List<Double> computeQualityModel(final List<String> probes, final List<List<ChrBaseRegion>> sourceRegions)
     {
         // Assert probes are batched per call as expected.
         assertEquals(Math.min(mModelResults.size(), BATCH_SIZE), probes.size());
         assertTrue(probes.size() < BUFFER_SIZE);
+        assertEquals(probes.size(), sourceRegions.size());
 
         ArrayList<Double> results = new ArrayList<>();
         for(String probe : probes)
@@ -114,10 +118,29 @@ public class ProbeQualityScorerTest
         ChrBaseRegion startRegion = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter);
         ChrBaseRegion endRegion = new ChrBaseRegion("2", 2000 * mProbeCounter, 2000 * mProbeCounter);
         SequenceDefinition definition =
-                new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
+                SequenceDefinition.variant(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
         Probe probe = probe(definition, sequence);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
+        mModelResults.add(Pair.of(sequence, quality));
+        mExpectedProbes.add(probe.withQualityScore(quality));
+    }
+
+    // Probe close enough to the ref to qualify for the profile, but with a region shorter than the profile window, so it must fall back to
+    // the probe quality model (the profile can't score a sub-window region).
+    private void probeWithShortRegionUsesModel()
+    {
+        mProbeCounter++;
+        // Two same-chromosome regions separated by a small gap (treated as ref-similar), with the first region shorter than the window.
+        ChrBaseRegion startRegion = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter + PROFILE_MIN_REGION_LENGTH - 10);
+        ChrBaseRegion endRegion = new ChrBaseRegion("1", 1000 * mProbeCounter + PROFILE_MIN_REGION_LENGTH - 6, 1000 * mProbeCounter + 120);
+        SequenceDefinition definition =
+                SequenceDefinition.variant(startRegion, Orientation.FORWARD, "", endRegion, Orientation.FORWARD);
+        String sequence = "A".repeat(definition.baseLength());
+        Probe probe = probe(definition, sequence);
+        double quality = 0.1 + mProbeCounter / 1e6;
+        mInputProbes.add(probe);
+        // Model is used, not the profile, so no mProfileResults entry.
         mModelResults.add(Pair.of(sequence, quality));
         mExpectedProbes.add(probe.withQualityScore(quality));
     }
@@ -160,6 +183,13 @@ public class ProbeQualityScorerTest
     {
         // Novel sequence requires using the probe quality model.
         probeWithModelResult();
+    }
+
+    @Test
+    public void testShortRegionUsesModel()
+    {
+        // A probe with a region shorter than the profile window falls back to the model instead of throwing.
+        probeWithShortRegionUsesModel();
     }
 
     @Test

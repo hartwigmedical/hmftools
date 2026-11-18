@@ -181,7 +181,7 @@ public class LinxConfig
         }
     }
 
-    public final List<String> getSampleIds() { return mSampleIds; }
+    public List<String> getSampleIds() { return mSampleIds; }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
 

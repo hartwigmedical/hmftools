@@ -22,8 +22,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
-public final class
-FileWriterUtils
+public final class FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_DIR_DESC = "Output directory";

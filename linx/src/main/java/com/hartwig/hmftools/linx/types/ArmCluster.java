@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.breakendsCannotLink;
 import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_LINE;
 import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_OTHER;
@@ -56,13 +56,13 @@ public class ArmCluster
 
     public String getChrArm() { return makeChrArmStr(mChromosome, mArm); }
 
-    public final String toString()
+    public String toString()
     {
         return String.format("%d: %s %s_%s %d:%d", mId, mType, mChromosome, mArm, mStartPos, mEndPos);
     }
 
-    public final String chromosome() { return mChromosome; }
-    public final Arm arm() { return mArm; }
+    public String chromosome() { return mChromosome; }
+    public Arm arm() { return mArm; }
     public int posStart() { return mStartPos; }
     public int posEnd() { return mEndPos; }
 
@@ -73,7 +73,7 @@ public class ArmCluster
         int index = 0;
         while(index < mBreakends.size())
         {
-            final SvBreakend be = mBreakends.get(index);
+            SvBreakend be = mBreakends.get(index);
 
             if(breakend.position() < be.position())
                 break;
@@ -104,7 +104,7 @@ public class ArmCluster
 
     public static void buildArmClusters(final SvCluster cluster)
     {
-        final List<ArmCluster> armClusters = cluster.getArmClusters();
+        List<ArmCluster> armClusters = cluster.getArmClusters();
 
         for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
@@ -114,7 +114,7 @@ public class ArmCluster
 
             for(int i = 0; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
                 SvVarData var = breakend.getSV();
 
                 // ensure that a pair of foldback breakends are put into the same arm cluster
@@ -185,10 +185,10 @@ public class ArmCluster
 
         if(mBreakends.size() == 2)
         {
-            final SvBreakend be1 = mBreakends.get(0);
-            final SvVarData var1 = be1.getSV();
-            final SvBreakend be2 = mBreakends.get(1);
-            final SvVarData var2 = be2.getSV();
+            SvBreakend be1 = mBreakends.get(0);
+            SvVarData var1 = be1.getSV();
+            SvBreakend be2 = mBreakends.get(1);
+            SvVarData var2 = be2.getSV();
 
             if(var1 == var2)
             {
@@ -210,7 +210,7 @@ public class ArmCluster
                 return;
             }
 
-            final LinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
+            LinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
 
             if(tiPair != null && tiPair.hasBreakend(be2))
             {
@@ -219,7 +219,7 @@ public class ArmCluster
                 return;
             }
 
-            final DbPair dbPair = be1.getSV().getDBLink(be1.usesStart());
+            DbPair dbPair = be1.getSV().getDBLink(be1.usesStart());
 
             if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
             {
@@ -248,9 +248,9 @@ public class ArmCluster
                 ++foldbackCount;
             }
 
-            if(breakend.orientation() == -1)
+            if(breakend.reverseOrient())
             {
-                final LinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
+                LinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
 
                 if(tiPair != null && mBreakends.contains(tiPair.getOtherBreakend(breakend)))
                 {
@@ -305,17 +305,19 @@ public class ArmCluster
         // check for DSBs which were masked by TIs in between
         for(int i = 0; i < unlinkedBreakends.size() - 1; ++i)
         {
-            final SvBreakend be1 = unlinkedBreakends.get(i);
-            final SvBreakend be2 = unlinkedBreakends.get(i+1);
+            SvBreakend be1 = unlinkedBreakends.get(i);
+            SvBreakend be2 = unlinkedBreakends.get(i+1);
 
-            if(be1.orientation() == 1 && be2.orientation() == -1)
+            if(be1.forwardOrient() && be2.reverseOrient())
             {
                 ++dsbCount;
             }
-            else if(be1.orientation() == -1 && be2.orientation() == 1
-            && be2.position() - be1.position() < getMinTemplatedInsertionLength(be1, be2))
+            else
             {
-                ++dsbCount;
+                if(be1.reverseOrient() && be2.forwardOrient() && breakendsCannotLink(be1, be2))
+                {
+                    ++dsbCount;
+                }
             }
         }
 
@@ -356,14 +358,5 @@ public class ArmCluster
         }
 
         return results;
-    }
-
-    public static void logArmClusterData(final SvCluster cluster)
-    {
-        for(ArmCluster armCluster : cluster.getArmClusters())
-        {
-            LNX_LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
-                    cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), armCluster.getType());
-        }
     }
 }

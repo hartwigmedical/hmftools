@@ -40,6 +40,7 @@ public final class SamRecordUtils
     public static final String READ_GROUP_ATTRIBUTE = SAMTag.RG.name();
 
     public static final String XS_ATTRIBUTE = "XS";
+    public static final String XA_ATTRIBUTE = "XA";
 
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";

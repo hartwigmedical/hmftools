@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
-import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
@@ -55,7 +53,7 @@ public class AmberData
             throw new ParseException("Unable to open Amber QC file: " + qcFile);
         }
 
-        PPL_LOGGER.info("reading Amber QC from {}", qcFile);
+        PPL_LOGGER.debug("reading Amber QC from {}", qcFile);
         Contamination = AmberQCFile.read(qcFile).contamination();
 
         String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
@@ -64,7 +62,7 @@ public class AmberData
             throw new ParseException("Unable to open Amber BAF file: " + amberFilename);
         }
 
-        PPL_LOGGER.info("reading Amber BAFs from {}", amberFilename);
+        PPL_LOGGER.debug("reading Amber BAFs from {}", amberFilename);
         ChromosomeBafs = AmberBAFFile.read(amberFilename, !germlineOnlyMode);
 
         if(!germlineOnlyMode)
@@ -76,7 +74,7 @@ public class AmberData
                 throw new ParseException("Unable to open Amber PCF file: " + pcfFilename);
             }
 
-            PPL_LOGGER.info("reading Amber PCFs from {}", pcfFilename);
+            PPL_LOGGER.debug("reading Amber PCFs from {}", pcfFilename);
 
             TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, pcfFilename);
         }
@@ -93,9 +91,6 @@ public class AmberData
                 .orElse(DEFAULT_READ_DEPTH));
 
         PatientGender = determineGender(refGenVersion, ChromosomeBafs, chrXRegionPercentage);
-
-        PPL_LOGGER.info("Amber average tumor depth({}) ambiguous BAF({})",
-                AverageTumorDepth, String.format("%.3f", ExpectedBAF.expectedBAF(AverageTumorDepth)));
     }
 
     public int minSomaticTotalReadCount()

@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.esvee.prep.JunctionUtils.SIMPLE_SEARCH_COUNT;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.findJunctionMatchIndex;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
-import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasWellAnchoredRead;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.findWellAnchoredReadSoftClipLength;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.markSupplementaryDuplicates;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.readWithinJunctionRange;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
@@ -823,8 +823,12 @@ public class JunctionTracker
 
         if(!junctionData.internalIndel())
         {
-            if(!hasWellAnchoredRead(junctionData, mFilterConfig))
+            Integer maxValidSoftClipLength = findWellAnchoredReadSoftClipLength(junctionData, mFilterConfig);
+
+            if(maxValidSoftClipLength == null)
                 return false;
+
+            junctionData.setMaxValidSoftClipLength(maxValidSoftClipLength);
         }
 
         if(junctionFrags + exactSupportCount < mFilterConfig.MinJunctionSupport)

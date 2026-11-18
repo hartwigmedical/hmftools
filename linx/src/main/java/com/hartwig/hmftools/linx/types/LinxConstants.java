@@ -21,4 +21,6 @@ public class LinxConstants
     public static final int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
 
     public static final double LOW_JCN_THRESHOLD = 0.75;
+
+    public static final double DISRUPTION_CN_REPORTABLE_THRESHOLD = 0.5;
 }

@@ -57,7 +57,10 @@ public final class PurpleDataLoader
         String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorId);
         String purityTsv = PurplePurity.generateFilename(purpleDir, tumorId);
         String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorId);
-        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorId));
+
+        String somaticVariantVcf = config.PurpleRnaAppendVcf != null ?
+                config.PurpleRnaAppendVcf : resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorId));
+
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorId);
         String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorId));
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorId);
@@ -99,8 +102,7 @@ public final class PurpleDataLoader
 
             germlineDrivers = germlineDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
-            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(
-                    tumorId, config.ReferenceId, config.RnaSampleId, germlineVariantVcf);
+            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(tumorId, config.ReferenceId, germlineVariantVcf);
 
             panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 

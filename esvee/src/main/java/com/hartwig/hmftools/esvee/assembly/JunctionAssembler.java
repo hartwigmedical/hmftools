@@ -10,11 +10,13 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPL
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.setIndelStatus;
+import static com.hartwig.hmftools.esvee.assembly.JunctionReadTypes.calcProximateJunctionReadRatio;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.findSbxPossibleDuplicates;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
 import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.checkSupportVsRefSideSoftClip;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 
@@ -25,6 +27,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -37,11 +40,13 @@ public class JunctionAssembler
 {
     private Junction mJunction;
     private final SagaSequenceMatcher mSagaMatcher;
+    private final RefGenomeInterface mRefGenome;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, @Nullable final SagaSequenceMatcher sagaMatcher)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, @Nullable final SagaSequenceMatcher sagaMatcher)
     {
         mJunction = junction;
+        mRefGenome = refGenome;
         mSagaMatcher = sagaMatcher;
         mNonJunctionReads = Lists.newArrayList();
     }
@@ -79,7 +84,7 @@ public class JunctionAssembler
         else if(mJunction.DiscordantOnly)
         {
             // look for a common soft-clip position, otherwise take the min variant length back from the inner most read as the junction
-            DiscordantJunctionBuilder discordantJunctionBuilder = new DiscordantJunctionBuilder(mJunction);
+            DiscordantJunctionBuilder discordantJunctionBuilder = new DiscordantJunctionBuilder(mJunction, mNonJunctionReads);
             discordantJunctionBuilder.assessDiscordantJunction(rawReads, extensionReads, junctionReads);
 
             if(extensionReads.isEmpty())
@@ -93,7 +98,7 @@ public class JunctionAssembler
         }
         else
         {
-            JunctionReadTypes juncReadTypes = new JunctionReadTypes(mJunction, rawReads);
+            JunctionReadTypes juncReadTypes = new JunctionReadTypes(mJunction, rawReads, mRefGenome);
             junctionReads.addAll(juncReadTypes.junctionReads());
 
             juncReadTypes.establishExtensionReads(extensionReads, juncThresholdState);
@@ -224,7 +229,11 @@ public class JunctionAssembler
             // check for a SAGA match by sequence, even if a coord match was previously found
             boolean sagaMatched = mSagaMatcher != null && assembly.matchToSaga(mSagaMatcher);
 
-            if(juncThresholdState.UsesLowerSagaLimits)
+            // now that the assembly has been established, check for short (<32) non-SAGA junctions which would have been dropped by Prep
+            boolean isValidPrepJunction = mJunction.softClipBased() ?
+                    (mJunction.MaxSoftClipLength >= MIN_VARIANT_LENGTH || assembly.hasLineSequence() || mJunction.Hotspot) : true;
+
+            if(juncThresholdState.UsesLowerSagaLimits || !isValidPrepJunction)
             {
                 if(sagaMatched)
                 {
@@ -235,6 +244,8 @@ public class JunctionAssembler
                     return Collections.emptyList();
                 }
             }
+
+            assembly.stats().ProximateJuncReadRatio = calcProximateJunctionReadRatio(mJunction, rawReads); // used for downstream filtering
         }
 
         return assemblies;
@@ -394,6 +405,6 @@ public class JunctionAssembler
     @VisibleForTesting
     public JunctionAssembler(final Junction junction)
     {
-        this(junction, null);
+        this(junction, null, null);
     }
 }

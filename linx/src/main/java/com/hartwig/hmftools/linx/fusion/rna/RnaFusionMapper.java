@@ -163,7 +163,7 @@ public class RnaFusionMapper
 
             for(SvBreakend breakend : breakendList)
             {
-                if(breakend.orientation() != rnaOrient)
+                if(breakend.orientAsByte() != rnaOrient)
                      continue;
 
                 final SvVarData var = breakend.getSV();

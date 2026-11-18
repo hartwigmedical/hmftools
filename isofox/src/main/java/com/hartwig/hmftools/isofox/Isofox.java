@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.PANEL_LOW_COVERAGE_FAC
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH;
@@ -47,7 +46,6 @@ import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
-import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
@@ -90,8 +88,6 @@ public class Isofox
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.load(false);
 
-        mConfig.Filters.buildGeneRegions(mGeneTransCache);
-
         mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.applyGcBiasAdjust() ? new ExpectedCountsCache(mConfig) : null;
 
         mGcTranscriptCalcs = mConfig.applyGcBiasAdjust() ? new GcTranscriptCalculator(mConfig) : null;
@@ -130,13 +126,6 @@ public class Isofox
             NeoEpitopeReader neReader = new NeoEpitopeReader(mConfig, mGeneTransCache);
             neReader.calcFragmentSupport();
             return true;
-        }
-
-        if(mConfig.runFunction(READ_COUNTS))
-        {
-            boolean status = countBamReads(chrGeneMap);
-            mResultsWriter.close();
-            return status;
         }
 
         // BAM processing for the key routines - novel junctions, fusions and gene expression
@@ -234,21 +223,18 @@ public class Isofox
     {
         FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
-        long enrichedGeneFragCount = 0;
-        GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
+        GcRatioCounts gcRatioCounts = new GcRatioCounts();
 
         for(ChromosomeTaskExecutor chrTask : chrTasks)
         {
             totalFragmentCounts.combine(chrTask.getCombinedCounts());
 
-            enrichedGeneFragCount += chrTask.getEnrichedGenesFragmentCount();
-
-            nonEnrichedGcRatioCounts.mergeRatioCounts(chrTask.getNonEnrichedGcRatioCounts().getCounts());
+            gcRatioCounts.mergeRatioCounts(chrTask.getNonEnrichedGcRatioCounts().getCounts());
         }
 
         if(mConfig.applyGcBiasAdjust())
         {
-            applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
+            applyGcAdjustments(chrTasks, callableList, gcRatioCounts);
         }
 
         if(mConfig.writeType(GC_RATIO))
@@ -262,9 +248,6 @@ public class Isofox
             copyVector(combinedGcRatioCounts.getCounts(), percentData);
             convertToPercentages(percentData);
             writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
-
-            if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
             if(mConfig.applyGcBiasAdjust())
             {
@@ -281,10 +264,10 @@ public class Isofox
         }
 
         // calculate a TPM for all transcripts before results are written
-        final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
+        List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
-        double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);
+        double[] tpmFactors = calcTpmFactors(geneSummaryData);
 
         PanelTpmNormaliser panelTpmNormaliser = new PanelTpmNormaliser(mConfig.PanelTpmNormFile);
 
@@ -306,7 +289,7 @@ public class Isofox
         // write summary statistics
         if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS) || mConfig.runFunction(IsofoxFunction.STATISTICS))
         {
-            double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
+            double medianGCRatio = gcRatioCounts.getPercentileRatio(0.5);
 
             int lowCoverageThreshold = LOW_COVERAGE_THRESHOLD;
             int splicedGeneThreshold = SPLICE_GENE_THRESHOLD;
@@ -320,9 +303,9 @@ public class Isofox
                 splicedGeneThreshold = (int)(panelGeneCoverage * SPLICE_GENE_THRESHOLD);
             }
 
-            final RnaStatistics summaryStats = createSummaryStats(
-                    totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
-                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
+            RnaStatistics summaryStats = createSummaryStats(
+                    totalFragmentCounts, spliceGeneCount, medianGCRatio, mFragmentLengthDistribution,
+                    mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
                     lowCoverageThreshold, splicedGeneThreshold);
 
             mResultsWriter.writeSummaryStats(summaryStats);
@@ -355,7 +338,7 @@ public class Isofox
         if(!mConfig.Filters.SpecificChrRegions.hasFilters())
             return mGeneTransCache.getChrGeneDataMap();
 
-        final Map<String, List<GeneData>> chrGeneMap = Maps.newHashMap();
+        Map<String, List<GeneData>> chrGeneMap = Maps.newHashMap();
 
         if(mConfig.Filters.SpecificChrRegions.Regions.isEmpty())
         {
@@ -374,7 +357,22 @@ public class Isofox
                         .filter(x -> positionsOverlap(region.start(), region.end(), x.GeneStart, x.GeneEnd))
                         .collect(Collectors.toList());
 
-                chrGeneMap.put(region.Chromosome, regionGeneList);
+                if(!regionGeneList.isEmpty())
+                {
+                    List<GeneData> chrGeneDataList = chrGeneMap.get(region.Chromosome);
+
+                    if(chrGeneDataList == null)
+                    {
+                        chrGeneDataList = Lists.newArrayList();
+                        chrGeneMap.put(region.Chromosome, chrGeneDataList);
+                    }
+
+                    for(GeneData geneData : regionGeneList)
+                    {
+                        if(!chrGeneDataList.contains(geneData))
+                            chrGeneDataList.add(geneData);
+                    }
+                }
             }
         }
 
@@ -385,7 +383,7 @@ public class Isofox
     {
         int requiredFragCount = mConfig.FragmentLengthSamplingCount / chrGeneMap.size(); // split evenly amongst chromosomes
 
-        final List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
+        List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
 
         for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
@@ -394,7 +392,7 @@ public class Isofox
             fragSizeCalcs.add(fragSizeCalc);
         }
 
-        final List<Callable<Void>> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
+        List<Callable<Void>> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
@@ -429,24 +427,6 @@ public class Isofox
 
             combinedPc.logStats();
         }
-    }
-
-    private boolean countBamReads(final Map<String, List<GeneData>> chrGeneMap)
-    {
-        ISF_LOGGER.info("basic BAM read counts");
-
-        final List<BamReadCounter> taskList = Lists.newArrayList();
-        final List<Callable<Void>> callableList = Lists.newArrayList();
-
-        for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
-        {
-            BamReadCounter bamReaderTask = new BamReadCounter(mConfig, mResultsWriter);
-            bamReaderTask.initialise(entry.getKey(), entry.getValue());
-            taskList.add(bamReaderTask);
-            callableList.add(bamReaderTask);
-        }
-
-        return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
     public static void main(@NotNull final String[] args)

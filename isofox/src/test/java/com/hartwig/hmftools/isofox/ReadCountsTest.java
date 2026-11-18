@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
@@ -26,7 +27,7 @@ import htsjdk.samtools.CigarOperator;
 
 public class ReadCountsTest
 {
-    public static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
+    public static final String REF_BASE_STR_1 = "ACGT".repeat(5);
     public static final String REF_BASE_STR_2 = REF_BASE_STR_1 + REF_BASE_STR_1;
 
     @Test
@@ -37,15 +38,15 @@ public class ReadCountsTest
 
         // simple matched read
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(119, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(100, read.getMappedRegionCoords().get(0).start());
+        assertEquals(119, read.getMappedRegionCoords().get(0).end());
 
         // with soft-clippings
         read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1, createCigar(10, 20, 10));
 
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(119, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(100, read.getMappedRegionCoords().get(0).start());
+        assertEquals(119, read.getMappedRegionCoords().get(0).end());
 
         // with 2 splits
         Cigar cigar = new Cigar();
@@ -58,12 +59,12 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 100, 159, REF_BASE_STR_1, cigar);
 
         assertEquals(3, read.getMappedRegionCoords().size());
-        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(104, read.getMappedRegionCoords().get(0)[SE_END]);
-        assertEquals(125, read.getMappedRegionCoords().get(1)[SE_START]);
-        assertEquals(134, read.getMappedRegionCoords().get(1)[SE_END]);
-        assertEquals(165, read.getMappedRegionCoords().get(2)[SE_START]);
-        assertEquals(169, read.getMappedRegionCoords().get(2)[SE_END]);
+        assertEquals(100, read.getMappedRegionCoords().get(0).start());
+        assertEquals(104, read.getMappedRegionCoords().get(0).end());
+        assertEquals(125, read.getMappedRegionCoords().get(1).start());
+        assertEquals(134, read.getMappedRegionCoords().get(1).end());
+        assertEquals(165, read.getMappedRegionCoords().get(2).start());
+        assertEquals(169, read.getMappedRegionCoords().get(2).end());
 
         // with a delete
         // 10M2D8M
@@ -76,8 +77,8 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1.substring(0, 18), cigar);
 
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(119, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(100, read.getMappedRegionCoords().get(0).start());
+        assertEquals(119, read.getMappedRegionCoords().get(0).end());
 
         // with an insert
         // 10M2D8M
@@ -90,8 +91,8 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 100, 117, REF_BASE_STR_1, cigar);
 
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(117, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(100, read.getMappedRegionCoords().get(0).start());
+        assertEquals(117, read.getMappedRegionCoords().get(0).end());
     }
 
     @Test
@@ -106,8 +107,8 @@ public class ReadCountsTest
         Read read = createReadRecord(1, "1", 110, 130, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(110, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(130, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(110, read.getMappedRegionCoords().get(0).start());
+        assertEquals(130, read.getMappedRegionCoords().get(0).end());
 
         // test classification of reads
         assertEquals(WITHIN_EXON, read.getRegionMatchType(region));
@@ -132,12 +133,12 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 110, 204, REF_BASE_STR_1, cigar);
 
         assertEquals(3, read.getMappedRegionCoords().size());
-        assertEquals(110, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(120, read.getMappedRegionCoords().get(0)[SE_END]);
-        assertEquals(140, read.getMappedRegionCoords().get(1)[SE_START]);
-        assertEquals(160, read.getMappedRegionCoords().get(1)[SE_END]);
-        assertEquals(180, read.getMappedRegionCoords().get(2)[SE_START]);
-        assertEquals(204, read.getMappedRegionCoords().get(2)[SE_END]);
+        assertEquals(110, read.getMappedRegionCoords().get(0).start());
+        assertEquals(120, read.getMappedRegionCoords().get(0).end());
+        assertEquals(140, read.getMappedRegionCoords().get(1).start());
+        assertEquals(160, read.getMappedRegionCoords().get(1).end());
+        assertEquals(180, read.getMappedRegionCoords().get(2).start());
+        assertEquals(204, read.getMappedRegionCoords().get(2).end());
 
         RegionReadData region1 = new RegionReadData("1", 100, 120);
         RegionReadData region2 = new RegionReadData("1", 140, 160);
@@ -164,12 +165,12 @@ public class ReadCountsTest
                 createCigar(5, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region1));
         assertEquals(2, read.getMappedRegionCoords().size());
-        assertEquals(146, read.getMappedRegionCoords().get(0)[SE_START]);
-        assertEquals(150, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(146, read.getMappedRegionCoords().get(0).start());
+        assertEquals(150, read.getMappedRegionCoords().get(0).end());
 
         // test again on the up side, with 2 different regions matching the inferred bases
         read = createReadRecord(1, "1", 141, 155, REF_BASE_STR_1.substring(0, 15),
@@ -190,44 +191,44 @@ public class ReadCountsTest
         region3.addPreRegion(region4);
 
         regions = Lists.newArrayList(region1, region4);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region2));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region3));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region4));
         assertEquals(2, read.getMappedRegionCoords().size());
-        assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_START]);
-        assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_END]);
+        assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1).start());
+        assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1).end());
 
         // test with a soft-clipped and overhanging base together
         read = createReadRecord(1, "1", 141, 152, REF_BASE_STR_1.substring(0, 15),
                 createCigar(0, 12, 3));
 
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region2));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region3));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region4));
         assertEquals(2, read.getMappedRegionCoords().size());
-        assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_START]);
-        assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_END]);
+        assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1).start());
+        assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1).end());
 
         // test again with ambiguous mapping of 1 base to more than 1 adjacent exons, and observe the read coords being truncated
         read = createReadRecord(1, "1", 132, 151,
                 REF_BASE_STR_1.substring(0, 19) + REF_BASE_STR_1.substring(10, 11), createCigar(0, 20, 0));
 
-        read.processOverlappingRegions(Lists.newArrayList(region1, region4));
+        processOverlappingRegions(read, Lists.newArrayList(region1, region4));
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(150, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(150, read.getMappedRegionCoords().get(0).end());
 
         read = createReadRecord(1, "1", 199, 218,
                 REF_BASE_STR_1.substring(9, 10) + REF_BASE_STR_1.substring(0, 19), createCigar(0, 20, 0));
 
-        read.processOverlappingRegions(Lists.newArrayList(region2, region3));
+        processOverlappingRegions(read, Lists.newArrayList(region2, region3));
         assertEquals(1, read.getMappedRegionCoords().size());
-        assertEquals(200, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(200, read.getMappedRegionCoords().get(0).start());
     }
 
     @Test

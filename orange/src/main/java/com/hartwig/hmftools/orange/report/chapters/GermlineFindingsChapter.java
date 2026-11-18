@@ -58,12 +58,6 @@ public class GermlineFindingsChapter implements ReportChapter
     {
         document.addParagraph(name(), mReportResources.chapterTitleStyle());
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
-        {
-            document.addQcFailNotice(mReportResources);
-            return;
-        }
-
         if(mReport.referenceId() != null)
         {
             addGermlineVariants(document);

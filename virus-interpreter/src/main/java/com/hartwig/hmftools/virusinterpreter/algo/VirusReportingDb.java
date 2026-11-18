@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.virusinterpreter.algo;
 
 import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
 import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,30 +18,34 @@ public class GeneCopyNumberDataTest extends ComparableItemTest<GeneCopyNumberDat
     @Before
     public void setUp()
     {
-        comparer = new GeneCopyNumberComparer(new ComparConfig());
+        comparer = new GeneCopyNumberComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestGeneCopyNumberDataBuilder.BUILDER;
         GeneCopyNumberData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_MIN_COPY_NUMBER, b -> b.minCopyNumber = alternateValueSource.CopyNumber.minCopyNumber(),
-                FLD_MAX_COPY_NUMBER, b -> b.maxCopyNumber = alternateValueSource.CopyNumber.maxCopyNumber()
+                GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), b -> b.minCopyNumber = alternateValueSource.CopyNumber.minCopyNumber(),
+                GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.CopyNumber.maxCopyNumber(),
+                GeneCopyNumberComparer.Fields.DriverType.toString(), b -> b.driverType = alternateValueSource.CopyNumber.driverType()
         );
         nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.CopyNumber.geneName());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
     }
 
-    @Override
     @Test
-    public void fullyMatchesSelfInReportableMode()
+    public void transcriptIsShownButNotCompared()
     {
-        // Override since copy numbers are never compared in reportable mode
-    }
+        GeneCopyNumberData canonical = builder.create(b -> b.transcriptId = "ENST00000498124");
+        GeneCopyNumberData otherTranscript = builder.create(b ->
+        {
+            b.transcriptId = "ENST00000579755";
+            b.isCanonical = false;
+        });
 
-    @Override
-    @Test
-    public void singleFieldMismatchesAreRecognizedInReportableMode()
-    {
-        // Override since copy numbers are never compared in reportable mode
+        assertEquals(
+                "ENST00000579755",
+                otherTranscript.fieldValues().get(GeneCopyNumberComparer.Fields.TranscriptId.toString()).displayValue());
+        assertEquals("false", otherTranscript.fieldValues().get(GeneCopyNumberComparer.Fields.IsCanonical.toString()).displayValue());
+        assertEquals(MismatchType.FULL_MATCH, canonical.findMismatch(comparer, otherTranscript, MatchLevel.DETAILED, true).Type);
     }
 }

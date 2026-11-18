@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 public class GeneReadData
 {
@@ -84,20 +85,20 @@ public class GeneReadData
         if(regions.isEmpty())
             return;
 
-        List<int[]> commonRegions = Lists.newArrayList(new int[] {regions.get(0).start(), regions.get(0).end()});
+        List<BaseRegion> commonRegions = Lists.newArrayList(new BaseRegion(regions.get(0).Region.start(), regions.get(0).Region.end()));
 
         for(int i = 1; i < regions.size(); ++i)
         {
-            List<int[]> nextRegion = Lists.newArrayList(new int[] {regions.get(i).start(), regions.get(i).end()});
+            List<BaseRegion> nextRegion = Lists.newArrayList(new BaseRegion(regions.get(i).Region.start(), regions.get(i).Region.end()));
             commonRegions = deriveCommonRegions(commonRegions, nextRegion);
         }
 
-        allCommonRegions.addAll(commonRegions);
+        commonRegions.forEach(x -> allCommonRegions.add(new int[] {x.start(), x.end()} ));
     }
 
     public int calcExonicRegionLength()
     {
-        final List<int[]> commonExonicRegions = Lists.newArrayList();
+        List<int[]> commonExonicRegions = Lists.newArrayList();
         generateCommonExonicRegions(mExonRegions, commonExonicRegions);
         return commonExonicRegions.stream().mapToInt(x -> x[SE_END] - x[SE_START]).sum();
     }
@@ -115,13 +116,13 @@ public class GeneReadData
 
     public static List<GeneReadData> createGeneReadData(final List<GeneData> geneDataList, final EnsemblDataCache geneTransCache)
     {
-        final List<GeneReadData> geneReadDataList = Lists.newArrayList();
+        List<GeneReadData> geneReadDataList = Lists.newArrayList();
 
         for(GeneData geneData : geneDataList)
         {
             GeneReadData geneReadData = new GeneReadData(geneData);
 
-            final List<TranscriptData> geneTranscripts = geneTransCache.getTranscripts(geneData.GeneId);
+            List<TranscriptData> geneTranscripts = geneTransCache.getTranscripts(geneData.GeneId);
 
             if(geneTranscripts == null || geneTranscripts.isEmpty())
             {

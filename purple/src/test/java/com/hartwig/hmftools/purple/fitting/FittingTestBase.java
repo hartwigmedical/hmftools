@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.purple.MiscTestUtils.REF_SAMPLE_ID;
 import static com.hartwig.hmftools.purple.MiscTestUtils.SAMPLE_ID;
 import static com.hartwig.hmftools.purple.MiscTestUtils.buildDefaultConfigBuilder;
 import static com.hartwig.hmftools.purple.MiscTestUtils.buildPurpleConfig;
+import static com.hartwig.hmftools.purple.fitting.AmbiguousBaf.depthBasedBAF;
 
 import java.util.List;
 
@@ -66,7 +67,8 @@ public class FittingTestBase
         mSomaticCache = new SomaticVariantCache(mConfig);
         mSvCache = new SomaticSvCache();
 
-        mRegionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, mAmberData.AverageTumorDepth);
+        double ambiguousBaf = depthBasedBAF(mAmberData.AverageTumorDepth); // TODO: adjust these unit tests to call into new routine
+        mRegionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, ambiguousBaf);
 
         mReferenceData = new ReferenceData();
 

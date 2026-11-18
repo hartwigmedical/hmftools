@@ -1,21 +1,17 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SV_VIS_CLUSTER_PREFIX;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.PNG_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,10 +19,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
@@ -46,6 +44,7 @@ public final class LinxDataLoader
 
         String somaticSvAnnotationFile = LinxSvAnnotation.generateFilename(linxSomaticDir, tumorSample, false);
         String somaticBreakendFile = LinxBreakend.generateFilename(linxSomaticDir, tumorSample);
+        String somaticClusterFile = LinxCluster.generateFilename(linxSomaticDir, tumorSample);
         String somaticFusionFile = LinxFusion.generateFilename(linxSomaticDir, tumorSample);
         String somaticDriversFile = LinxDriver.generateFilename(linxSomaticDir, tumorSample);
         String somaticDriverCatalogFile = LinxDriver.generateCatalogFilename(linxSomaticDir, tumorSample, true);
@@ -64,20 +63,23 @@ public final class LinxDataLoader
         }
 
         return load(
-                somaticSvAnnotationFile, somaticFusionFile, somaticBreakendFile, somaticDriverCatalogFile, somaticDriversFile,
-                config.LinxPlotDirectory, germlineSvAnnotationFile, germlineBreakendFile, germlineDisruptionFile, germlineDriverCatalogFile);
+                somaticSvAnnotationFile, somaticFusionFile, somaticBreakendFile, somaticClusterFile, somaticDriverCatalogFile,
+                somaticDriversFile, config.LinxPlotDirectory, germlineSvAnnotationFile, germlineBreakendFile, germlineDisruptionFile,
+                germlineDriverCatalogFile);
     }
 
     private static LinxData load(
-            final String somaticSvAnnotationFile, final String fusionTsv, final String somaticBreakendTsv,
+            final String somaticSvAnnotationFile, final String fusionFile, final String somaticBreakendFile, final String somaticClusterFile,
             final String somaticDriverCatalogTsv, final String somaticDriverTsv, final String linxPlotDirectory,
-            @Nullable String germlineSvAnnotationFile, @Nullable String germlineBreakendTsv, @Nullable String germlineDisruptionTsv,
-            @Nullable String germlineDriverCatalogTsv)
+            @Nullable String germlineSvAnnotationFile, @Nullable String germlineBreakendFile, @Nullable String germlineDisruptionFile,
+            @Nullable String germlineDriverCatalogFile)
             throws IOException
     {
         List<LinxDriver> somaticDriverData = LinxDriver.read(somaticDriverTsv);
-        List<LinxFusion> fusions = loadFusions(fusionTsv);
-        List<LinxBreakend> somaticBreakends = loadBreakends(somaticBreakendTsv, fusions);
+        List<LinxFusion> fusions = loadFusions(fusionFile);
+        List<LinxBreakend> somaticBreakends = loadBreakends(somaticBreakendFile, fusions);
+
+        List<LinxCluster> somaticClusters = LinxCluster.read(somaticClusterFile);
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv).stream()
                 .filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).collect(Collectors.toList());
@@ -90,7 +92,8 @@ public final class LinxDataLoader
         Map<LinxFusion,Integer> fusionClusterIds = findFusionClusterId(fusions, somaticBreakends, somaticSvAnnotations);
 
         // likely now redundant since the list will not be persisted
-        restrictToMatchingBreakends(somaticSvAnnotations, somaticBreakends);
+        List<LinxSvAnnotation> somaticBreakendSvAnnotations = Lists.newArrayList(somaticSvAnnotations);
+        restrictToMatchingBreakends(somaticBreakendSvAnnotations, somaticBreakends);
 
         List<DriverCatalog> somaticHomozygousDisruptions = somaticDrivers.stream()
                 .filter(x -> x.driver() == DriverType.HOM_DUP_DISRUPTION || x.driver() == DriverType.HOM_DEL_DISRUPTION)
@@ -101,35 +104,39 @@ public final class LinxDataLoader
         List<DriverCatalog> germlineDrivers = null;
         List<LinxGermlineDisruption> reportableGermlineDisruptions = null;
 
-        if(germlineSvAnnotationFile != null && germlineBreakendTsv != null && germlineDisruptionTsv != null)
+        if(germlineSvAnnotationFile != null && germlineBreakendFile != null && germlineDisruptionFile != null)
         {
-            germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv).stream()
+            germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogFile).stream()
                     .filter(x -> DRIVERS_LINX_GERMLINE.contains(x.driver())).collect(Collectors.toList());
 
             germlineSvAnnotations = LinxSvAnnotation.read(germlineSvAnnotationFile);
-            reportableGermlineBreakends = loadBreakends(germlineBreakendTsv, Collections.emptyList());
+            reportableGermlineBreakends = loadBreakends(germlineBreakendFile, Collections.emptyList());
 
             restrictToMatchingBreakends(germlineSvAnnotations, reportableGermlineBreakends);
 
-            List<LinxGermlineDisruption> allGermlineDisruptions = LinxGermlineDisruption.read(germlineDisruptionTsv);
+            List<LinxGermlineDisruption> allGermlineDisruptions = LinxGermlineDisruption.read(germlineDisruptionFile);
             reportableGermlineDisruptions = selectGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
         }
 
         List<String> reportableEventPlots = Lists.newArrayList();
+        List<String> reportableEventPlotTitles = Lists.newArrayList();
 
         if(linxPlotDirectory != null)
         {
             for(String file : new File(linxPlotDirectory).list())
             {
                 if(file.contains(SV_VIS_CLUSTER_PREFIX) && file.endsWith(PNG_EXTENSION))
+                {
                     reportableEventPlots.add(linxPlotDirectory + file);
+                    reportableEventPlotTitles.add(formPlotTitle(file, somaticSvAnnotations, somaticBreakends, somaticClusters));
+                }
             }
 
             LOGGER.debug(" loaded {} Linx plots from {}", reportableEventPlots.size(), linxPlotDirectory);
         }
 
         return ImmutableLinxData.builder()
-                .somaticSvAnnotations(somaticSvAnnotations)
+                .somaticSvAnnotations(somaticBreakendSvAnnotations)
                 .somaticDrivers(somaticDrivers)
                 .somaticDriverData(somaticDriverData)
                 .fusions(fusions)
@@ -138,6 +145,7 @@ public final class LinxDataLoader
                 .somaticBreakendClusterIds(somaticBreakendClusterIds)
                 .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .reportableEventPlots(reportableEventPlots)
+                .reportableEventPlotTitles(reportableEventPlotTitles)
                 .germlineDrivers(germlineDrivers)
                 .germlineSvAnnotations(germlineSvAnnotations)
                 .germlineBreakends(reportableGermlineBreakends)
@@ -263,92 +271,57 @@ public final class LinxDataLoader
         }
     }
 
-    private static Set<Integer> loadFusionClusters(final String filename) throws IOException
+    private static String formPlotTitle(
+            final String plotFilename, final List<LinxSvAnnotation> svAnnotations, final List<LinxBreakend> breakends,
+            final List<LinxCluster> clusters)
     {
-        List<String> lines = Files.readAllLines(new File(filename).toPath());
-        if(lines.isEmpty())
+        // use cluster ID to look-up SV count, resolved type and gene list
+        // expected file name: SAMPLE_ID.cluster-102.007.png
+
+        try
         {
-            throw new IllegalStateException(String.format("File lacks header: %s", filename));
-        }
+            int clusterIdIndex = plotFilename.indexOf(SV_VIS_CLUSTER_PREFIX);
+            String fileRemainder = plotFilename.substring(clusterIdIndex + SV_VIS_CLUSTER_PREFIX.length());
+            int endIndex = fileRemainder.indexOf(".");
+            String clusterIdStr = fileRemainder.substring(1, endIndex);
+            int clusterId = Integer.parseInt(clusterIdStr);
 
-        Set<Integer> clusterIds = new HashSet<>();
-        String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        lines.remove(0);
+            LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == clusterId).findFirst().orElse(null);
 
-        for(String line : lines)
-        {
-            String[] values = line.split(TSV_DELIM);
-            clusterIds.add(getIntValue(fieldsIndexMap, "ClusterId", 0, values));
-        }
-
-        return clusterIds;
-    }
-
-    private static void loadSvToCluster(
-            final String somaticVisSvDataTsv, final Map<Integer,Integer> svIdToClusterId, final Map<Integer,Integer> clusterIdToLinkCount) throws IOException
-    {
-        List<String> lines = Files.readAllLines(new File(somaticVisSvDataTsv).toPath());
-        if(lines.isEmpty())
-        {
-            throw new IllegalStateException(String.format("File lacks header: %s", somaticVisSvDataTsv));
-        }
-
-        String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        lines.remove(0);
-
-        for(String line : lines)
-        {
-            String[] values = line.split(TSV_DELIM);
-            int clusterId = getIntValue(fieldsIndexMap, "ClusterId", 0, values);
-            int svId = getIntValue(fieldsIndexMap, "SvId", 0, values);
-
-            if(!svIdToClusterId.containsKey(svId))
+            if(cluster == null)
             {
-                svIdToClusterId.put(svId, clusterId);
+                LOGGER.warn("Linx plot filename({}) cluster({}) not found", plotFilename, clusterId);
+                return "";
             }
 
-            if(clusterIdToLinkCount.containsKey(clusterId))
-            {
-                clusterIdToLinkCount.put(clusterId, clusterIdToLinkCount.get(clusterId) + 1);
-            }
-            else
-            {
-                clusterIdToLinkCount.put(clusterId, 1);
-            }
-        }
-    }
+            Set<String> distinctGenes = Sets.newHashSet();
+            int svCount = 0;
 
-    private static Map<Integer, Integer> loadClusterExonCounts(final String filename) throws IOException
-    {
-        List<String> lines = Files.readAllLines(new File(filename).toPath());
-        if(lines.isEmpty())
+            for(LinxSvAnnotation svAnnotation : svAnnotations)
+            {
+                if(svAnnotation.clusterId() == clusterId)
+                {
+                    ++svCount;
+
+                    List<LinxBreakend> svBreakends = breakends.stream()
+                            .filter(x -> x.svId() == svAnnotation.svId()).collect(Collectors.toList());
+
+                    svBreakends.forEach(x -> distinctGenes.add(x.gene()));
+                }
+            }
+
+            List<String> geneList = distinctGenes.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
+            Collections.sort(geneList);
+            String geneStr = geneList.stream().collect(Collectors.joining(", "));
+
+            return format("Cluster(%d: %s) SVs(%d) Genes(%s)", clusterId, cluster.resolvedType(), svCount, geneStr);
+
+        }
+        catch(Exception e)
         {
-            throw new IllegalStateException(String.format("File lacks header: %s", filename));
+            LOGGER.warn("Linx plot filename({}) failed to extract cluster ID", plotFilename);
+            return "";
         }
-
-        Map<Integer, Integer> counts = new HashMap<>();
-        String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        lines.remove(0);
-
-        for(String line : lines)
-        {
-            String[] values = line.split(TSV_DELIM);
-            int clusterId = getIntValue(fieldsIndexMap, "ClusterId", 0, values);
-
-            if(counts.containsKey(clusterId))
-            {
-                counts.put(clusterId, counts.get(clusterId) + 1);
-            }
-            else
-            {
-                counts.put(clusterId, 1);
-            }
-        }
-
-        return counts;
     }
 }
 

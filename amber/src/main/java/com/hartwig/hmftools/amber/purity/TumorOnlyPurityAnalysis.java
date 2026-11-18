@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber.purity;
 
+import static java.lang.Math.min;
+import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.google.common.collect.Range.open;
@@ -12,6 +14,7 @@ import static com.hartwig.hmftools.amber.AmberConstants.HOMOZYGOUS_PROPORTION_LO
 import static com.hartwig.hmftools.amber.AmberConstants.HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION;
 import static com.hartwig.hmftools.amber.AmberConstants.MIN_CUTOFF;
 import static com.hartwig.hmftools.amber.AmberConstants.MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION;
+import static com.hartwig.hmftools.amber.AmberConstants.MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +34,9 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 public class TumorOnlyPurityAnalysis
 {
-    public static final Range<Double> HOM_PROP_RANGE =
-            open(HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION, HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION);
+    public static final Range<Double> HOM_PROP_RANGE = open(
+            HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION, HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION);
+
     private final List<CandidatePeak> mCopyNumberPeaks = new ArrayList<>();
     private final List<CandidatePeak> mContaminationPeaks = new ArrayList<>();
 
@@ -76,34 +80,49 @@ public class TumorOnlyPurityAnalysis
 
         AMB_LOGGER.debug(format("baseline het gnomad frequency: %.3f", baselineHetGnomadFrequency));
 
-        AucCalculator<PositionEvidence, ChrArm> chrArmAucCalculator =
-                new AucCalculator<>(chrArmClassifier(config.refGenomeVersion()), hetVariants);
+        AucCalculator<PositionEvidence, ChrArm> chrArmAucCalculator = new AucCalculator<>(
+                chrArmClassifier(config.refGenomeVersion()), hetVariants);
+
         AucCalculator<PositionEvidence, CanonicalSnvType> snvTypeAucCalculator = new AucCalculator<>(snvTypeClassifier(), hetVariants);
-        for(CandidatePeakEvaluationResult evaluationResult : new PeakSearch(filteredEvidence, config.threads()).peaks())
+
+        PeakSearch peakSearch = new PeakSearch(filteredEvidence, config.threads());
+        List<CandidatePeakResult> candidatePeaks = peakSearch.peaks();
+
+        for(CandidatePeakResult evaluationResult : candidatePeaks)
         {
             CandidatePeak peak = evaluationResult.candidatePeak();
             PeakGnomadFrequenciesChecker gnomadChecker = new PeakGnomadFrequenciesChecker(peak);
+
             if(!gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency))
             {
                 AMB_LOGGER.debug(format("peak %.3f failed Gnomad frequency check", peak.vaf()));
                 continue;
             }
+
             double homozygousProportion = peak.homozygousProportion();
             double chrArmAuc = chrArmAucCalculator.calculateAuc(peak.allCapturedPoints());
             double mutationAuc = snvTypeAucCalculator.calculateAuc(peak.allCapturedPoints());
-            AMB_LOGGER.debug(format("peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f", peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
+
+            int peakPoints = peak.numberOfCapturedEvidencePoints();
+
+            double chrArmLowerBound = CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION * sqrt(min(peakPoints / MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR, 1.0));
+
+            AMB_LOGGER.debug(format("peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f",
+                    peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
+
             if(HOM_PROP_RANGE.contains(homozygousProportion))
             {
                 if(mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION
-                        && chrArmAuc > CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION)
+                && chrArmAuc > chrArmLowerBound)
                 {
                     AMB_LOGGER.debug(format("peak %.3f is a contamination peak", peak.vaf()));
                     mContaminationPeaks.add(peak);
                     continue;
                 }
             }
+
             if(chrArmAuc < CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS
-                    || mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION && chrArmAuc < CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION)
+            || mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION && chrArmAuc < chrArmLowerBound)
             {
                 AMB_LOGGER.debug(format("peak %.3f is a copy number peak", peak.vaf()));
                 mCopyNumberPeaks.add(peak);
@@ -134,7 +153,7 @@ public class TumorOnlyPurityAnalysis
         {
             return MIN_CUTOFF;
         }
-        return Math.min(MIN_CUTOFF, minCopyNumberPeak / 3.0);
+        return min(MIN_CUTOFF, minCopyNumberPeak / 3.0);
     }
 
     public List<CandidatePeak> contaminationPeaks()

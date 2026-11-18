@@ -12,8 +12,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.ParseException;

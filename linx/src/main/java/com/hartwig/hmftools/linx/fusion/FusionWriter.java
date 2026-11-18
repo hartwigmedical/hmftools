@@ -203,8 +203,8 @@ public class FusionWriter implements CohortFileInterface
                 sj.add("Biotype" + upDown);
             }
 
-            sj.add("ProteinsKept").add("ProteinsLost").add("PriorityScore").add("FusionId").add("ChainTerminatedUp");
-            sj.add("ChainTerminatedDown").add("ChainInfo");
+            sj.add("ProteinsKept").add("ProteinsLost").add("PriorityScore").add("FusionId");
+            sj.add("ChainTerminatedUp").add("ChainTerminatedDown").add("ChainInfo");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -285,20 +285,19 @@ public class FusionWriter implements CohortFileInterface
         sj.add(valueOf(fusion.priority()));
         sj.add(valueOf(fusion.id()));
 
-        String chainInfo = format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
+        sj.add(valueOf(annotations.terminatedUp()));
+        sj.add(valueOf(annotations.terminatedDown()));
 
         if(annotations.chainInfo() != null)
         {
-            chainInfo += format(",%d;%d;%d;%s;%s",
+            sj.add(format("%d;%d;%d;%s;%s",
                     annotations.chainInfo().chainId(), annotations.chainInfo().chainLinks(), annotations.chainInfo().chainLength(),
-                    annotations.chainInfo().validTraversal(), annotations.chainInfo().traversalAssembled());
+                    annotations.chainInfo().validTraversal(), annotations.chainInfo().traversalAssembled()));
         }
         else
         {
-            chainInfo += ",-1;0;0;true;false";
+            sj.add("-1;0;0;true;false");
         }
-
-        sj.add(format("%s", chainInfo));
 
         mCohortDataWriter.write(this, Lists.newArrayList(sj.toString()));
     }

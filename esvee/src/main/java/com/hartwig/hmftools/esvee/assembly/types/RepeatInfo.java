@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_MIN_COUNT;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,7 +15,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
+
+import org.jetbrains.annotations.Nullable;
 
 public class RepeatInfo
 {
@@ -255,12 +258,14 @@ public class RepeatInfo
         return new RepeatInfo(index, repeat, repeatLength);
     }
 
-    public static int getRepeatCount(final Read read, final RepeatInfo repeatInfo, int readIndexStart, boolean searchForward)
+    public static int getRepeatCount(final byte[] bases, final String repeat, int readIndexStart, boolean searchForward)
     {
-        return getRepeatCount(read.getBases(), repeatInfo.Bases, readIndexStart, searchForward);
+        return getRepeatCount(bases, repeat, readIndexStart, searchForward, 0, null);
     }
 
-    public static int getRepeatCount(final byte[] bases, final String repeat, int readIndexStart, boolean searchForward)
+    public static int getRepeatCount(
+            final byte[] bases, final String repeat, int readIndexStart, boolean searchForward, int previousRepeatCount,
+            @Nullable final byte[] baseQuals)
     {
         // count how many instance of the repeat are in this read
         int repeatCount = 0;
@@ -274,18 +279,43 @@ public class RepeatInfo
             return -1;
 
         byte[] repeatBases = repeat.getBytes();
+        int lowQualMismatchCount = 0;
+        int totalRepeatSpan = previousRepeatCount * repeatLength;
+        int mismatchRepeatCount = 0;
 
         while(readIndex >= 0 && readIndex < bases.length - repeatLength + 1)
         {
+            boolean hasMismatch = false;
+
             for(int j = 0; j < repeatLength; ++j)
             {
                 if(bases[readIndex + j] != repeatBases[j])
-                    return repeatCount;
+                {
+                    if(baseQuals == null || aboveMinQual(baseQuals[readIndex + j]))
+                    {
+                        hasMismatch = true;
+                        break;
+                    }
+
+                    ++lowQualMismatchCount;
+                }
             }
 
-            ++repeatCount;
+            if(hasMismatch)
+                break;
+
+            // if the base qual is low-qual, track the repeat count for mismatches separately
+            if(lowQualMismatchCount > 0)
+                ++mismatchRepeatCount;
+            else
+                ++repeatCount;
+
             readIndex += searchForward ? repeatLength : -repeatLength;
+            totalRepeatSpan += repeatLength;
         }
+
+        if(lowQualMismatchCount > 0 && lowQualMismatchCount <= 0.1 * totalRepeatSpan) // allow a 10% low-qual mismatch rate
+            repeatCount += mismatchRepeatCount;
 
         return repeatCount;
     }

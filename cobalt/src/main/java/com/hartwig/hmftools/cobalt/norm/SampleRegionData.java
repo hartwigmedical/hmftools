@@ -12,6 +12,8 @@ public class SampleRegionData
     public final double PanelGcRatio; // only used when writing temp data to file
     public final double WgsGcRatio;
 
+    private boolean mValid;
+
     // calculated values
     private double mAdjustedGcRatio;
 
@@ -23,13 +25,16 @@ public class SampleRegionData
         PanelGcBucket = calcGcBucket(PanelGcContent);
         WgsGcRatio = wgsGcRatio;
         mAdjustedGcRatio = 0;
+        mValid = true;
     }
+
+    public void markInvalid() { mValid = false; }
+    public boolean isValid() { return mValid; }
 
     public double adjustedGcRatio()
     {
         return mAdjustedGcRatio;
     }
-
     public void setAdjustedGcRatio(double adjustedGcRatio)
     {
         mAdjustedGcRatio = adjustedGcRatio;
@@ -37,6 +42,7 @@ public class SampleRegionData
 
     public String toString()
     {
-        return format("reads(%.3f) ratio(%.3f wgs=%f) adjRatio(%.4f)", ReadDepth, PanelGcContent, WgsGcRatio, mAdjustedGcRatio);
+        return format("reads(%.3f) ratio(%.3f wgs=%f) adjRatio(%.4f) %s",
+                ReadDepth, PanelGcContent, WgsGcRatio, mAdjustedGcRatio, mValid ? "" : "invalid");
     }
 }

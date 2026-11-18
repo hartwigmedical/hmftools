@@ -19,9 +19,9 @@ public final class LinxCommonTypes
     public static final String SV_VIS_CLUSTER_PREFIX = ".cluster";
 
     // Visualiser file suffixes and file naming
-    public static String formVisPlotClusterPrefix(final String clusterIds)
+    public static String formVisPlotClusterPrefix(final String clusterId)
     {
-        return format("%s-%s", SV_VIS_CLUSTER_PREFIX, clusterIds);
+        return format("%s-%s", SV_VIS_CLUSTER_PREFIX, clusterId);
     }
 
     private static final String SV_FILE_EXTENSION = ".linx.vis_sv_data.tsv";

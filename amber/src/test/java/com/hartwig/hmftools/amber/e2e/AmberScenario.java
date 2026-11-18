@@ -7,13 +7,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
@@ -105,7 +102,7 @@ public class AmberScenario
     public void checkResults(Multimap<Chromosome, AmberBAF> results)
     {
         Assert.assertEquals(TumorReads.chromosomes(), results.keySet());
-        TumorReads.chromosomes().forEach(c -> checkTumorChromosomeResults(results.get(c), TumorReads.specifications(c)));
+        TumorReads.chromosomes().stream().sorted().forEach(c -> checkTumorChromosomeResults(results.get(c), TumorReads.specifications(c)));
     }
 
     File getTumorBamFile()
@@ -137,7 +134,7 @@ public class AmberScenario
 
     private void checkTumorChromosomeResults(Collection<AmberBAF> results, List<AmberSiteExpectation> expectedResults)
     {
-        Assert.assertEquals(results.size(), expectedResults.size());
+        Assert.assertEquals(expectedResults.size(), results.size());
         for(AmberBAF baf : results)
         {
             AmberSiteExpectation match = expectedResults.stream().filter(expectation -> expectation.aligns(baf)).findFirst().orElseThrow();

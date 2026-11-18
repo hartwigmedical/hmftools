@@ -189,8 +189,8 @@ public class ClusterClassification
         {
             if(cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getSglBreakendCount() == 2)
             {
-                final SvVarData sgl1 = cluster.getSV(0);
-                final SvVarData sgl2 = cluster.getSV(1);
+                SvVarData sgl1 = cluster.getSV(0);
+                SvVarData sgl2 = cluster.getSV(1);
                 ResolvedType resolvedType = classifySinglePairResolvedType(sgl1, sgl2);
 
                 if(resolvedType != NONE)
@@ -249,7 +249,7 @@ public class ClusterClassification
             if(cluster.getChains().size() != 1)
                 return NO_LENGTH;
 
-            final SvChain chain = cluster.getChains().get(0);
+            SvChain chain = cluster.getChains().get(0);
             return abs(chain.getOpenBreakend(true).position() - chain.getOpenBreakend(false).position());
         }
     }
@@ -259,7 +259,7 @@ public class ClusterClassification
         if(cluster.getChains().size() != 1)
             return NO_LENGTH;
 
-        final SvChain chain = cluster.getChains().get(0);
+        SvChain chain = cluster.getChains().get(0);
 
         return chain.getLinkedPairs().stream().mapToInt(x -> x.baseLength()).max().getAsInt();
     }
@@ -270,9 +270,9 @@ public class ClusterClassification
         if(cluster.getChains().size() != 1)
             return NO_LENGTH;
 
-        final SvChain chain = cluster.getChains().get(0);
-        final SvBreakend chainStart = chain.getOpenBreakend(true);
-        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+        SvChain chain = cluster.getChains().get(0);
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
 
         if(!chainStart.getChrArm().equals(chainEnd.getChrArm()))
             return NO_LENGTH;
@@ -341,8 +341,8 @@ public class ClusterClassification
         }
         else
         {
-            final SvBreakend startBreakend = chain.getOpenBreakend(true);
-            final SvBreakend endBreakend = chain.getOpenBreakend(false);
+            SvBreakend startBreakend = chain.getOpenBreakend(true);
+            SvBreakend endBreakend = chain.getOpenBreakend(false);
 
             if(!startBreakend.chromosome().equals(endBreakend.chromosome()) || startBreakend.arm() != endBreakend.arm())
             {
@@ -371,8 +371,8 @@ public class ClusterClassification
         if(sgl1.isInferredSgl() && sgl2.isInferredSgl())
             return NONE;
 
-        final SvBreakend breakend1 = sgl1.getBreakend(true);
-        final SvBreakend breakend2 = sgl2.getBreakend(true);
+        SvBreakend breakend1 = sgl1.getBreakend(true);
+        SvBreakend breakend2 = sgl2.getBreakend(true);
 
         // to form a simple del or dup, they need to have different orientations
         if(breakend1.orientation() == breakend2.orientation())
@@ -382,8 +382,8 @@ public class ClusterClassification
         if(!ChainJcnLimits.jcnMatch(sgl1, sgl2))
             return NONE;
 
-        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
-                || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
+        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.reverseOrient())
+                || (breakend2.position() < breakend1.position() && breakend2.reverseOrient());
 
         int length = abs(breakend1.position() - breakend2.position());
 
@@ -393,7 +393,7 @@ public class ClusterClassification
         {
             // a DUP if breakends are further than the anchor distance away, else an INS
             int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
-            if(length >= minTiLength)
+            if(length + 1 >= minTiLength)
                 resolvedType = SGL_PAIR_DUP;
             else
                 resolvedType = SGL_PAIR_INS;

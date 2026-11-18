@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 
 import htsjdk.samtools.SAMException;
@@ -64,7 +65,7 @@ public class ExpectedGcRatiosGenerator implements Callable<Void>
         int genesProcessed = 0;
         int nextLogCount = 100;
 
-        for(final GeneData geneData : mGeneDataList)
+        for(GeneData geneData : mGeneDataList)
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -156,11 +157,11 @@ public class ExpectedGcRatiosGenerator implements Callable<Void>
         int readLength = mConfig.ReadLength;
 
         boolean endOfTrans = false;
-        for(final ExonData exon : transData.exons())
+        for(ExonData exon : transData.exons())
         {
             for(int startPos = exon.Start; startPos <= exon.End; ++startPos)
             {
-                final List<int[]> readRegions = generateReadRegions(transData, startPos, readLength);
+                List<BaseRegion> readRegions = generateReadRegions(transData, startPos, readLength);
 
                 if(readRegions.isEmpty())
                 {
@@ -182,9 +183,9 @@ public class ExpectedGcRatiosGenerator implements Callable<Void>
         writeExpectedGcRatios(mWriter, transData.TransName, gcRatioCounts.getCounts());
     }
 
-    public List<int[]> generateReadRegions(final TranscriptData transData, int startPos, int readLength)
+    private List<BaseRegion> generateReadRegions(final TranscriptData transData, int startPos, int readLength)
     {
-        List<int[]> readRegions = Lists.newArrayListWithExpectedSize(10);
+        List<BaseRegion> readRegions = Lists.newArrayListWithExpectedSize(10);
 
         // set out the fragment reads either within a single exon or spanning one or more
         int exonCount = transData.exons().size();
@@ -206,14 +207,14 @@ public class ExpectedGcRatiosGenerator implements Callable<Void>
             if(nextRegionStart + remainingReadBases - 1 <= exon.End)
             {
                 int regionEnd = nextRegionStart + remainingReadBases - 1;
-                readRegions.add(new int[] { nextRegionStart, regionEnd });
+                readRegions.add(new BaseRegion(nextRegionStart, regionEnd));
                 return readRegions;
             }
 
             int regionEnd = exon.End;
             int regionLength = regionEnd - nextRegionStart + 1;
             remainingReadBases -= regionLength;
-            readRegions.add(new int[] { nextRegionStart, regionEnd });
+            readRegions.add(new BaseRegion(nextRegionStart, regionEnd));
 
             if(i == exonCount - 1)
             {

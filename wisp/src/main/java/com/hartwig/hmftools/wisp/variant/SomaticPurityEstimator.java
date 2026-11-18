@@ -317,7 +317,6 @@ public class SomaticPurityEstimator
 
         double errorRate = bqrErrorRate + mosaicErrorRate;
 
-
         // calculate a LOD purity estimate, and for this use only the BQR error rate
         double lodPurityEstimateBqrOnly = calcLimitOfDetection(fragmentTotals, bqrErrorRate);
         double probabilityBqrOnly = estimatedProbability(fragmentTotals, bqrErrorRate);

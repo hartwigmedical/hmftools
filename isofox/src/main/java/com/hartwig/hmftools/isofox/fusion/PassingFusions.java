@@ -149,8 +149,9 @@ public class PassingFusions
 
     private static boolean isShortLocalFusion(final FusionData fusion)
     {
-        return fusion.Chromosomes[SE_START].equals(fusion.Chromosomes[SE_END]) &&
-                abs(fusion.JunctionPositions[SE_END] - fusion.JunctionPositions[SE_START]) < LOCAL_FUSION_THRESHOLD;
+        return fusion.Chromosomes[SE_START].equals(fusion.Chromosomes[SE_END])
+            && fusion.JunctionOrientations[SE_START] != fusion.JunctionOrientations[SE_END]
+            && abs(fusion.JunctionPositions[SE_END] - fusion.JunctionPositions[SE_START]) < LOCAL_FUSION_THRESHOLD;
     }
 
     private boolean isPassingFusion(final FusionData fusion)
@@ -211,7 +212,7 @@ public class PassingFusions
             return false;
         }
 
-        if(fusion.totalFragments() < requiredFragments)
+        if(fusion.supportingFragments() < requiredFragments)
         {
             fusion.setFilter(FRAGMENT_COUNT);
             return false;

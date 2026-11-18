@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
@@ -80,7 +81,7 @@ public class SampleData
         else if(configBuilder.hasValue(SAMPLE))
         {
             String sampleId = configBuilder.getValue(SAMPLE);
-            String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+            String rnaSampleId = configBuilder.getValue(RNA_SAMPLE);
             String cancerType = configBuilder.getValue(CANCER_TYPE, "");
             boolean hasRna = configBuilder.hasValue(ISOFOX_DIR_CFG) && configBuilder.hasValue(RNA_SOMATIC_VCF);
             samples.add(new SampleData(sampleId, rnaSampleId, cancerType, hasRna));

@@ -141,7 +141,7 @@ public class ChainDiagnostics implements CohortFileInterface
     {
         int invalidCount = 0;
 
-        for(final ChainState svConn : svConnections)
+        for(ChainState svConn : svConnections)
         {
             if(svConn.uniqueConnections(true) <= 1 && svConn.uniqueConnections(false) <= 1)
                 continue;
@@ -165,9 +165,9 @@ public class ChainDiagnostics implements CohortFileInterface
             int compDupCons = 0;
             String otherSVs = "";
 
-            for(final SvBreakend otherBreakend : svConn.getConnections(useStart))
+            for(SvBreakend otherBreakend : svConn.getConnections(useStart))
             {
-                final SvVarData otherVar = otherBreakend.getSV();
+                SvVarData otherVar = otherBreakend.getSV();
 
                 if(mInitialFoldbacks.contains(otherVar))
                     ++foldbackCons;

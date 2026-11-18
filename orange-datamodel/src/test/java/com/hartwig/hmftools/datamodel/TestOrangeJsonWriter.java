@@ -34,14 +34,12 @@ import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.orange.OrangeSequencingType;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
@@ -95,6 +93,7 @@ public class TestOrangeJsonWriter
                 .samplingDate(LocalDate.of(2022, 1, 20))
                 .experimentType(ExperimentType.WHOLE_GENOME)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
+                .sequencingType(OrangeSequencingType.ILLUMINA)
                 .purple(createPurpleRecord())
                 .linx(createLinxRecord())
                 .lilac(createLilacRecord())
@@ -128,32 +127,6 @@ public class TestOrangeJsonWriter
                         .purpleVariantCopyNumberPlot("")
                         .purplePurityRangePlot("")
                         .purpleRainfallPlot("")
-                        .build())
-                .build();
-    }
-
-    @NotNull
-    private static OrangeSample createOrangeSample() {
-        return ImmutableOrangeSample.builder()
-                .metrics(ImmutableWGSMetrics.builder()
-                        .meanCoverage(0)
-                        .sdCoverage(0)
-                        .medianCoverage(0)
-                        .madCoverage(0)
-                        .pctExcAdapter(0.0)
-                        .pctExcMapQ(0)
-                        .pctExcDupe(0)
-                        .pctExcUnpaired(0)
-                        .pctExcBaseQ(0)
-                        .pctExcOverlap(0)
-                        .pctExcCapped(0)
-                        .pctExcTotal(0)
-                        .build())
-                .flagstat(ImmutableFlagstat.builder()
-                        .uniqueReadCount(0)
-                        .secondaryCount(0)
-                        .supplementaryCount(0)
-                        .mappedProportion(0)
                         .build())
                 .build();
     }
@@ -317,6 +290,7 @@ public class TestOrangeJsonWriter
                         .tpmFoldChange(0.0)
                         .armCopyNumber(1.0)
                         .build()))
+                .germlineGainsDels(List.of())
                 .build();
     }
 
@@ -370,6 +344,7 @@ public class TestOrangeJsonWriter
                         .domainsLost("")
                         .build())
                 .addSomaticBreakends(somaticBreakend)
+                .germlineBreakends(List.of())
                 .build();
     }
 

@@ -36,16 +36,19 @@ public class PurpleCopyNumberFactory
     private final int mAverageReadDepth;
     private final int mMinTumorRatioCount;
     private final int mMinTumorRatioCountAtCentromere;
+    private final boolean mIsTargetedPanel;
     private final PurityAdjuster mPurityAdjuster;
     private final CobaltChromosomes mCobaltChromosomes;
 
     public PurpleCopyNumberFactory(
-            int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
+            int minTumorRatioCount, int minTumorRatioCountAtCentromere, boolean isTargetedPanel,
+            int averageReadDepth, double ploidy,
             final PurityAdjuster purityAdjuster, final CobaltChromosomes cobaltChromosomes)
     {
         mPurityAdjuster = purityAdjuster;
         mMinTumorRatioCount = minTumorRatioCount;
         mMinTumorRatioCountAtCentromere = minTumorRatioCountAtCentromere;
+        mIsTargetedPanel = isTargetedPanel;
         mAverageReadDepth = averageReadDepth;
         mPloidy = ploidy;
         mCobaltChromosomes = cobaltChromosomes;
@@ -56,7 +59,8 @@ public class PurpleCopyNumberFactory
     {
         mSomaticCopyNumbers.clear();
 
-        ExtendDiploid extendDiploid = new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
+        AlleleTolerance alleleTolerance = new AlleleTolerance(mPurityAdjuster, mIsTargetedPanel);
+        ExtendDiploid extendDiploid = new ExtendDiploid(alleleTolerance, mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
 
         ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
 
@@ -103,11 +107,11 @@ public class PurpleCopyNumberFactory
 
     private static List<PurpleCopyNumber> toCopyNumber(final List<CombinedRegion> regions)
     {
-        final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
 
         for(int i = 0; i < regions.size(); i++)
         {
-            final CombinedRegion region = regions.get(i);
+            CombinedRegion region = regions.get(i);
 
             int copyNumberStartPos = region.start();
 
@@ -130,7 +134,7 @@ public class PurpleCopyNumberFactory
                 }
             }
 
-            final SegmentSupport trailingSupport = i < regions.size() - 1 ? regions.get(i + 1).region().support() : SegmentSupport.TELOMERE;
+            SegmentSupport trailingSupport = i < regions.size() - 1 ? regions.get(i + 1).region().support() : SegmentSupport.TELOMERE;
 
             PurpleCopyNumber copyNumber = toCopyNumber(region, copyNumberStartPos, trailingSupport);
             copyNumbers.add(copyNumber);

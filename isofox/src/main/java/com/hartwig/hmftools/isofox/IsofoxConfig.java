@@ -8,16 +8,19 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -44,17 +47,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
@@ -100,6 +105,7 @@ public class IsofoxConfig
     private static final String FILTER_READS_FILE = "filter_reads_file";
 
     public final String SampleId;
+    public final String DnaTumorId; // required for neoepitope reading
 
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
@@ -141,7 +147,7 @@ public class IsofoxConfig
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
-    public final List<String> FilteredReadIds;
+    public final Set<String> LogReadIds;
 
     public static final Logger ISF_LOGGER = LogManager.getLogger(IsofoxConfig.class);
 
@@ -155,7 +161,7 @@ public class IsofoxConfig
         {
             final String[] functionsStr = configBuilder.getValue(FUNCTIONS).split(ITEM_DELIM);
 
-            for(final String functionStr : functionsStr)
+            for(String functionStr : functionsStr)
             {
                 Functions.add(IsofoxFunction.valueOf(functionStr));
             }
@@ -207,6 +213,7 @@ public class IsofoxConfig
         GeneReadLimit = Integer.parseInt(configBuilder.getValue(GENE_READ_LIMIT, "0"));
 
         MaxFragmentLength = configBuilder.getInteger(LONG_FRAGMENT_LIMIT);
+
         IsofoxConstants.SINGLE_MAP_QUALITY = (short)configBuilder.getInteger(SINGLE_MAP_QUAL);
         DropDuplicates = configBuilder.hasValue(DROP_DUPLICATES);
 
@@ -226,6 +233,7 @@ public class IsofoxConfig
         }
 
         NeoDir = configBuilder.getValue(NEO_DIR_CFG);
+        DnaTumorId = configBuilder.getValue(TUMOR);
         PanelTpmNormFile = configBuilder.getValue(PANEL_TPM_NORM_FILE);
 
         ApplyFragmentLengthAdjust = ExpCountsFile != null;
@@ -244,9 +252,7 @@ public class IsofoxConfig
 
         RunValidations = configBuilder.hasValue(RUN_VALIDATIONS);
         RunPerfChecks = configBuilder.hasValue(PERF_CHECKS);
-
-        FilteredReadIds = configBuilder.hasValue(FILTER_READS_FILE) ?
-                loadDelimitedIdFile(configBuilder.getValue(FILTER_READS_FILE), "FilteredReadIds", CSV_DELIM) : null;
+        LogReadIds = Sets.newHashSet(parseLogReadIds(configBuilder).stream().collect(Collectors.toSet()));
     }
 
     public boolean isValid()
@@ -317,8 +323,6 @@ public class IsofoxConfig
             return OutputDir + SampleId + ISF_FILE_ID + fileId;
     }
 
-    public boolean skipFilteredRead(final String readId) { return FilteredReadIds != null && !FilteredReadIds.contains(readId); }
-
     public IsofoxConfig(final RefGenomeInterface refGenome)
     {
         SampleId = "TEST";
@@ -349,6 +353,7 @@ public class IsofoxConfig
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
         NeoDir = null;
+        DnaTumorId = null;
         PanelTpmNormFile = null;
 
         WriteTypes = Lists.newArrayList();
@@ -361,7 +366,7 @@ public class IsofoxConfig
         RunValidations = true;
         RunPerfChecks = false;
         Threads = 0;
-        FilteredReadIds = null;
+        LogReadIds = Collections.emptySet();
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -396,6 +401,7 @@ public class IsofoxConfig
         configBuilder.addPath(EXP_COUNTS_FILE, false, "File with generated expected expression rates per transcript");
         configBuilder.addPath(EXP_GC_RATIOS_FILE, false, "File with generated expected GC ratios per transcript");
         configBuilder.addPath(NEO_DIR_CFG, false, NEO_DIR_DESC);
+        configBuilder.addConfigItem(TUMOR, "DNA tumor sample ID, used to read neoepitope file for annotation");
         configBuilder.addPath(PANEL_TPM_NORM_FILE, false, "Panel TPM normalisation file");
         configBuilder.addInteger(READ_LENGTH, "Sample sequencing read length, if 0 then is inferred from reads", 0);
         configBuilder.addInteger(SINGLE_MAP_QUAL, "Map quality for reads mapped to a single location", DEFAULT_SINGLE_MAP_QUALITY);
@@ -410,5 +416,6 @@ public class IsofoxConfig
         FusionConfig.registerConfig(configBuilder);
         addThreadOptions(configBuilder);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 }

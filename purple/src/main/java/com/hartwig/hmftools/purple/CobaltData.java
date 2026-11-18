@@ -46,14 +46,14 @@ public class CobaltData
         if(tumorId != null)
         {
             String pcfFileName = PCFFile.generateRatioFilename(cobaltDirectory, tumorId);
-            PPL_LOGGER.info("reading Cobalt segments from {}", pcfFileName);
+            PPL_LOGGER.debug("reading Cobalt segments from {}", pcfFileName);
             TumorSegments.putAll(PCFFile.readPositions(PurpleConstants.WINDOW_SIZE, PCFSource.TUMOR_RATIO, pcfFileName));
         }
 
         if(referenceId != null)
         {
             String pcfFileName = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);
-            PPL_LOGGER.info("reading Cobalt segments from {}", pcfFileName);
+            PPL_LOGGER.debug("reading Cobalt segments from {}", pcfFileName);
             ReferenceSegments.putAll(PCFFile.readPositions(PurpleConstants.WINDOW_SIZE, PCFSource.REFERENCE_RATIO, pcfFileName));
         }
 
@@ -63,7 +63,7 @@ public class CobaltData
             throw new ParseException("unable to open Cobalt ratio file: " + cobaltFilename);
         }
 
-        PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
+        PPL_LOGGER.debug("reading Cobalt ratios from {}", cobaltFilename);
         Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
 
         List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);

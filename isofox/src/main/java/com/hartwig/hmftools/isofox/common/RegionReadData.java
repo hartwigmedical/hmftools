@@ -65,7 +65,7 @@ public class RegionReadData implements Comparable<RegionReadData>
 
     public int getExonRank(final int transId)
     {
-        for(final TransExonRef transRef : mTransExonRefs)
+        for(TransExonRef transRef : mTransExonRefs)
         {
             if(transRef.TransId == transId)
                 return transRef.ExonRank;
@@ -190,11 +190,11 @@ public class RegionReadData implements Comparable<RegionReadData>
     {
         for(int i = 0; i < regions.size() - 1; ++i)
         {
-            final RegionReadData region1 = regions.get(i);
+            RegionReadData region1 = regions.get(i);
 
             for(int j = i + 1; j < regions.size(); ++j)
             {
-                final RegionReadData region2 = regions.get(j);
+                RegionReadData region2 = regions.get(j);
                 region1.markNonUniqueBases(region2);
             }
         }
@@ -276,7 +276,7 @@ public class RegionReadData implements Comparable<RegionReadData>
     {
         if(mRefBasesMatched != null)
         {
-            for (int i = 0; i < mRefBasesMatched.length; ++i)
+            for(int i = 0; i < mRefBasesMatched.length; ++i)
                 mRefBasesMatched[i] = 0;
         }
     }
@@ -305,7 +305,7 @@ public class RegionReadData implements Comparable<RegionReadData>
             final String geneId, final String chromosome, final List<RegionReadData> regions, final List<TranscriptData> transcripts)
     {
         // form a genomic region for each unique exon amongst the transcripts
-        for(final TranscriptData transData : transcripts)
+        for(TranscriptData transData : transcripts)
         {
             RegionReadData prevRegionReadData = null;
 

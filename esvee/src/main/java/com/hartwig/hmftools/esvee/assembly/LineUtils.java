@@ -120,26 +120,26 @@ public final class LineUtils
         {
             ++totalBaseCount;
 
-            if(baseQuals == null || !isUncertainBaseQual(baseQuals[index]))
+            if(bases[index] == lineBase)
             {
-                if(bases[index] != lineBase)
-                {
-                    ++nonLineBaseCount;
+                ++lineBaseCount;
+            }
+            else if(baseQuals == null || !isUncertainBaseQual(baseQuals[index]))
+            {
+                if(totalBaseCount > LINE_POLY_AT_TEST_LEN)
+                    break;
 
-                    if(totalBaseCount > LINE_POLY_AT_TEST_LEN)
-                        break;
+                ++nonLineBaseCount;
 
-                    if(nonLineBaseCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
-                        return false;
-                }
-                else
-                {
-                    ++lineBaseCount;
-                }
+                if(nonLineBaseCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
+                    return false;
             }
 
             index += leftClipped ? -1 : 1;
         }
+
+        if(lineBaseCount < LINE_POLY_AT_REQ || nonLineBaseCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
+            return false;
 
         // will have returned if initial bases fail the line test, otherwise will be the total number of line bases
         // including the max permitted non-line bases

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.TestUtils.ALT_SJ_COHORT_CACHE;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
@@ -14,14 +15,19 @@ import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
+import static com.hartwig.hmftools.isofox.TestUtils.setReadFirstSecondInPair;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGeneDataCache;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -34,6 +40,8 @@ import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.junit.Test;
+
+import htsjdk.samtools.SAMFlag;
 
 public class FusionFiltersTest
 {
@@ -182,12 +190,10 @@ public class FusionFiltersTest
 
         int gcId = 0;
 
-        final GeneCollection gc3 =
-                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
-        final GeneCollection gc5 =
-                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
+        GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+        GeneCollection gc5 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
 
-        FragmentAllocator bamReader1 = new FragmentAllocator(config, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        FragmentAllocator bamReader1 = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
 
         FusionTaskManager fusionTaskManager = new FusionTaskManager(config, geneTransCache);
 
@@ -197,19 +203,25 @@ public class FusionFiltersTest
         int readId2 = 2;
         int readId3 = 3;
 
-        Read read1 = createMappedRead(readId1, gc5, 10210, 10249, createCigar(0, 40, 20));
+        // the mate read
+        Read read1 = createMappedRead(readId1, gc5, 10250, 10289, createCigar(0, 40, 0));
+        setReadFirstSecondInPair(read1, false);
 
-        Read[] readPair1 = createSupplementaryReadPair(readId1, gc5, gc3, 10200, 10219, 20281, 20300,
+        Read[] readPair1 = createSupplementaryReadPair(
+                readId1, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
+        // TODO: should be setting both primary and supp to have the same strandedness
         readPair1[0].setStrand(true, false);
 
         bamReader1.processReadRecords(gc5, Lists.newArrayList(read1, readPair1[0]));
 
         // supporting the first junction and enough to avoid being hard-filtered
-        Read read2 = createMappedRead(readId2, gc5, 10210, 10249, createCigar(0, 40, 20));
+        Read read2 = createMappedRead(readId2, gc5, 10250, 10289, createCigar(0, 40, 0));
+        setReadFirstSecondInPair(read2, false);
 
-        Read[] readPair2 = createSupplementaryReadPair(readId2, gc5, gc3, 10200, 10219, 20281, 20300,
+        Read[] readPair2 = createSupplementaryReadPair(
+                readId2, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair2[0].setStrand(true, false);
@@ -217,9 +229,11 @@ public class FusionFiltersTest
         bamReader1.processReadRecords(gc5, Lists.newArrayList(read2, readPair2[0]));
 
         // single read for a new junction, hard-filtered - cannot be at a known splice site
-        Read read3 = createMappedRead(readId3, gc5, 10410, 10449, createCigar(0, 40, 20));
+        Read read3 = createMappedRead(readId3, gc5, 10450, 10489, createCigar(0, 40, 0));
+        setReadFirstSecondInPair(read3, false);
 
-        Read[] readPair3 = createSupplementaryReadPair(readId3, gc5, gc3, 10401, 10420, 20480, 20499,
+        Read[] readPair3 = createSupplementaryReadPair(
+                readId3, gc5, gc3, 10401, 10420, 20480, 20499,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair3[0].setStrand(true, false);
@@ -255,7 +269,7 @@ public class FusionFiltersTest
         assertTrue(finderChr1.getFusionCandidates().isEmpty());
 
         // now chromosome 2
-        FragmentAllocator bamReader2 = new FragmentAllocator(config, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        FragmentAllocator bamReader2 = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair1[1]));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair2[1]));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair3[1]));
@@ -295,4 +309,95 @@ public class FusionFiltersTest
         assertEquals(1, finderChr2.getFusionCandidates().values().stream().mapToInt(x -> x.size()).sum());
     }
 
+    @Test
+    public void testFusionSplitPrimaries()
+    {
+        // a fusion formed from the primaries being in different gene collections
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = createIsofoxConfig();
+        config.Functions.clear();
+        config.Functions.add(FUSIONS);
+        config.Fusions.MinHardFilterFrags = 1;
+
+        populateRefGenome(config.RefGenome);
+
+        int gcId = 0;
+
+        // the mate read
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+
+        // the primary for the fusion
+        GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+
+        // the supp for the fusion
+        GeneCollection gc5 = createGeneCollection(geneTransCache, gcId, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
+
+        FragmentAllocator bamReader = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+
+        FusionTaskManager fusionTaskManager = new FusionTaskManager(config, geneTransCache);
+
+        FusionFinder finderChr1 = fusionTaskManager.createFusionFinder(gc3.chromosome());
+
+        int readId = 1;
+
+        // the mate read
+        Read mateRead = createMappedRead(readId, gc1, 1200, 1240, createCigar(0, 41, 0));
+        setReadFirstSecondInPair(mateRead, false);
+
+        Read[] readPair = createSupplementaryReadPair(
+                readId, gc3, gc5, 20261, 20300, 10600, 10619,
+                createCigar(0, 40, 20), createCigar(40, 20, 00), true);
+
+        bamReader.processReadRecords(gc1, Lists.newArrayList(mateRead));
+        bamReader.postSliceProcessReads();
+
+        finderChr1.processNewChimericReadGroups(gc1, bamReader.getBaseDepth(), bamReader.getChimericReadTracker().fusionReadGroupMap());
+
+        bamReader.clearCache();
+
+        bamReader.processReadRecords(gc3, Lists.newArrayList(readPair[0]));
+        bamReader.postSliceProcessReads();
+
+        finderChr1.processNewChimericReadGroups(gc3, bamReader.getBaseDepth(), bamReader.getChimericReadTracker().fusionReadGroupMap());
+
+        Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = finderChr1.extractIncompleteReadGroups(
+                gc3.chromosome(), bamReader.getChimericReadTracker().getHardFilteredReadIds());
+
+        // note the chromosome is the one the imcomplete groups link to
+        List<FusionReadGroup> interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
+                gc3.chromosome(), chrIncompleteReadsGroups, bamReader.getChimericReadTracker().getHardFilteredReadIds());
+
+        finderChr1.processInterChromosomalReadGroups(interChromosomalGroups);
+
+        assertTrue(finderChr1.getFusionCandidates().isEmpty());
+
+        // now chromosome 2
+        FragmentAllocator bamReader2 = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        bamReader2.processReadRecords(gc5, Lists.newArrayList(readPair[1]));
+        bamReader2.postSliceProcessReads();
+
+        FusionFinder finderChr2 = fusionTaskManager.createFusionFinder(gc3.chromosome());
+
+        finderChr2.processNewChimericReadGroups(gc5, bamReader2.getBaseDepth(), bamReader2.getChimericReadTracker().fusionReadGroupMap());
+
+        chrIncompleteReadsGroups = finderChr2.extractIncompleteReadGroups(
+                gc5.chromosome(), bamReader2.getChimericReadTracker().getHardFilteredReadIds());
+
+        interChromosomalGroups = fusionTaskManager.addIncompleteReadGroup(
+                gc5.chromosome(), chrIncompleteReadsGroups, bamReader2.getChimericReadTracker().getHardFilteredReadIds());
+
+        finderChr2.processInterChromosomalReadGroups(interChromosomalGroups);
+
+        assertEquals(1, finderChr2.getFusionCandidates().values().stream().mapToInt(x -> x.size()).sum());
+
+        List<FusionReadData> fusions = finderChr2.getFusionCandidates().values().stream().findFirst().orElse(Collections.emptyList());
+        FusionReadData fusionReadData = fusions.get(0);
+
+        assertEquals(KNOWN, fusionReadData.junctionTypes()[0]);
+        assertEquals(KNOWN, fusionReadData.junctionTypes()[1]);
+    }
 }

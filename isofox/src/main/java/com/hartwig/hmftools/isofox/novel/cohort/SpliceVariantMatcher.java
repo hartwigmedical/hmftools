@@ -237,7 +237,7 @@ public class SpliceVariantMatcher
                 .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
                 .fetch();
 
-        for (Record record : result)
+        for(Record record : result)
         {
             // filter to specific gene list
             final String gene = record.getValue(Tables.SOMATICVARIANT.GENE);
@@ -327,7 +327,7 @@ public class SpliceVariantMatcher
         int exonPosition = 0;
         String closestTransStr = "";
 
-        for(final TranscriptData transData : transDataList)
+        for(TranscriptData transData : transDataList)
         {
             for(int i = 0; i < transData.exons().size(); ++i)
             {
@@ -397,7 +397,7 @@ public class SpliceVariantMatcher
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
                 // look for any alt SJs which match with the somatic variant
-                for(final AltSpliceJuncData altSJ : altSpliceJunctions)
+                for(AltSpliceJuncData altSJ : altSpliceJunctions)
                 {
                     if(matchedAltSJs.contains(altSJ))
                         continue;

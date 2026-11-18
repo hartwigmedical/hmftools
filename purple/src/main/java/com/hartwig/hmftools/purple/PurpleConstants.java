@@ -11,7 +11,6 @@ public class PurpleConstants
 
     // common
     public static final int WINDOW_SIZE = 1000;
-    public static final double BAF_PNT_5 = 0.5;
 
     // TMB calcs
     public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
@@ -63,9 +62,43 @@ public class PurpleConstants
     public static final double TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT = 0.25;
     public static final double TARGETED_GC_RATIO_EXPONENT_DEFAULT = 3;
 
-    public static final double DEFAULT_AMBIGUOUS_BAF_THRESHOLD = 0.535;
+    // resegmentation
+    public static final double RESEG_RATIO_BUCKET_MIN = 0;
+    public static final double RESEG_RATIO_BUCKET_MAX = 3;
+    public static final double RESEG_RATIO_BUCKET_STEP = 0.01;
+    public static final int RESEG_ROLLING_AVG_WINDOW = 5;
+
+    public static final double RESEG_TROUGH_MIN_DIFF = 5;
+    public static final double RESEG_TROUGH_MIN_RATIO = 1.2;
+    public static final double RESEG_TROUGH_MIN_GAP = 0.1;
+    public static final double RESEG_MAX_SEGMENTATION_PENALTY_RATIO = 0.35;
+
+    public static final double RESEG_PEAK_MIN_RATIO = 1.25;
+    public static final double RESEG_PEAK_MIN_GAP = 0.1;
+    public static final double RESEG_PEAK_MIN_PROPORTION = 0.002;
+    public static final int RESEG_MAX_PEAKS = 5;
+
+    public static final double RESEG_GC_BIN_MIN = 0.33;
+    public static final double RESEG_GC_BIN_MAX = 0.57;
+    public static final double RESEG_GC_BIN_WIDTH = 0.02;
+    public static final double[] RESEG_GC_PERCENTILES = { 0.1, 0.3, 0.5, 0.7, 0.9 };
+    public static final double RESEG_GC_SPARSE_MIN_JUMP = 0.05;
+    public static final double RESEG_GC_SPARSE_MAX_PROPORTION = 0.01;
+
+    public static final int RESEG_MAX_SUPERSEGMENT_SIZE_FOR_BRUTE_FORCE = 10;
+    public static final int RESEG_BAF_WEIGHT_THRESHOLD = 50;
+
+    // BAF related
+    public static final double BAF_PNT_5 = 0.5;
+    public static final double DEFAULT_AMBIGUOUS_BAF_THRESHOLD = 0.525;
     public static double AMBIGUOUS_BAF_THRESHOLD = DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
-    public static final double DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD = 0.6;
+    public static final double AMBIGUOUS_BAF_MIN = 0.525;
+    public static final double AMBIGUOUS_BAF_MAX = 0.57;
+    public static final double AMBIGUOUS_BAF_OBSERVED_RATIO_MAX = RESEG_RATIO_BUCKET_MAX;
+    public static final double AMBIGUOUS_BAF_EDGE_RATIO = 0.67;
+    public static final double AMBIGUOUS_BAF_CONSOLIDATE_RATIO = 1.3;
+    public static final int AMBIGUOUS_BAF_MIN_VALUE = 100;
+    public static final double STANDARD_BAF_TARGET_PERC = 0.8;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
@@ -135,10 +168,13 @@ public class PurpleConstants
     // copy number smoothing
     public static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
     public static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
-    public static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
-    public static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
-    public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 1;
-    public static final double MIN_RELATIVE_COPY_NUMBER_ADDITION = 0.8;
+    public static final double MIN_ABS_CN_TOLERANCE = 0.3;
+    public static final double MIN_REL_CN_TOLERANCE = 0.12;
+    public static final double MIN_ABS_CN_ADDITION = 1;
+    public static final double MIN_REL_CN_ADDITION = 0.8;
+
+    public static final double MIN_ABS_CN_ADDITION_TARGETED = 0.5;
+    public static final double MIN_REL_CN_ADDITION_TARGETED = 0.4;
 
     public static final ChrBaseRegion CDKN2A_DELETION_REGION = new ChrBaseRegion("9", 9000000, 12000000);
 

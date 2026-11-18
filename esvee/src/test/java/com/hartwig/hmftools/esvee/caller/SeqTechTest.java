@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
+import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSgl;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.FiltersTest.FILTER_CONSTANTS;
 import static com.hartwig.hmftools.esvee.caller.FiltersTest.FRAG_LENGTHS;
@@ -209,9 +210,7 @@ public class SeqTechTest
         // SGLs
         commonAttributes.put(ASM_INFO, "1:100:1"); // matching
 
-        var = createSv(
-                "01", CHR_1, null, posStart, -1, ORIENT_FWD, ORIENT_FWD, "",
-                commonAttributes, tumorAttributes, tumorAttributes);
+        var = createSgl("01", CHR_1, posStart, ORIENT_FWD, "", commonAttributes, tumorAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 
@@ -221,9 +220,7 @@ public class SeqTechTest
         commonAttributes.put(ASM_INFO, "2:100:1"); // not matching
         commonAttributes.put(ASM_LENGTH, 400);
 
-        var = createSv(
-                "01", CHR_1, null, posStart, -1, ORIENT_FWD, ORIENT_FWD, "",
-                commonAttributes, tumorAttributes, tumorAttributes);
+        var = createSgl("01", CHR_1, posStart, ORIENT_FWD, "", commonAttributes, tumorAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 

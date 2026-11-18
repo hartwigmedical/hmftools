@@ -58,11 +58,14 @@ public class CustomSmallVariants
         boolean valid = true;
         for(CustomSmallVariant v : customVariants)
         {
-            String refGenomeSeq = refGenome.getBaseString(v.position().Chromosome, v.position().Position,
+            String refGenomeSeq = refGenome.getBaseString(
+                    v.position().Chromosome, v.position().Position,
                     v.position().Position + v.refSequence().length() - 1);
             if(!v.refSequence().equals(refGenomeSeq))
             {
-                LOGGER.error("Invalid custom small variant ref sequence. At {} expected {} but got {}", v.position(), refGenomeSeq, v.refSequence());
+                LOGGER.error(
+                        "Invalid custom small variant ref sequence. At {} expected {} but got {}", v.position(), refGenomeSeq,
+                        v.refSequence());
                 valid = false;
             }
         }
@@ -75,9 +78,10 @@ public class CustomSmallVariants
     private static void checkNoDuplicates(final List<CustomSmallVariant> customVariants)
     {
         LOGGER.debug("Checking custom small variants for duplicates");
-        List<CustomSmallVariant> duplicated = findDuplicates(customVariants, (v1, v2) ->
-                v1.position() == v2.position() && v1.refSequence().length() == v2.refSequence().length() &&
-                        v1.altSequence().equals(v2.altSequence()));
+        List<CustomSmallVariant> duplicated = findDuplicates(
+                customVariants, (v1, v2) ->
+                        v1.position() == v2.position() && v1.refSequence().length() == v2.refSequence().length() &&
+                                v1.altSequence().equals(v2.altSequence()));
         if(!duplicated.isEmpty())
         {
             duplicated.forEach(v -> LOGGER.error("Duplicate custom small variant: {}", v));
@@ -97,7 +101,9 @@ public class CustomSmallVariants
         LOGGER.debug("Generating probes for {}", customVariant);
         TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, customVariant.extraInfo());
         SequenceDefinition definition =
-                buildIndelProbe(customVariant.position().Chromosome, customVariant.position().Position, customVariant.refSequence(), customVariant.altSequence(), PROBE_LENGTH);
+                buildIndelProbe(
+                        customVariant.position().Chromosome, customVariant.position().Position, customVariant.refSequence(),
+                        customVariant.altSequence(), PROBE_LENGTH);
         // TODO: should target whole range or just altered bases?
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         ProbeEvaluator.Criteria evalCriteria = new ProbeEvaluator.Criteria(

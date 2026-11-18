@@ -42,8 +42,8 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusBreakend;
+import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;

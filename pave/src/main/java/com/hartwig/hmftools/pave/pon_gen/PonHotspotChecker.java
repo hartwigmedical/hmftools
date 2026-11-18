@@ -49,7 +49,7 @@ public class PonHotspotChecker
 
         try
         {
-            ListMultimap<Chromosome, SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotVcf(hotspotFile);
+            ListMultimap<Chromosome, SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotFile(hotspotFile);
 
             BufferedReader fileReader = createBufferedReader(ponFile);
 

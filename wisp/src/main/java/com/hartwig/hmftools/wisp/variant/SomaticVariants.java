@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
@@ -40,7 +39,6 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.AVG_BASE_QUAL_OLD_TAG;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.buildFragments;
-import static com.hartwig.hmftools.wisp.variant.MosaicData.INVALID_DATA;
 import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.assessMosaics;
 import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.onlyMosaicFilters;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
@@ -55,6 +53,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.PaveVcfTags;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
@@ -217,7 +216,7 @@ public class SomaticVariants
         }
 
         CT_LOGGER.info("processed {} somatic variants from VCF({}), filtered({}))",
-                variantCount, filenamePart(somaticVcf), filteredCount);
+                variantCount, FileWriterUtils.filenamePart(somaticVcf), filteredCount);
 
         if(mConfig.writeType(FRAG_LENGTHS))
             mFragmentLengths.processSample(somaticVcf, mVariants);

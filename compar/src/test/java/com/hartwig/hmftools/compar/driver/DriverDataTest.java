@@ -2,12 +2,9 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.AMP;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreForFields;
+import static com.hartwig.hmftools.compar.driver.TestDriverDataBuilder.buildAlternatePurityData;
+import static com.hartwig.hmftools.compar.driver.TestDriverDataBuilder.buildPurityData;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -17,11 +14,13 @@ import static junit.framework.TestCase.assertEquals;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -39,19 +38,16 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
     @Before
     public void setUp()
     {
-        comparer = new DriverComparer(new ComparConfig());
+        comparer = new DriverComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestDriverDataBuilder.BUILDER;
         DriverData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer = Map.of(
-                FLD_LIKE_METHOD, b -> b.likelihoodMethod = alternateValueSource.DriverCatalog.likelihoodMethod(),
-                FLD_LIKELIHOOD, b -> b.likelihood = alternateValueSource.DriverCatalog.driverLikelihood(),
-                FLD_MIN_COPY_NUMBER, b -> b.minCopyNumber = alternateValueSource.DriverCatalog.minCopyNumber(),
-                FLD_MAX_COPY_NUMBER, b -> b.maxCopyNumber = alternateValueSource.DriverCatalog.maxCopyNumber(),
-                FLD_CHROMOSOME, b -> {
-                    b.chromosome = alternateValueSource.DriverCatalog.chromosome();
-                    b.comparisonChromosome = alternateValueSource.mComparisonChromosome;
-                },
-                FLD_CHROMOSOME_BAND, b -> b.chromosomeBand = alternateValueSource.DriverCatalog.chromosomeBand()
+                DriverComparer.Fields.LikelihoodMethod.toString(), b -> b.likelihoodMethod = alternateValueSource.DriverCatalog.likelihoodMethod(),
+                DriverComparer.Fields.Likelihood.toString(), b -> b.likelihood = alternateValueSource.DriverCatalog.driverLikelihood(),
+                DriverComparer.Fields.MinCopyNumber.toString(), b -> b.minCopyNumber = alternateValueSource.DriverCatalog.minCopyNumber(),
+                DriverComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.DriverCatalog.maxCopyNumber(),
+                DriverComparer.Fields.Chromosome.toString(), b -> b.comparisonChromosome = alternateValueSource.ComparisonChromosome,
+                DriverComparer.Fields.ChromosomeBand.toString(), b -> b.chromosomeBand = alternateValueSource.DriverCatalog.chromosomeBand()
         );
         nameToAlternateIndexInitializer = Map.of(
                 "gene", b -> b.gene = alternateValueSource.DriverCatalog.gene(),
@@ -62,7 +58,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
-        nameToNonPassInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Map.of("nonPass", b -> b.isPass = false);
     }
     
     @Test
@@ -129,6 +125,62 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
     }
 
     @Test
+    public void passVsNonPassComparison()
+    {
+        PurplePurity reportedPurity = buildPurityData();
+        PurplePurity notReportedPurity = buildAlternatePurityData();
+
+        DriverCatalog reportedCatalog = createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2);
+
+        DriverCatalog notReportedCatalog = ImmutableDriverCatalog.builder()
+                .from(reportedCatalog)
+                .minCopyNumber(5)
+                .maxCopyNumber(5)
+                .driverLikelihood(0.)
+                .reportedStatus(ReportedStatus.NOT_REPORTED)
+                .build();
+
+        DriverData passDriver = new DriverData(reportedCatalog, reportedPurity, "1", false, true, comparer.fieldsList());
+        DriverData nonPassDriver = new DriverData(notReportedCatalog, notReportedPurity, "1", false, false, comparer.fieldsList());
+
+        assertTrue(passDriver.matches(nonPassDriver));
+
+        // fields only meaningful for a called driver are omitted entirely when isPass is false
+        assertTrue(passDriver.fieldValues().containsKey(DriverComparer.Fields.Likelihood.toString()));
+        assertTrue(passDriver.fieldValues().containsKey(DriverComparer.Fields.Purity.toString()));
+
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Likelihood.toString()));
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.LikelihoodMethod.toString()));
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Chromosome.toString()));
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.ChromosomeBand.toString()));
+
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.MinCopyNumber.toString()));
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.MaxCopyNumber.toString()));
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Purity.toString()));
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Ploidy.toString()));
+
+        // compared fields is limited to relevant fields
+        Set<String> expectedDiffFields = Set.of(
+                DriverComparer.Fields.MinCopyNumber.toString(), DriverComparer.Fields.MaxCopyNumber.toString());
+
+        Mismatch detailedOldOnly = passDriver.findMismatch(comparer, nonPassDriver, MatchLevel.DETAILED, false);
+        assertEquals(MismatchType.OLD_ONLY, detailedOldOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, detailedOldOnly.DiffValues);
+
+        Mismatch detailedNewOnly = nonPassDriver.findMismatch(comparer, passDriver, MatchLevel.DETAILED, false);
+        assertEquals(MismatchType.NEW_ONLY, detailedNewOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, detailedNewOnly.DiffValues);
+
+        Mismatch reportableOldOnly = passDriver.findMismatch(comparer, nonPassDriver, MatchLevel.REPORTABLE, false);
+        assertEquals(MismatchType.OLD_ONLY, reportableOldOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, reportableOldOnly.DiffValues);
+
+        Mismatch reportableNewOnly = nonPassDriver.findMismatch(comparer, passDriver, MatchLevel.REPORTABLE, false);
+        assertEquals(MismatchType.NEW_ONLY, reportableNewOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, reportableNewOnly.DiffValues);
+    }
+
+    @Test
     public void testDriverDiffsWithoutMatches()
     {
         List<Mismatch> mismatches = generateTestMismatches(false);
@@ -154,34 +206,34 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
     private static List<Mismatch> generateTestMismatches(final boolean includeMatches)
     {
         ComparConfig config = new ComparConfig();
-        DriverComparer driverComparer = new DriverComparer(config);
-
-        driverComparer.registerThresholds(config.Thresholds);
+        DriverComparer driverComparer = new DriverComparer(config, Collections.emptyMap());
 
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
 
+        PurplePurity purity = buildPurityData();
+
         refItems.add(
                 new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6),
-                        null, "1", false));
+                        purity, "1", false, true, driverComparer.fieldsList()));
 
         newItems.add(
                 new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2),
-                        null, "2", false));
+                        purity, "2", false, true, driverComparer.fieldsList()));
 
         refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2),
-                null, "3", false));
+                purity, "3", false, true, driverComparer.fieldsList()));
         newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2),
-                null, "3", false));
+                purity, "3", false, true, driverComparer.fieldsList()));
 
         refItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
-                null, "4", false));
+                purity, "4", false, true, driverComparer.fieldsList()));
 
         newItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
-                null, "4", false));
+                purity, "4", false, true, driverComparer.fieldsList()));
 
         List<Mismatch> mismatches = Lists.newArrayList();
-        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(driverComparer, mismatches, MatchLevel.REPORTABLE, includeMatches, false, refItems, newItems);
         return mismatches;
     }
 

@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -98,44 +97,31 @@ public class ProbeUtils
                 .toList();
     }
 
+    // Determines the subset of the probe's reference genome regions covered by targetedRange (offsets into the probe sequence).
+    // Handles any number of segments; insert segments occupy sequence space but map to no genome region.
     public static List<ChrBaseRegion> probeTargetedRegions(final SequenceDefinition definition, final TargetedRange targetedRange)
     {
-        // Determine subset of probe regions defined by targetedRange.
-
-        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>(2);
-
-        int probeLength = definition.baseLength();
         int targetedStart = targetedRange.startOffset();
         int targetedEnd = targetedRange.endOffset();
 
-        // Compute the intersection with the start region.
-        ChrBaseRegion startRegion = definition.startRegion();
-        if(startRegion != null)
+        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>(definition.segments().size());
+        int segmentStart = 0;
+        for(SequenceSegment segment : definition.segments())
         {
-            int startOffset = 0;
-            int endOffset = startRegion.baseLength();
-            int intersectionStart = max(startOffset, targetedStart);
-            int intersectionEnd = min(endOffset, targetedEnd);
-            if(intersectionStart < intersectionEnd)
+            int segmentEnd = segmentStart + segment.baseLength();
+            if(segment instanceof RefSegment refSegment)
             {
-                Orientation orientation = definition.startOrientation() == null ? Orientation.FORWARD : definition.startOrientation();
-                targetedRegions.add(getSubregion(startRegion, orientation, intersectionStart, intersectionEnd));
+                // Intersect the targeted range with this segment's span in probe-sequence space, then convert to offsets within the segment.
+                int intersectionStart = max(segmentStart, targetedStart);
+                int intersectionEnd = min(segmentEnd, targetedEnd);
+                if(intersectionStart < intersectionEnd)
+                {
+                    targetedRegions.add(getSubregion(
+                            refSegment.region(), refSegment.orientation(),
+                            intersectionStart - segmentStart, intersectionEnd - segmentStart));
+                }
             }
-        }
-
-        // Compute the intersection with the end region.
-        ChrBaseRegion endRegion = definition.endRegion();
-        if(endRegion != null)
-        {
-            int startOffset = probeLength - endRegion.baseLength();
-            int endOffset = probeLength;
-            int intersectionStart = max(startOffset, targetedStart) - startOffset;
-            int intersectionEnd = min(endOffset, targetedEnd) - startOffset;
-            if(intersectionStart < intersectionEnd)
-            {
-                Orientation orientation = definition.endOrientation() == null ? Orientation.FORWARD : definition.endOrientation();
-                targetedRegions.add(getSubregion(endRegion, orientation, intersectionStart, intersectionEnd));
-            }
+            segmentStart = segmentEnd;
         }
 
         return targetedRegions;

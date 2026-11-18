@@ -123,7 +123,7 @@ public final class ReadUtils
         return readIndexFromPosition(read, refPosition);
     }
 
-    private static int readIndexFromPosition(final Read read, final int refPosition)
+    public static int readIndexFromPosition(final Read read, final int refPosition)
     {
         // could replace this with a standard method if as efficient
         int readIndex = 0;
@@ -161,91 +161,6 @@ public final class ReadUtils
         }
 
         return readIndex;
-    }
-
-    @Deprecated
-    public static boolean readSoftClipsAndCrossesJunction(final Read read, final Junction junction, final RefGenomeInterface refGenome)
-    {
-        if(junction.isForward())
-        {
-            // first check indel-inferred soft-clips
-            if(read.hasIndelImpliedUnclippedEnd() && read.maxUnclippedEnd() > junction.Position)
-                return true;
-
-            // soft-clip must be close enough to the junction
-            if(read.isRightClipped())
-                return abs(read.alignmentEnd() - junction.Position) <= ASSEMBLY_MAX_JUNC_POS_DIFF && read.unclippedEnd() > junction.Position;
-        }
-        else
-        {
-            if(read.hasIndelImpliedUnclippedStart() && read.minUnclippedStart() < junction.Position)
-                return true;
-
-            if(read.isLeftClipped())
-                return abs(read.alignmentStart() - junction.Position) <= ASSEMBLY_MAX_JUNC_POS_DIFF && read.unclippedStart() < junction.Position;
-        }
-
-        // check for support from ref bases with mismatches
-        return refGenome != null ? readMismatchesPastJunction(read, junction, refGenome) : false;
-    }
-
-    @Deprecated
-    public static boolean readMismatchesPastJunction(final Read read, final Junction junction, final RefGenomeInterface refGenome)
-    {
-        // must have min mismatches to even be tested
-        Object numOfEvents = read.bamRecord().getAttribute(NUM_MUTATONS_ATTRIBUTE);
-
-        if(numOfEvents == null || (int)numOfEvents < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-            return false;
-
-        int posStart, posEnd;
-
-        if(junction.isForward())
-        {
-            if(read.alignmentEnd() <= junction.Position)
-                return false;
-
-            posStart = junction.Position + 1;
-            posEnd = read.alignmentEnd();
-        }
-        else
-        {
-            if(read.alignmentStart() >= junction.Position)
-                return false;
-
-            posStart = read.alignmentStart();
-            posEnd = junction.Position - 1;
-        }
-
-        int refLength = posEnd - posStart + 1;
-
-        if(refLength < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-            return false; // insufficient for junction support anyway
-
-        if(refLength > MIN_VARIANT_LENGTH / 2)
-            return false; // should have been soft-clipped
-
-        byte[] refBases = refGenome.getBases(read.chromosome(), posStart, posEnd);
-
-        if(refBases == null || refBases.length < refLength)
-            return false;
-
-        int readIndexStart = readIndexFromPosition(read, posStart);
-        int mismatches = 0;
-
-        for(int i = 0; i < refLength; ++i)
-        {
-            if(readIndexStart + i >= read.basesLength() || i >= refBases.length)
-                return false;
-
-            if(read.getBases()[readIndexStart + i] != refBases[i])
-                ++mismatches;
-
-            if(mismatches >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-                return true;
-        }
-
-        return false;
     }
 
     public static boolean recordSoftClipsAtJunction(final Read read, final Junction junction)

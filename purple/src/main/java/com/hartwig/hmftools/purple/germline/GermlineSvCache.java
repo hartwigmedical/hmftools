@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.sv.SvUtils.SV_GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
@@ -128,6 +129,10 @@ public class GermlineSvCache
             VariantContext variantContext = variant.startContext();
 
             if(variantContext.isFiltered())
+                continue;
+
+            // skip if a SAGA variant
+            if(variantContext.hasAttribute(SAGA_VARIANT))
                 continue;
 
             Genotype refGenotype = variantContext.getGenotype(mGenotypeIds.ReferenceOrdinal);

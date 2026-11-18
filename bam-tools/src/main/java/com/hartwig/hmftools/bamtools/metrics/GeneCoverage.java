@@ -1,23 +1,17 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneRegions;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonCoverageFilename;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -27,20 +21,20 @@ import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.metrics.DepthRange;
+import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class GeneCoverage
 {
     private final Map<String,List<ExonCoverage>> mChrGeneRegionsMap;
 
     private static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
+    private static final List<DepthRange> DEPTH_RANGES = Lists.newArrayList();
     public static final int MAX_DEPTH_BUCKET = 10000;
     protected static final int GENE_COVERAGE_MIN_MAP_QUALITY = 10;
-    private final int[] EXON_DEPTH_THRESHOLDS = { 10, 20, 30, 60, 100, 250 };
 
     public GeneCoverage(final ConfigBuilder configBuilder)
     {
@@ -56,6 +50,14 @@ public class GeneCoverage
         ensemblDataCache.createGeneNameIdMap();
 
         List<DriverGene> driverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
+
+        List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(driverGenes, ensemblDataCache);
+        if(!invalidDriverGenes.isEmpty())
+        {
+            BT_LOGGER.error("Invalid non-Ensembl gene names: {}",
+                    invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
+            System.exit(1);
+        }
 
         List<String> coverageGenes = driverGenes.stream().map(x -> x.gene()).collect(Collectors.toList());
 
@@ -99,36 +101,22 @@ public class GeneCoverage
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(exonFilename, false);
-
-            writer.write(GeneDepthFile.exonCoverageHeader(EXON_DEPTH_THRESHOLDS));
-            writer.newLine();
+            List<ExonDepth> exonDepths = Lists.newArrayList();
 
             for(List<ExonCoverage> exonCoverageList : mChrGeneRegionsMap.values())
             {
                 for(ExonCoverage exonCoverage : exonCoverageList)
                 {
-                    StringJoiner data = new StringJoiner(TSV_DELIM);
-                    data.add(exonCoverage.GeneName);
-                    data.add(exonCoverage.Chromosome);
-                    data.add(String.valueOf(exonCoverage.start()));
-                    data.add(String.valueOf(exonCoverage.end()));
-                    data.add(String.valueOf(exonCoverage.ExonRank));
-                    data.add(format("%.0f", exonCoverage.medianDepth()));
-                    data.add(format("%.2f", exonCoverage.meanDepth()));
+                    ExonDepth exonDepth = new ExonDepth(
+                            exonCoverage.GeneName, exonCoverage.Chromosome, exonCoverage.start(), exonCoverage.end(),
+                            exonCoverage.ExonRank, exonCoverage.medianDepth(), exonCoverage.meanDepth(),
+                            toDepthCounts(exonDepthCounts(exonCoverage)));
 
-                    double[] propBasesAboveDepth = exonCoverage.propBasesAboveDepth(EXON_DEPTH_THRESHOLDS);
-                    for(double value : propBasesAboveDepth)
-                    {
-                        data.add(format("%.2f", value));
-                    }
-
-                    writer.write(data.toString());
-                    writer.newLine();
+                    exonDepths.add(exonDepth);
                 }
             }
 
-            writer.close();
+            GeneDepthFile.writeExonCoverage(exonFilename, exonDepths);
         }
         catch(IOException e)
         {
@@ -165,19 +153,19 @@ public class GeneCoverage
                 String geneName = entry.getKey();
                 List<ExonCoverage> exonCoverageList = entry.getValue();
 
-                int[] depthCounts = baseCoverageSummary(exonCoverageList);
+                Map<DepthRange,Integer> depthCounts = toDepthCounts(baseCoverageSummary(exonCoverageList));
 
                 int minPosition = exonCoverageList.stream().mapToInt(x -> x.start()).min().orElse(0);
                 int maxPosition = exonCoverageList.stream().mapToInt(x -> x.end()).max().orElse(0);
 
                 GeneDepth geneDepth = new GeneDepth(
                         geneName, exonCoverageList.get(0).Chromosome, minPosition, maxPosition,
-                        missedVariantLikelihood(depthCounts), depthCounts);
+                        depthCounts);
 
                 geneDepths.add(geneDepth);
             }
 
-            GeneDepthFile.write(geneFilename, geneDepths, DEPTH_BUCKETS);
+            GeneDepthFile.writeGeneCoverage(geneFilename, geneDepths);
         }
         catch(IOException e)
         {
@@ -226,6 +214,40 @@ public class GeneCoverage
         {
             DEPTH_BUCKETS.add(depthBucket);
         }
+
+        for(int bucket = 0; bucket < DEPTH_BUCKETS.size() - 1; ++bucket)
+        {
+            int depth = DEPTH_BUCKETS.get(bucket);
+            int depthNext = DEPTH_BUCKETS.get(bucket + 1);
+            DEPTH_RANGES.add(new DepthRange(depth, depthNext - 1));
+        }
+
+        int maxDepth = DEPTH_BUCKETS.get(DEPTH_BUCKETS.size() - 1);
+        DEPTH_RANGES.add(new DepthRange(maxDepth, maxDepth));
+    }
+
+    private static Map<DepthRange,Integer> toDepthCounts(final int[] baseCounts)
+    {
+        Map<DepthRange,Integer> depthCounts = Maps.newLinkedHashMap();
+
+        for(int i = 0; i < baseCounts.length; ++i)
+        {
+            depthCounts.put(DEPTH_RANGES.get(i), baseCounts[i]);
+        }
+
+        return depthCounts;
+    }
+
+    private static int[] exonDepthCounts(final ExonCoverage exon)
+    {
+        int[] exonDepth = new int[DEPTH_BUCKETS.size()];
+
+        for(int baseDepth : exon.coverage())
+        {
+            exonDepth[bucket(baseDepth)]++;
+        }
+
+        return exonDepth;
     }
 
     private static int[] baseCoverageSummary(final List<ExonCoverage> exons)
@@ -234,30 +256,15 @@ public class GeneCoverage
 
         for(ExonCoverage exon : exons)
         {
-            for(int baseDepth : exon.coverage())
+            int[] exonDepth = exonDepthCounts(exon);
+
+            for(int i = 0; i < geneDepth.length; ++i)
             {
-                geneDepth[bucket(baseDepth)]++;
+                geneDepth[i] += exonDepth[i];
             }
         }
 
         return geneDepth;
-    }
-
-    public static int depth(int bucket)
-    {
-        if(bucket >= DEPTH_BUCKETS.size())
-            return MAX_DEPTH_BUCKET;
-
-        if(bucket == DEPTH_BUCKETS.size() - 1)
-            return DEPTH_BUCKETS.get(DEPTH_BUCKETS.size() - 1);
-
-        int depth = DEPTH_BUCKETS.get(bucket);
-        int depthNext = DEPTH_BUCKETS.get(bucket + 1);
-
-        if(depthNext == depth + 1)
-            return depth;
-
-        return (depth + depthNext) / 2;
     }
 
     public static int bucket(int depth)
@@ -272,36 +279,4 @@ public class GeneCoverage
 
         return DEPTH_BUCKETS.size() - 1;
     }
-
-    public static double missedVariantLikelihood(int[] baseCoverage)
-    {
-        int totalCoverage = Arrays.stream(baseCoverage).sum();
-        double totalLikelihood = 0;
-
-        for(int i = 0; i < baseCoverage.length; i++)
-        {
-            int depth = depth(i);
-            int coverage = baseCoverage[i];
-
-            if(coverage > 0)
-            {
-                final double proportion = 1d * coverage / totalCoverage;
-                final double likelihoodOfMissing;
-                if(depth == 0)
-                {
-                    likelihoodOfMissing = 1;
-                }
-                else
-                {
-                    final PoissonDistribution distribution = new PoissonDistribution(depth / 2d);
-                    likelihoodOfMissing = distribution.cumulativeProbability(2);
-                }
-
-                totalLikelihood += proportion * likelihoodOfMissing;
-            }
-        }
-
-        return totalLikelihood;
-    }
-
 }

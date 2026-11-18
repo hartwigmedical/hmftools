@@ -20,9 +20,10 @@ public class PositionEvidenceChecker
         mMinBaseQuality = minBaseQuality;
     }
 
-    public void addEvidence(final PositionEvidence posEvidence, final SAMRecord read)
+    public void addEvidence(
+            final PositionEvidence posEvidence, final SAMRecord read, int readIndex, final boolean isIndel)
     {
-        int baseQuality = getBaseQuality(posEvidence.Position, read);
+        int baseQuality = isIndel ? getBaseQuality(posEvidence.Position, read) : read.getBaseQualities()[readIndex];
 
         boolean filtered = false;
 
@@ -37,9 +38,6 @@ public class PositionEvidenceChecker
             ++posEvidence.BaseQualFiltered;
             filtered = true;
         }
-
-        int bafPosition = posEvidence.position();
-        int readIndex = read.getReadPositionAtReferencePosition(bafPosition) - 1; // is 1-based
 
         if(isUltima())
         {
@@ -59,9 +57,9 @@ public class PositionEvidenceChecker
 
         if(readIndex >= 0)
         {
-            if(!isIndel(bafPosition, readIndex + 1, read)) // to preserve existing read index behaviour
+            if(!isIndel)
             {
-                char baseChar = read.getReadString().charAt(readIndex);
+                char baseChar = (char)read.getReadBases()[readIndex];
 
                 if(posEvidence.equalsRef(baseChar))
                 {
@@ -77,23 +75,6 @@ public class PositionEvidenceChecker
                 ++posEvidence.IndelCount;
             }
         }
-    }
-
-    private static boolean isIndel(int bafPosition, int readIndex, final SAMRecord samRecord)
-    {
-        if(samRecord.getAlignmentEnd() > bafPosition)
-        {
-            // Delete?
-            if(samRecord.getReadPositionAtReferencePosition(bafPosition + 1) == 0)
-            {
-                return true;
-            }
-
-            // Insert?
-            return samRecord.getReferencePositionAtReadPosition(readIndex + 1) != bafPosition + 1;
-        }
-
-        return false;
     }
 
     private static int getBaseQuality(final int position, final SAMRecord samRecord)

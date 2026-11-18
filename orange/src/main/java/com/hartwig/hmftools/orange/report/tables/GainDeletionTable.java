@@ -4,11 +4,15 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.GERMLINE_AMP;
 import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.GERMLINE_DELETION;
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_WIDTH;
 import static com.hartwig.hmftools.orange.report.ReportResources.NOT_AVAILABLE;
+import static com.hartwig.hmftools.orange.report.tables.ExpressionTable.COL_FOLD_CHANGE;
+import static com.hartwig.hmftools.orange.report.tables.ExpressionTable.COL_PERCENTILE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.convertWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
@@ -18,12 +22,9 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RANGE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.scaleTableWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
 import java.util.List;
@@ -64,70 +65,86 @@ public final class GainDeletionTable
 
         Cells cells = new Cells(reportResources);
 
-        List<Integer> widths = Lists.newArrayList();
-        List<String> headers = Lists.newArrayList();
-
-        addEntry(widths, headers, 1, COL_LOCATION);
-        addEntry(widths, headers, 1, COL_GENE);
-        addEntry(widths, headers, 1, COL_TYPE);
-        addEntry(widths, headers, 1, COL_RANGE); // if known
-        addEntry(widths, headers, 1, COL_MIN_CN);
-        addEntry(widths, headers, 1, COL_MAX_CN);
-        addEntry(widths, headers, 1, COL_REL_CN);
-        addEntry(widths, headers, 1, COL_ARM_CN);
+        List<TableHeaderData> headers = Lists.newArrayList();
+        headers.add(new TableHeaderData(COL_LOCATION, 0, false));
+        headers.add(new TableHeaderData(COL_GENE, 0, false));
+        headers.add(new TableHeaderData(COL_TYPE, 0, false));
+        headers.add(new TableHeaderData(COL_RANGE, 0, false));
+        headers.add(new TableHeaderData(COL_MIN_CN, 0, false));
+        headers.add(new TableHeaderData(COL_MAX_CN, 0, false));
+        headers.add(new TableHeaderData(COL_REL_CN, 0, false));
+        headers.add(new TableHeaderData(COL_ARM_CN, 0, false));
 
         boolean anyEventsHaveRna = hasRna && gainsDels.stream().anyMatch(x -> x.tpm() != null);
 
         if(anyEventsHaveRna)
         {
-            addEntry(widths, headers, 1, COL_TPM);
-            addEntry(widths, headers, 1, "Percentile");
-            addEntry(widths, headers, 1, "Fold Change");
+            headers.add(new TableHeaderData(COL_TPM, 0, false));
+            headers.add(new TableHeaderData(COL_PERCENTILE, 0, false));
+            headers.add(new TableHeaderData(COL_FOLD_CHANGE, 0.6, false));
         }
 
-        addEntry(widths, headers, 1, COL_DRIVER);
+        headers.add(new TableHeaderData(COL_DRIVER, 0, false));
 
-        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
-        float[] pcts = toPercentages(intToFloatArray(widths));
+        List<List<String>> tableRowData = Lists.newArrayList();
+        List<Boolean> shadeVariantData = Lists.newArrayList();
 
         for(PurpleGainDeletion gainDel : sort(gainsDels))
         {
-            List<String> rowCells = Lists.newArrayList();
+            List<String> rowData = Lists.newArrayList();
+            tableRowData.add(rowData);
 
-            rowCells.add(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
-            rowCells.add(cells.createContent(geneDisplay(gainDel)));
-            rowCells.add(cells.createContent(typeDisplay(gainDel)));
-            rowCells.add(cells.createContent(rangeDisplay(gainDel)));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.armCopyNumber())));
+            rowData.add(gainDel.chromosome() + gainDel.chromosomeBand());
+            rowData.add(geneDisplay(gainDel));
+            rowData.add(typeDisplay(gainDel));
+            rowData.add(rangeDisplay(gainDel));
+            rowData.add(formatSingleDigitDecimal(gainDel.minCopyNumber()));
+            rowData.add(formatSingleDigitDecimal(gainDel.maxCopyNumber()));
+            rowData.add(formatSingleDigitDecimal(gainDel.relativeCopyNumber()));
+            rowData.add(formatSingleDigitDecimal(gainDel.armCopyNumber()));
 
             if(anyEventsHaveRna)
             {
                 if(gainDel.tpm() != null)
                 {
-                    rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
-                    rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
-                    rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
+                    rowData.add(formatTpmField(gainDel.tpm()));
+                    rowData.add(formatPercentage(gainDel.tpmPercentile()));
+                    rowData.add(formatFoldChangeField(gainDel.tpmFoldChange()));
                 }
                 else
                 {
-                    rowCells.add(cells.createContent(NOT_AVAILABLE));
-                    rowCells.add(cells.createContent(NOT_AVAILABLE));
-                    rowCells.add(cells.createContent(NOT_AVAILABLE));
+                    rowData.add(NOT_AVAILABLE);
+                    rowData.add(NOT_AVAILABLE);
+                    rowData.add(NOT_AVAILABLE);
                 }
             }
 
-            rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));
+            rowData.add(gainDel.driver().driverInterpretation().toString());
 
-            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+            boolean isCandidate = gainDel.driver().driverInterpretation() == DriverInterpretation.LOW;
+            shadeVariantData.add(isCandidate);
+        }
 
-            if(gainDel.driver().driverInterpretation() == DriverInterpretation.LOW)
+        scaleTableWidths(headers, tableRowData, MAX_TABLE_WIDTH, reportResources);
+
+        int columnCount = headers.size();
+        String[] columnTexts = new String[columnCount];
+        float[] columnWidths = new float[columnCount];
+        float[] columnPercentages = new float[columnCount];
+
+        convertWidths(headers, columnTexts, columnWidths, columnPercentages);
+
+        BaseTable table = createStandardTable(docCtx, title, width, columnWidths, columnTexts, reportResources);
+
+        for(int r = 0; r < tableRowData.size(); ++r)
+        {
+            List<String> rowData = tableRowData.get(r);
+            List<Cell<PDPage>> createdCells = cells.addRow(table, columnPercentages, rowData);
+
+            if(shadeVariantData.get(r))
             {
                 reportResources.shadeCandidateCells(createdCells);
             }
-
         }
 
         return table;

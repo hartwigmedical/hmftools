@@ -13,8 +13,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 public class BaseDepth
 {
@@ -63,15 +65,15 @@ public class BaseDepth
 
     public int length() { return mBaseRange[SE_END] - mBaseRange[SE_START] + 1; }
 
-    public void processRead(final List<int[]> readCoords)
+    public void processRead(final List<BaseRegion> readAlignments)
     {
         if(mDepth == null)
             return;
 
-        for(final int[] readSection : readCoords)
+        for(BaseRegion alignedSection : readAlignments)
         {
-            int readStartPos = readSection[SE_START];
-            int readEndPos = readSection[SE_END];
+            int readStartPos = alignedSection.start();
+            int readEndPos = alignedSection.end();
 
             if(readStartPos > mBaseRange[SE_END] || readEndPos < mBaseRange[SE_START])
                 continue;
@@ -98,7 +100,7 @@ public class BaseDepth
     {
         final Map<Integer,Integer> depthMap = Maps.newHashMap();
 
-        for(final Integer position : candidateJunctions)
+        for(Integer position : candidateJunctions)
         {
             if(!positionWithin(position, mBaseRange[SE_START], mBaseRange[SE_END]))
                 continue;

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.amber.purity;
 
 import static com.hartwig.hmftools.amber.AmberConstants.MINIMUM_CAPTURED_POINTS;
-import static com.hartwig.hmftools.amber.purity.CandidatePeakEvaluationResult.tooFewPointsOfSufficientDepth;
+import static com.hartwig.hmftools.amber.purity.CandidatePeakResult.tooFewPointsOfSufficientDepth;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -12,7 +12,7 @@ public class CandidatePeakEvaluation implements Callable<Void>
 {
     private final CandidatePeak mCandidatePeak;
     private final List<PositionEvidence> mEvidence;
-    private CandidatePeakEvaluationResult mResult;
+    private CandidatePeakResult mResult;
 
     public CandidatePeakEvaluation(final CandidatePeak candidatePeak, final List<PositionEvidence> evidence)
     {
@@ -31,18 +31,15 @@ public class CandidatePeakEvaluation implements Callable<Void>
         testable.forEach(mCandidatePeak::test);
         if(mCandidatePeak.numberOfCapturedEvidencePoints() < MINIMUM_CAPTURED_POINTS)
         {
-            mResult = CandidatePeakEvaluationResult.tooFewPointsCaptured(mCandidatePeak, mCandidatePeak.numberOfCapturedEvidencePoints());
+            mResult = CandidatePeakResult.tooFewPointsCaptured(mCandidatePeak, mCandidatePeak.numberOfCapturedEvidencePoints());
         }
         else
         {
             double score = (double) mCandidatePeak.numberOfCapturedEvidencePoints() / testable.size();
-            mResult = new CandidatePeakEvaluationResult(mCandidatePeak, score, "");
+            mResult = new CandidatePeakResult(mCandidatePeak, score, "");
         }
         return null;
     }
 
-    public CandidatePeakEvaluationResult result()
-    {
-        return mResult;
-    }
+    public CandidatePeakResult result() { return mResult; }
 }

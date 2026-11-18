@@ -170,7 +170,7 @@ public class FusionData
     }
 
     public int totalFragments() { return SplitFrags + RealignedFrags + DiscordantFrags; }
-    public int supportingFragments() { return SplitFrags + RealignedFrags; }
+    public int supportingFragments() { return SplitFrags + DiscordantFrags; }
 
     public String toString()
     {

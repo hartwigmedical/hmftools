@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_ASSEMBLY_LINK_
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.breakendsCannotLink;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 
@@ -60,8 +61,8 @@ public class FoldbackFinder
                     nextBreakend = breakendList.get(j);
 
                     // first skip over any breakends in a DB with the initial breakend
-                    if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
-                    && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
+                    if(j == i + 1 && breakend.reverseOrient() && nextBreakend.orientation().isForward()
+                    && breakendsCannotLink(breakend, nextBreakend))
                     {
                         ++j;
                         continue;
@@ -82,7 +83,7 @@ public class FoldbackFinder
                     }
 
                     // check again for an overlapping DB at the outer (potential) foldback breakend
-                    if(breakend.orientation() == 1 && nextBreakend.orientation() == -1 && j < breakendList.size() - 1)
+                    if(breakend.forwardOrient() && nextBreakend.reverseOrient() && j < breakendList.size() - 1)
                     {
                         SvBreakend nextNextBreakend = breakendList.get(j + 1);
 
@@ -96,8 +97,8 @@ public class FoldbackFinder
                     // now check for opposite orientation for the potential foldback
                     if(nextBreakend.orientation() == breakend.orientation() && !nextBreakend.isAssembledLink())
                     {
-                        beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
-                        beBack = breakend.orientation() == 1 ? nextBreakend : breakend;
+                        beFront = breakend.forwardOrient() ? breakend : nextBreakend;
+                        beBack = breakend.forwardOrient() ? nextBreakend : breakend;
                     }
 
                     break;
@@ -108,7 +109,7 @@ public class FoldbackFinder
                 if(beFront != null && beBack != null)
                 {
                     // the foldback is invalid if it has a deletion bridge with overhang on the front-facing breakend
-                    final DbPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
+                    DbPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
 
                     if(dbLink == null || dbLink.length() > 0)
                     {
@@ -145,7 +146,7 @@ public class FoldbackFinder
         if(varEnd.type() == INS || varStart.type() == INS)
             return false;
 
-        final SvCluster cluster = varEnd.getCluster();
+        SvCluster cluster = varEnd.getCluster();
 
         boolean singleSV = varEnd.equals(varStart);
 
@@ -173,7 +174,7 @@ public class FoldbackFinder
         if(singleSV)
         {
             // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
-            final SvChain chain = cluster.findChain(varEnd);
+            SvChain chain = cluster.findChain(varEnd);
 
             if(chain != null)
             {
@@ -192,8 +193,8 @@ public class FoldbackFinder
         }
         else
         {
-            final SvChain chain1 = cluster.findChain(varEnd);
-            final SvChain chain2 = cluster.findChain(varStart);
+            SvChain chain1 = cluster.findChain(varEnd);
+            SvChain chain2 = cluster.findChain(varStart);
 
             if(chain1 == null || chain2 == null || chain1 != chain2)
                 return false;
@@ -242,13 +243,13 @@ public class FoldbackFinder
 
         if(varEnd.getFoldbackBreakend(beEndUsesStart) != null)
         {
-            final SvBreakend otherBreakend = varEnd.getFoldbackBreakend(beEndUsesStart);
+            SvBreakend otherBreakend = varEnd.getFoldbackBreakend(beEndUsesStart);
             otherBreakend.getSV().setFoldbackLink(otherBreakend.usesStart(), null, -1, "");
         }
 
         if(varStart.getFoldbackBreakend(beStartUsesStart) != null)
         {
-            final SvBreakend otherBreakend = varStart.getFoldbackBreakend(beStartUsesStart);
+            SvBreakend otherBreakend = varStart.getFoldbackBreakend(beStartUsesStart);
             otherBreakend.getSV().setFoldbackLink(otherBreakend.usesStart(), null, -1, "");
         }
 
@@ -271,21 +272,21 @@ public class FoldbackFinder
     {
         // a special case where one ends of an SV connects to both ends of a single other variant
         // during a replication event and in doing so forms a foldback
-        final SvVarData var = be.getSV();
+        SvVarData var = be.getSV();
 
         // if the other breakend is assembled to 2 other breakends and forms a chain with this breakend
         // open at both ends, then consider it a single-SV foldback
         if(var.getAssembledLinkedPairs(!be.usesStart()).size() < 2)
             return;
 
-        final SvChain chain = var.getCluster().findChain(var);
+        SvChain chain = var.getCluster().findChain(var);
 
         if(chain == null)
             return;
 
         if(chain.getOpenBreakend(true) == be && chain.getOpenBreakend(false) == be)
         {
-            final String chainInfo = String.format("%d;%d;%d", 1, 1, chain.getLength(false));
+            String chainInfo = String.format("%d;%d;%d", 1, 1, chain.getLength(false));
 
             var.setFoldbackLink(be.usesStart(), be, 0, chainInfo);
 

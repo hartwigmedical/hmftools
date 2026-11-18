@@ -37,6 +37,7 @@ import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotator;
+import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
@@ -229,7 +230,10 @@ public class CallerApplication
         for(Variant var : mSvDataCache.getSvList())
         {
             if(mHotspotCache.isHotspotVariant(var))
+            {
                 var.markHotspot();
+                var.filters().remove(FilterType.OFF_TARGET); // called regardless of proximity to panel boundaries
+            }
 
             mVariantFilters.applyFilters(var);
         }

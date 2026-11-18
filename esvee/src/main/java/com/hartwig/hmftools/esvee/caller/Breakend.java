@@ -23,6 +23,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
@@ -158,6 +159,12 @@ public class Breakend
         return Context.getAttributeAsInt(SEG_REPEAT_LENGTH, 0);
     }
     public int uniqueFragmentPositions() { return Context.getAttributeAsInt(UNIQUE_FRAG_POSITIONS, 0); }
+
+    public double strandBias()
+    {
+        Genotype genotype = mTumorGenotype != null ? mTumorGenotype : mRefGenotype;
+        return getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
+    }
 
     public int minOrientationPositionRange()
     {

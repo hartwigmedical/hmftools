@@ -77,17 +77,17 @@ public class ClusterMetrics
         if(cluster.getSvCount() == 0)
             return;
 
-        final Map<String,Boolean> crossCentromereLinks = Maps.newHashMap();
+        Map<String,Boolean> crossCentromereLinks = Maps.newHashMap();
 
         cluster.getLinkedPairs().stream()
                 .filter(x -> x.firstBreakend().arm() != x.secondBreakend().arm())
                 .forEach(x -> crossCentromereLinks.put(x.chromosome(), true));
 
-        for(final Map.Entry<String,List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        for(Map.Entry<String,List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
-            final List<SvBreakend> chrBreakendList = chrBreakendMap.get(chromosome);
+            String chromosome = entry.getKey();
+            List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> chrBreakendList = chrBreakendMap.get(chromosome);
 
             int startIndex = findStartIndex(breakendList);
             int endIndex = findEndIndex(breakendList);
@@ -100,17 +100,17 @@ public class ClusterMetrics
             // add up all stand-alone DELs and deletion bridges, including those spanning unclustered SVs
             for(int i = startIndex; i <= endIndex - 1; ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
-                final SvBreakend nextBreakend = breakendList.get(i+1);
+                SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
+                SvBreakend nextBreakend = breakendList.get(i+1);
                 int breakendsDistance = nextBreakend.position() - breakend.position();
 
                 boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
 
                 boolean isSimpleDel = !isDB && var.type() == DEL
-                        && breakend.orientation() == 1 && nextBreakend.getSV() == var;
+                        && breakend.forwardOrient() && nextBreakend.getSV() == var;
 
-                boolean isTraversedDB = !isDB && !isSimpleDel && breakend.orientation() == 1 && nextBreakend.orientation() == -1;
+                boolean isTraversedDB = !isDB && !isSimpleDel && breakend.forwardOrient() && nextBreakend.reverseOrient();
 
                 if(isDB || isSimpleDel || isTraversedDB)
                 {
@@ -123,15 +123,15 @@ public class ClusterMetrics
                     if(delLength <= SHORT_DB_LENGTH)
                         ++ShortDBCount;
                 }
-                else if(nextBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 2 && breakend.orientation() == -1 && nextBreakend.orientation() == 1)
+                else if(nextBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 2 && breakend.reverseOrient() && nextBreakend.forwardOrient())
                 {
                     // a gap in the cluster breakends - check for DELs from other clusters
                     int impliedTICount = 0;
 
                     for(int j = breakend.getChrPosIndex() + 1; j < nextBreakend.getChrPosIndex() - 1; ++j)
                     {
-                        final SvBreakend ncBreakend = chrBreakendList.get(j);
-                        final SvVarData ncVar = ncBreakend.getSV();
+                        SvBreakend ncBreakend = chrBreakendList.get(j);
+                        SvVarData ncVar = ncBreakend.getSV();
                         if(ncVar.type() == DEL && chrBreakendList.get(j + 1).getSV() == ncVar)
                         {
                             TraversedDelLength += ncVar.length();
@@ -158,7 +158,7 @@ public class ClusterMetrics
                 {
                     // if neither breakend points across the centromere then subtract it from the total range
                     // and also check for a reliable TI across this region as well
-                    if(breakend.orientation() == 1 && nextBreakend.orientation() == -1 && !crossCentromereLinks.containsKey(chromosome))
+                    if(breakend.forwardOrient() && nextBreakend.reverseOrient() && !crossCentromereLinks.containsKey(chromosome))
                         TotalRange -= breakendsDistance;
                 }
             }
@@ -171,11 +171,11 @@ public class ClusterMetrics
         int startIndex = 0;
         for(; startIndex < breakendList.size() - 1; )
         {
-            final SvBreakend lowerBreakend = breakendList.get(startIndex);
-            final SvBreakend upperBreakend = breakendList.get(startIndex + 1);
+            SvBreakend lowerBreakend = breakendList.get(startIndex);
+            SvBreakend upperBreakend = breakendList.get(startIndex + 1);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-            && lowerBreakend.orientation() == ORIENT_REV && upperBreakend.orientation() == ORIENT_FWD
+            && lowerBreakend.reverseOrient() && upperBreakend.forwardOrient()
             && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 startIndex += 2;
@@ -194,11 +194,11 @@ public class ClusterMetrics
 
         for(; endIndex >= 1;)
         {
-            final SvBreakend lowerBreakend = breakendList.get(endIndex - 1);
-            final SvBreakend upperBreakend = breakendList.get(endIndex);
+            SvBreakend lowerBreakend = breakendList.get(endIndex - 1);
+            SvBreakend upperBreakend = breakendList.get(endIndex);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-                    && lowerBreakend.orientation() == ORIENT_REV && upperBreakend.orientation() == ORIENT_FWD
+                    && lowerBreakend.reverseOrient() && upperBreakend.forwardOrient()
                     && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 endIndex -= 2;

@@ -3,29 +3,23 @@ package com.hartwig.hmftools.compar.teal;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class TealData implements ComparableItem
+public class TealData extends ComparableItem
 {
     public final TelomereLength TelomereLength;
 
-    protected static final String FLD_TYPE = "Type";
-    protected static final String FLD_TELOMERE_LENGTH = "TelomereLength";
-
-    public TealData(final TelomereLength telomereLength)
+    public TealData(final TelomereLength telomereLength, final List<FieldInfo> fields)
     {
         TelomereLength = telomereLength;
+
+        addDoubleValue(TealComparer.Fields.TelomereLength.toString(), telomereLength.finalTelomereLength(), fields);
     }
 
     @Override
@@ -37,36 +31,12 @@ public class TealData implements ComparableItem
         return String.format("type(%s)", TelomereLength.type());
     }
 
-    public static List<String> comparedFieldNames()
-    {
-        return List.of(FLD_TELOMERE_LENGTH);
-    }
-
-    @Override
-    public List<String> displayValues()
-    {
-        return List.of(format("%.2f", TelomereLength.finalTelomereLength()));
-    }
-
     @Override
     public boolean matches(final ComparableItem other)
     {
         final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
 
         return TelomereLength.type().equals(otherTelomereLength.type());
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
-    {
-        final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
-
-        final List<String> diffs = new ArrayList<>();
-
-        checkDiff(diffs, FLD_TELOMERE_LENGTH, TelomereLength.finalTelomereLength(), otherTelomereLength.finalTelomereLength(), thresholds);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     public String toString()

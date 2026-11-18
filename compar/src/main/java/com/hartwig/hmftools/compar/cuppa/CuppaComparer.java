@@ -3,66 +3,57 @@ package com.hartwig.hmftools.compar.cuppa;
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class CuppaComparer implements ItemComparer
+public class CuppaComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public CuppaComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        TopCancerType,
+        Probability;
+    }
+
+    public CuppaComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.TopCancerType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TopCancerType.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Probability.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Probability.toString(), 0.1, null),
+                "%.3f"));
     }
 
     @Override
     public CategoryType category() { return CUPPA; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<String> displayFieldNames()
     {
-        thresholds.addFieldThreshold(FLD_PROBABILITY, 0.1, 0);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-    }
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Lists.newArrayList();
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> comparableItems = new ArrayList<>();
 
@@ -77,7 +68,7 @@ public class CuppaComparer implements ItemComparer
 
             for(CuppaPredictionEntry predictionEntry : topProbabilities.PredictionEntries)
             {
-                comparableItems.add(new CuppaData(predictionEntry));
+                comparableItems.add(new CuppaData(predictionEntry, mFields));
             }
         }
         catch(IOException e)

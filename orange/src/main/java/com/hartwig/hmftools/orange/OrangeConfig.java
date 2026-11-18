@@ -31,6 +31,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
@@ -72,6 +74,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.datamodel.orange.OrangeSequencingType;
 import com.hartwig.hmftools.orange.util.PathResolver;
 
 public class OrangeConfig
@@ -100,6 +103,7 @@ public class OrangeConfig
     public final String PipelineVersionFile;
 
     public final String PurpleDataDirectory;
+    public final String PurpleRnaAppendVcf;
     public final String PurplePlotDirectory;
     public final String QSeeDirectory;
     public final String LinxSomaticDataDirectory;
@@ -126,13 +130,13 @@ public class OrangeConfig
     private static final String DISPLAY_SAMPLE_ID = "display_sample";
     private static final String PANEL_NAME = "panel_name";
 
+    private static final String PURPLE_RNA_APPENDED_VCF = "purple_rna_append_vcf";
+
     // Input files used by the algorithm
     private static final String DOID_JSON = "doid_json";
 
     // Files containing the actual genomic results for this sample.
     private static final String PIPELINE_VERSION_FILE = "pipeline_version_file";
-
-    private static String RNA_SAMPLE_ID = "rna_sample_id";
 
     // Some additional optional params and flags
     private static final String ADD_DISCLAIMER = "add_disclaimer";
@@ -227,8 +231,8 @@ public class OrangeConfig
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
         // RNA data can be in the appended Sage VCF and/or from Isofox
-
         RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+        PurpleRnaAppendVcf = configBuilder.getValue(PURPLE_RNA_APPENDED_VCF);
 
         String isofoxDir = null;
 
@@ -333,8 +337,9 @@ public class OrangeConfig
 
         configBuilder.addConfigItem(DISPLAY_SAMPLE_ID, false, "Sample ID for display instead of Tumor ID for demo purposes");
         configBuilder.addConfigItem(PANEL_NAME, false, "Panel name if known");
-        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, RNA_SAMPLE_DESC);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
+        configBuilder.addPath(PURPLE_RNA_APPENDED_VCF, false, "Purple somatic VCF appended with RNA");
 
         configBuilder.addFlag(ADD_DISCLAIMER, "Prints a disclaimer on each page");
         addLoggingOptions(configBuilder);
@@ -343,6 +348,11 @@ public class OrangeConfig
     public OrangeRefGenomeVersion orangeRefGenomeVersion()
     {
         return RefGenVersion.is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
+    }
+
+    public OrangeSequencingType orangeSequencingType()
+    {
+        return OrangeSequencingType.valueOf(SeqType.toString());
     }
 
     private static LocalDate interpretSamplingDateParam(final String samplingDateString)
@@ -432,5 +442,6 @@ public class OrangeConfig
         AddDisclaimer = addDisclaimer;
         DisplaySampleId = tumorId;
         PanelName = "";
+        PurpleRnaAppendVcf = null;
     }
 }

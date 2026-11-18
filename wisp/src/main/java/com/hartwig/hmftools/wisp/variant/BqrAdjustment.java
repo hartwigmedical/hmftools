@@ -145,6 +145,8 @@ public class BqrAdjustment
         {
             BqrKey key = bqrRecord.Key;
 
+            mHasDualEntries |= bqrRecord.Key.ReadType == DUAL;
+
             if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
 

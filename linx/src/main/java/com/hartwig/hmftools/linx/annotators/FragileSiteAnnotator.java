@@ -66,7 +66,7 @@ public class FragileSiteAnnotator
         if(mFragileSites.isEmpty())
             return false;
 
-        for(final ChrBaseRegion fsRegion : mFragileSites)
+        for(ChrBaseRegion fsRegion : mFragileSites)
         {
             if(fsRegion.containsPosition(svData.chromosome(useStart), svData.position(useStart)))
             {
