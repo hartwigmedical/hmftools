@@ -197,11 +197,10 @@ public class MosaicVariantTest
 
         SomaticPurityResult purityResult = somaticVariants.processSample(TEST_SAMPLE_ID);
 
-        assertEquals(0.00396, purityResult.PurityCalcs.ErrorRate, 0.0001);
-        assertEquals(49, purityResult.mosaicFragments(), 1);
-        assertEquals(11, purityResult.mosaicDualFragments(), 1);
+        assertEquals(0.00046, purityResult.PurityCalcs.ErrorRate, 0.0001);
+        assertEquals(5, purityResult.mosaicFragments(), 1);
+        assertEquals(1, purityResult.mosaicDualFragments(), 1);
 
         WispConfig.RunMosaicLogic = false;
-
     }
 }

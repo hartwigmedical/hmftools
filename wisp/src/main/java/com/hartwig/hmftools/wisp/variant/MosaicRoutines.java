@@ -2,12 +2,14 @@ package com.hartwig.hmftools.wisp.variant;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.wisp.ResultsWriter.formatPurityValue;
+import static com.hartwig.hmftools.wisp.WispConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL;
 import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
@@ -17,9 +19,11 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.variant.SomaticPurityCalcs.estimatedPurity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -159,8 +163,11 @@ public final class MosaicRoutines
         // start at the lower percentage as in outlier identification
         double minOutlierSamplePerc = outlierVariantCount == 0 ? OUTLIER_MIN_SAMPLE_PERC : OUTLIER_MIN_SAMPLE_RETEST_PERC;
 
-        double totalExpectedMosaicFrags = 0;
-        double totalExpectedDualMosaicFrags = 0;
+        // track expected mosaic fragments per cell generation
+        Map<Integer,Double> totalExpectedMosaicFragsMap = Maps.newHashMap();
+        Map<Integer,Double> totalExpectedDualMosaicFragsMap = Maps.newHashMap();
+        Map<Integer,Double> likelihoodMap = Maps.newHashMap();
+        Map<String,Map<Integer, Double>> variantLikelihoodMap = Maps.newHashMap();
 
         for(SomaticVariant variant : filteredVariants)
         {
@@ -237,24 +244,116 @@ public final class MosaicRoutines
                     notOutlierFilteredProb = 1;
                 }
 
+                double plausibility = new BinomialDistribution(sampleDp, expectedAf).cumulativeProbability(sampleAd);
+                Map<Integer, Double> variantGenerationMap = variantLikelihoodMap.computeIfAbsent(variant.toString(), k -> Maps.newHashMap());
+                variantGenerationMap.put(cellGeneration, plausibility);
+                likelihoodMap.put(cellGeneration, likelihoodMap.getOrDefault(cellGeneration, 0.0) + plausibility);
+
                 // the expected number of mosaic frags for that variant, given that cell generation, is:
-                //   expectedAD * zeroGermlineADProb * notOutlierFilteredProb.
-                //
+                double expectedMosaicFrags = expectedAd * zeroGermlineADProb * notOutlierFilteredProb;
+
                 // since one prob is based on random sampling of germlineDP and the other is random sampling of ctDNA sampleDP,
                 // they are largely orthogonal and can be multiplied in this way. Call this expectedFrags
-                double expectedMosaicFrags = expectedAd * zeroGermlineADProb * notOutlierFilteredProb;
 
                 // the expected number of dual mosaic frags for that variant is expectedFrags * siteDualRatio, unless dual-filtered
                 double expectedDualMosaicFrags = !sampleFragData.isDualFiltered() ? expectedMosaicFrags * dualDepthRatio : 0;
 
-                totalExpectedMosaicFrags += expectedMosaicFrags;
-                totalExpectedDualMosaicFrags += expectedDualMosaicFrags;
+                totalExpectedMosaicFragsMap.put(
+                        cellGeneration,
+                        totalExpectedMosaicFragsMap.getOrDefault(cellGeneration, 0.0) + expectedMosaicFrags);
+
+                totalExpectedDualMosaicFragsMap.put(
+                        cellGeneration,
+                        totalExpectedDualMosaicFragsMap.getOrDefault(cellGeneration, 0.0) + expectedDualMosaicFrags);
 
                 ++cellGeneration;
             }
         }
 
-        return new MosaicData(mosaicEligibleVariantCount, totalExpectedMosaicFrags, totalExpectedDualMosaicFrags);
-    }
+        // determine if any given cell generation is plausible given the expectedAF and distribution of sample AD/AF/DP for passing variants.
+        // To do so, we accumulate probabilities across each variant about whether the variant is consistent with mosaicism of a specific
+        // cell generation, given the expected AF.
 
+        double totalExpectedMosaicFrags = 0;
+        double totalExpectedDualMosaicFrags = 0;
+        Map<Integer,Double> overloadPenalty = Maps.newHashMap();
+        Map<Integer,Double> dualOverloadPenalty = Maps.newHashMap();
+
+        for(Map.Entry<String,Map<Integer, Double>> entry : variantLikelihoodMap.entrySet())
+        {
+            Map<Integer,Double> variantLikelihoods = entry.getValue();
+            Map<Integer,Double> generationContributions = Maps.newHashMap();
+
+            for(Map.Entry<Integer,Double> likelihoodEntry : variantLikelihoods.entrySet())
+            {
+                int cellGeneration = likelihoodEntry.getKey();
+
+                double likelihoodContribution = min(likelihoodMap.get(cellGeneration), 1.0) -
+                        min(likelihoodMap.get(cellGeneration) - likelihoodEntry.getValue(), 1.0);
+
+                if(likelihoodContribution > 0)
+                {
+                    generationContributions.put(cellGeneration, likelihoodContribution);
+                }
+            }
+
+            // If the same variant is the main one contributing to the probabilities to multiple cell generations (although each variant
+            // is actually at most associated with one mosaic cell generation), this 'overloading' is managed by proportionally downweighting
+            // its contribution to the plausibility probabilities
+
+            double totalLikelihoodContribution = generationContributions.values().stream().mapToDouble(Double::doubleValue).sum();
+
+            if(totalLikelihoodContribution > 1)
+            {
+                // If the sum of probabilities across all variants for a generation is > 1, the fragment contribution of that
+                // generation is proportionally downweighted
+                CT_LOGGER.trace("{} has total likelihood contribution {}, calculating overload",
+                        entry.getKey(), totalLikelihoodContribution);
+
+                double lossProportion = (totalLikelihoodContribution - 1) / totalLikelihoodContribution;
+
+                for(Map.Entry<Integer, Double> generationEntry : generationContributions.entrySet())
+                {
+                    int cellGeneration = generationEntry.getKey();
+                    double generationLoss = lossProportion * generationEntry.getValue();
+                    double generationOverload = generationLoss * totalExpectedMosaicFragsMap.get(cellGeneration);
+                    double dualGenerationOverload = generationLoss * totalExpectedDualMosaicFragsMap.get(cellGeneration);
+
+                    overloadPenalty.put(
+                            cellGeneration, overloadPenalty.getOrDefault(cellGeneration, 0.0) + generationOverload);
+
+                    dualOverloadPenalty.put(
+                            cellGeneration, dualOverloadPenalty.getOrDefault(cellGeneration, 0.0) + dualGenerationOverload);
+                }
+            }
+        }
+
+        for(Map.Entry<Integer,Double> entry : totalExpectedMosaicFragsMap.entrySet())
+        {
+            int cellGeneration = entry.getKey();
+
+            totalExpectedMosaicFrags += entry.getValue() * min(likelihoodMap.get(cellGeneration), 1) -
+                    overloadPenalty.getOrDefault(cellGeneration, 0.0);
+        }
+
+        for(Map.Entry<Integer,Double> entry : totalExpectedDualMosaicFragsMap.entrySet())
+        {
+            int cellGeneration = entry.getKey();
+
+            totalExpectedDualMosaicFrags += entry.getValue() * min(likelihoodMap.get(cellGeneration), 1) -
+                    dualOverloadPenalty.getOrDefault(cellGeneration, 0.0);;
+        }
+
+        BinomialDistribution distribution = new BinomialDistribution(
+                mosaicEligibleVariantCount,
+                filteredVariants.size() / (double)mosaicEligibleVariantCount);
+
+        double siteSelectionUncertaintyAdjustment = distribution.inverseCumulativeProbability(
+                HIGH_PROBABILITY) / (double) filteredVariants.size();
+
+        return new MosaicData(
+                mosaicEligibleVariantCount,
+                totalExpectedMosaicFrags * siteSelectionUncertaintyAdjustment,
+                totalExpectedDualMosaicFrags * siteSelectionUncertaintyAdjustment);
+    }
 }

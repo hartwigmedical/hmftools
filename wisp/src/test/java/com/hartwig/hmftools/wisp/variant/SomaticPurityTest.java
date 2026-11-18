@@ -55,18 +55,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticPurityTest
 {
-    private final BqrAdjustment mBbqrAdjustment;
-    private final SomaticPurityEstimator mPurityEstimator;
-
-    public SomaticPurityTest()
-    {
-        mBbqrAdjustment = new BqrAdjustment(TEST_CONFIG);
-
-        mPurityEstimator = new SomaticPurityEstimator(TEST_CONFIG, TEST_RESULTS_WRITER, TEST_SAMPLE, mBbqrAdjustment);
-
-        addBqrData(mBbqrAdjustment, "C", 100_000, 10, 0);
-    }
-
     @Test
     public void testVariantFilters()
     {
