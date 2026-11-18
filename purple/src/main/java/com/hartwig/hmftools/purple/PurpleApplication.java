@@ -328,7 +328,8 @@ public class PurpleApplication
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers, bestFit.Fit.ploidy()));
 
-            SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
+            SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
+                    bestFit.Fit.purity(), purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 

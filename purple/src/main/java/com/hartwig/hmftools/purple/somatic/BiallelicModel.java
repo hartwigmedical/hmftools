@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_DAMPENING_AD
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_DAMPENING_AD_LIMIT;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_BASE_ERROR_RATE;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_GROWTH_RATE;
-import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_MIN_PURITY;
+import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_LOH_MIN_PURITY_EXP;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_VCN_THRESHOLD_PI;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_VCN_THRESHOLD_P2;
 
@@ -25,9 +25,9 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class BiallelicModel
 {
-    public static boolean classifyBiallelic(double bialleicProbability) { return bialleicProbability >= 0.5; }
+    public static boolean classifyIsBiallelic(double bialleicProbability) { return bialleicProbability >= 0.5; }
 
-    public static double calcBiallelicProbability(
+    public static double calculateProbability(
             final double samplePurity, final PurpleCopyNumber purpleCopyNumber, final SomaticVariant variant)
     {
         int alleleReadCount = variant.alleleReadCount();
@@ -36,22 +36,24 @@ public class BiallelicModel
             return 0;
 
         int depth = variant.totalReadCount();
-        double vaf = variant.alleleFrequency();
 
-        // double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
         double segmentCN = purpleCopyNumber.averageTumorCopyNumber();
         double variantCN = variant.decorator().variantCopyNumber();
-        double majorAlleleCN = variantCN - variant.decorator().minorAlleleCopyNumber();
+        double minorAlleleCN = purpleCopyNumber.minorAlleleCopyNumber();
 
-        return calcBiallelicProbability(samplePurity, alleleReadCount, depth, vaf, segmentCN, variantCN, majorAlleleCN);
+        return calculateProbability(samplePurity, alleleReadCount, depth, segmentCN, variantCN, minorAlleleCN);
     }
 
-    public static double calcBiallelicProbability(
-            final double samplePurity, int alleleReadCount, int depth, double vaf, double segmentCN, double variantCN, double majorAlleleCN)
+    public static double calculateProbability(
+            final double samplePurity, int alleleReadCount, int depth, double segmentCN, double variantCN, double minorAlleleCN)
     {
-        double lohExponent = max(samplePurity, BIALLELIC_LOH_MIN_PURITY) * BIALLELIC_LOH_GROWTH_RATE;
-        double probabilityLoh = 1 - 1 / (1 + Math.exp(-lohExponent * (majorAlleleCN - 0.5)));
-        // =1-1/(1+EXP(-E3*(B19-0.5)))
+        if(depth == 0)
+            return 0;
+
+        double vaf = alleleReadCount / (double)depth;
+
+        double lohExponent = max(samplePurity * BIALLELIC_LOH_GROWTH_RATE, BIALLELIC_LOH_MIN_PURITY_EXP);
+        double probabilityLoh = 1 - 1 / (1 + Math.exp(-lohExponent * (minorAlleleCN - 0.5)));
 
         double vcnThresholdForNoWildtype = min(segmentCN - 0.5, max(BIALLELIC_VCN_THRESHOLD_PI, segmentCN - BIALLELIC_VCN_THRESHOLD_P2));
 
@@ -82,7 +84,7 @@ public class BiallelicModel
         double probabilityLohFloored = max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE);
         double probNoWildtypeOrNoLohRaw = probabilityLohFloored / (probWildtypeOrLohRelative + probabilityLohFloored);
 
-        double minAlleleDiff = max(min(abs(variantCN - majorAlleleCN), abs(variantCN - (segmentCN - majorAlleleCN))), 1 / PROB_UPPER_LIMIT);
+        double minAlleleDiff = max(min(abs(variantCN - minorAlleleCN), abs(variantCN - (segmentCN - minorAlleleCN))), 1 / PROB_UPPER_LIMIT);
         double minCNDiff = max(abs(variantCN - segmentCN), 1 / PROB_UPPER_LIMIT);
 
         double probNoWildtypeOrNoLohAdjusted = Math.log(minAlleleDiff / minCNDiff);
