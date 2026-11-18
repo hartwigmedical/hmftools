@@ -22,84 +22,53 @@ public class BiallelicProbabilityTest extends TestCase
 
         assertEquals(0.7136, probability, 0.001);
 
-        // scenario 1 - no LOH and not biallelic
-        samplePurity = 1.0;
-        alleleReadCount = 50;
-        depth = 100;
-        segmentCN = 2.0;
-        variantCN = 1.0;
-        minorAlleleCN = 1.0;
+        // test 1 - extreme subclonality - relative calc uses fallback value giving zero biallelic prob
+        samplePurity = 0.32;
+        alleleReadCount = 8;
+        depth = 755;
+        segmentCN = 1.58;
+        variantCN = 0.062;
+        minorAlleleCN = 0.552;
 
         probability = calculateProbability(samplePurity, alleleReadCount, depth, segmentCN, variantCN, minorAlleleCN);
 
         assertEquals(0, probability, 0.001);
 
-        // scenario 1 - clear LOH and moderate biallelic likelihood
-        samplePurity = 0.5;
-        alleleReadCount = 25;
-        depth = 100;
-        segmentCN = 1.0;
-        variantCN = 0.45;
-        minorAlleleCN = 0.1;
+        // test 2 - depth dampening plus AF uncertainty drags lowers p(noWT|LOH) certainty, adjustment further drags down p(noWT|!LOH) estimate
+        samplePurity = 0.73;
+        alleleReadCount = 1337;
+        depth = 2144;
+        segmentCN = 2.74;
+        variantCN = 2.17;
+        minorAlleleCN = 0.889;
 
         probability = calculateProbability(samplePurity, alleleReadCount, depth, segmentCN, variantCN, minorAlleleCN);
 
-        assertEquals(0.373, probability, 0.001);
+        assertEquals(0.2989, probability, 0.001);
 
-        /* old calc scenarios:
+        // test 3 - adjustment to p(NOWT|!LOH) adjustment (since VCN is closer to MACN than CN) drags p(noWT|!LOH) down further
+        samplePurity = 0.26;
+        alleleReadCount = 11;
+        depth = 107;
+        segmentCN = 1.61;
+        variantCN = 0.751;
+        minorAlleleCN = 0.489;
 
-        // Scenario 3
-        // input values:
-        CN = 2.98;
-        MACN = 0.991;
-        VCN = 2.33;
-        alleleReadCount = 36;
+        probability = calculateProbability(samplePurity, alleleReadCount, depth, segmentCN, variantCN, minorAlleleCN);
 
-        // expected output:
-        expectedBiallelicProbability = 0.054;
+        assertEquals(0.0399, probability, 0.001);
 
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
+        // test 4 - heavy adjustment to p(NOWT|!LOH) (because VCN is very close to CN and not close to either allele CN) drags the
+        // biallelic prob way up
+        samplePurity = 0.45;
+        alleleReadCount = 20;
+        depth = 58;
+        segmentCN = 1.39;
+        variantCN = 1.32;
+        minorAlleleCN = 0.63;
 
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
+        probability = calculateProbability(samplePurity, alleleReadCount, depth, segmentCN, variantCN, minorAlleleCN);
 
-        // Scenario 4
-        // input values:
-        CN = 43.78;
-        MACN = 0.0;
-        VCN = 42.74;
-        alleleReadCount = 627;
-
-        // expected output:
-        expectedBiallelicProbability = 0.442;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-        // Scenario 5 - initially called BIALLELIC in COLO829v003T chr1:50084056
-        // input values:
-        CN = 2.81;
-        MACN = 0.811;
-        VCN = 2.83;
-        alleleReadCount = 73;
-
-        // expected output:
-        expectedBiallelicProbability = 0.833;
-
-        correspondingBAF = 1 - (MACN / CN);
-        copyNumber = createCopyNumber(CN, correspondingBAF);
-        variant = createVariant(alleleReadCount, VCN);
-
-        biallelicProbability = SomaticPurityEnrichment.calculateBiallelic(copyNumber, variant);
-        assertEquals(expectedBiallelicProbability, biallelicProbability, 0.01);
-
-
-        */
+        assertEquals(0.9138, probability, 0.001);
     }
 }
