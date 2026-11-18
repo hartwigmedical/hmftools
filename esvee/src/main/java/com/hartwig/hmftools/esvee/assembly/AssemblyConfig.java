@@ -203,7 +203,7 @@ public class AssemblyConfig
         ReferenceBams = Lists.newArrayList();
         ReferenceIds = Lists.newArrayList();
 
-        List<String> prepTumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+        List<String> prepTumorBams = formPrepBamFilenames(PrepDir, TumorIds, OutputId);
 
         if(prepTumorBams.size() == TumorIds.size())
             TumorBams.addAll(prepTumorBams);
@@ -214,7 +214,7 @@ public class AssemblyConfig
         {
             ReferenceIds.addAll(parseSampleBamLists(configBuilder, REFERENCE));
 
-            List<String> prepRefBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+            List<String> prepRefBams = formPrepBamFilenames(PrepDir, ReferenceIds, OutputId);
 
             if(prepRefBams.size() == ReferenceIds.size())
                 ReferenceBams.addAll(prepRefBams);
