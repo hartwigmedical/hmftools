@@ -191,8 +191,6 @@ public class MosaicVariantTest
                 ref, alt, 30, 0, tumorDp, tumorAd, 2000, 1, sampleDualDp,
                 0, copyNumber, copyNumber);
 
-        WispConfig.RunMosaicLogic = true;
-
         somaticVariants.processVariant(sampleIds, varContext15);
 
         SomaticPurityResult purityResult = somaticVariants.processSample(TEST_SAMPLE_ID);
@@ -200,7 +198,5 @@ public class MosaicVariantTest
         assertEquals(0.00046, purityResult.PurityCalcs.ErrorRate, 0.0001);
         assertEquals(5, purityResult.mosaicFragments(), 1);
         assertEquals(1, purityResult.mosaicDualFragments(), 1);
-
-        WispConfig.RunMosaicLogic = false;
     }
 }

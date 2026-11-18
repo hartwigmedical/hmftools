@@ -93,8 +93,6 @@ public class WispConfig
     public final boolean InferVcfReferenceId;
     public final int Threads;
 
-    public static boolean RunMosaicLogic = false;
-
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     private static final String AMBER_EXTRA_TUMOR_ID = "amber_extra_tumor_id";
@@ -119,8 +117,6 @@ public class WispConfig
     private static final String EXCLUDED_SOMATICS_FILE = "excluded_somatics";
     private static final String INFER_VCF_REFERENCE_ID = "infer_vcf_reference_id";
     private static final String SKIP_REFERENCE_ID = "skip_reference_id";
-
-    private static final String RUN_MOSAICS = "run_mosaics";
 
     // support for old config names until next version
     private static final String PATIENT_ID_OLD_CFG = "patient_id";
@@ -191,8 +187,6 @@ public class WispConfig
         ApplyRefVariantFilters = configBuilder.hasFlag(APPLY_REF_VARIANT_FILTERS);
         AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
         DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
-
-        RunMosaicLogic = configBuilder.hasFlag(RUN_MOSAICS);
 
         WriteTypes = Sets.newHashSet();
 
@@ -413,8 +407,6 @@ public class WispConfig
                 "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
         configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted, recommend 0.4 for panel samples", 0);
-
-        configBuilder.addFlag(RUN_MOSAICS, "Run Mosaic logic");
 
         configBuilder.addFlag(WRITE_ALL_SUMMARY_METHODS, "Write empty summary data for non-configured purity methods");
         configBuilder.addFlag(SKIP_BQR, "Skip BQR adjustment for somatic variants");

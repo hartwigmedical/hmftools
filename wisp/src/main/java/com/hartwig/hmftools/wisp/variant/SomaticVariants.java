@@ -330,9 +330,8 @@ public class SomaticVariants
             // check for outlier / CHIP variants and remove them from variants used for purity estimates
             List<SomaticVariant> outlierVariants = MosaicRoutines.findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
 
-            MosaicData mosaicData = WispConfig.RunMosaicLogic ?
-                    assessMosaics(sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariants, sampleTotalAD, sampleTotalAF)
-                    : INVALID_DATA;
+            MosaicData mosaicData = assessMosaics(
+                    sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariants, sampleTotalAD, sampleTotalAF);
 
             purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), mosaicData, true);
 

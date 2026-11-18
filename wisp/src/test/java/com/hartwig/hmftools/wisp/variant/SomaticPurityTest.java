@@ -201,10 +201,10 @@ public class SomaticPurityTest
         assertEquals(0.54, purityResult.PurityCalcs.PurityRangeHigh, 0.01);
         assertEquals(0.46, purityResult.PurityCalcs.PurityRangeLow, 0.01);
         assertEquals(0, purityResult.PurityCalcs.Probability, 0.01);
-        assertEquals(0.00097, purityResult.PurityCalcs.LodPurityEstimate, 0.001);
+        assertEquals(0.0043151, purityResult.PurityCalcs.LodPurityEstimate, 0.001);
         assertEquals(0, purityResult.PurityCalcs.BqrQualThreshold);
         assertEquals(NONE, purityResult.PurityCalcs.Clonality.Method);
-        assertEquals(3.2e-5, purityResult.PurityCalcs.ErrorRate, 1e-4);
+        assertEquals(0.00468, purityResult.PurityCalcs.ErrorRate, 1e-4);
     }
 
     @Test
