@@ -17,13 +17,10 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     r-cowplot \
     r-magick \
     bioconductor-gviz \
-    circos>=0.69.9 \
+    "circos>=0.69.9" \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
-
-# Fix missing GD perl module error (despite GD already being installed with circos)
-RUN perl -MCPAN -e 'install GD'
 
 ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
 ADD target/entrypoint.sh ${RUN_SCRIPT}
