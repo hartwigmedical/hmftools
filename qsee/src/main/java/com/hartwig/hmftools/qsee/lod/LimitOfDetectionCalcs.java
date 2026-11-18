@@ -13,7 +13,7 @@ public class LimitOfDetectionCalcs
     private static final int MIN_ALT_READS = 3;
 
     private static final int LOD_VAF_BISECTION_ITERATIONS = 20; // VAF precision 1 / 2^20 = ~1e-6
-    private static final double LOD_TARGET_MISSED_VARIANT_LIKELIHOOD = 0.01;
+    private static final double LOD_TARGET_MISSED_VARIANT_LIKELIHOOD = 0.05;
 
     public static final double REF_SAMPLE_PURITY = 1.0;  // Assume no contamination from other samples
 

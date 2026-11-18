@@ -22,7 +22,7 @@ public class LimitOfDetectionCalcsTest
         );
 
         actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(depthCounts);
-        expectedVaf = 0.245;
+        expectedVaf = 0.132;
         assertEquals(expectedVaf, actualVaf, 1e-3);
 
         // Depth too low, no VAF can achieve the missed variant likelihood target

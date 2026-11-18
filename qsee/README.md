@@ -184,7 +184,7 @@ necessary represent a structural variant.
 
 - **Genes with potential missed variants**: Likelihood that a variant is missed within the respective gene, adjusted for tumor purity 
 (see [Missed variant likelihood](#missed-variant-likelihood)). Only genes 
-(up to 20) with missed variant likelihood >1% are shown.
+(up to 20) with missed variant likelihood >2% are shown.
 
 - **Base quality recalibration (BQR)**: Adjusting base quality of SNVs to account for sequencer-specific base quality biases. 
   - `+`: base quality boosted (original quality underestimated). `-`: base quality reduced (original quality overestimated)
@@ -230,11 +230,11 @@ mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
 
 ### Limit of detection of variants per exon
 
-The LOD VAF is the minimum *tumor VAF* (i.e. sample VAF / purity) at which a variant is reliably detected >=99% of the time given the 
+The LOD VAF is the minimum *tumor VAF* (i.e. sample VAF / purity) at which a variant is reliably detected >=95% of the time given the 
 exon's depth distribution.
 
-This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 1%, then divide by purity to get 
-`theoreticalTumorVaf`. Values >= 1 are unreachable (e.g. due to low purity). If MVLH > 1% even at a sample VAF of 1 (exon depth too low), 
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%, then divide by purity to get 
+`theoreticalTumorVaf`. Values >= 1 are unreachable (e.g. due to low purity). If MVLH > 5% even at a sample VAF of 1 (exon depth too low), 
 the sample VAF LoD is set to 1.
 
 Assuming a diploid genome, exons are marked in `VariantDetectabilityStatus` with:

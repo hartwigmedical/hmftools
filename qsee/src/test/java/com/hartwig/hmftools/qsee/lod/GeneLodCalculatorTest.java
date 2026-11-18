@@ -38,11 +38,11 @@ public class GeneLodCalculatorTest
     {
         // purity, exon rank, expected tumor VAF LoD, expected detectable clonal variants
         Object[][] expectedRows = {
-                { 0.5, 1, 0.490, VariantDetectabilityStatus.PASS },
+                { 0.5, 1, 0.263, VariantDetectabilityStatus.PASS },
                 { 0.5, 2, 2.0, VariantDetectabilityStatus.FAIL }, // Depth too low
-                { 0.3, 1, 0.816, VariantDetectabilityStatus.WARN_HET_UNRELIABLE },
-                { 0.3, 2, 3.333, VariantDetectabilityStatus.FAIL },
-                { 0.2, 1, 1.224, VariantDetectabilityStatus.FAIL }, // Purity adjusted VAF > 1
+                { 0.2, 1, 0.658, VariantDetectabilityStatus.WARN_HET_UNRELIABLE },
+                { 0.2, 2, 5.0, VariantDetectabilityStatus.FAIL },
+                { 0.1, 1, 1.316, VariantDetectabilityStatus.FAIL }, // Purity adjusted VAF > 1
         };
 
         for(Object[] expectedRow : expectedRows)
