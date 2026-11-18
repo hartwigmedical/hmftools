@@ -466,4 +466,22 @@ public class CigarUtilsTest
         assertEquals(2, state.ReadIndex);
         assertEquals(M, state.operator());
     }
+
+    @Test
+    public void testCigarElementLengths()
+    {
+        List<CigarElement> elements = CigarUtils.cigarFromStr("5S20M2I3D1000N10M").getCigarElements();
+        assertEquals(37, CigarUtils.cigarBaseLength(elements));
+        assertEquals(1033, CigarUtils.cigarAlignedLength(elements));
+    }
+
+    @Test
+    public void testHardClipAndRightSoftClip()
+    {
+        assertTrue(CigarUtils.hasHardClip(CigarUtils.cigarFromStr("5H95M").getCigarElements()));
+        assertFalse(CigarUtils.hasHardClip(CigarUtils.cigarFromStr("100M").getCigarElements()));
+
+        assertEquals(10, CigarUtils.rightSoftClipLength(CigarUtils.cigarFromStr("85M10S").getCigarElements()));
+        assertEquals(0, CigarUtils.rightSoftClipLength(CigarUtils.cigarFromStr("95M5H").getCigarElements()));
+    }
 }
