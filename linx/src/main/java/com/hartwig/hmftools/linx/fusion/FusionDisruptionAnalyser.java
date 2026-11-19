@@ -185,7 +185,7 @@ public class FusionDisruptionAnalyser
         mSampleId = sampleId;
 
         mUniqueFusions.clear();
-        mFusionFinder.reset();
+        mFusionFinder.resetIds();
 
         final List<SvVarData> svList = fullSvList.stream()
                 .filter(x -> x.getLinkedSVs() == null || !x.isSglBreakend()).collect(Collectors.toList());

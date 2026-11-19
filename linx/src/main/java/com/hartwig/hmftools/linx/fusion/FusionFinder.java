@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASON;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.processSvGeneDebug;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MIN_ENHANCER_PARTNER_GENE_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -34,7 +33,6 @@ import static com.hartwig.hmftools.common.linx.FusionReportableReason.PROTEIN_DO
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -54,7 +52,7 @@ public class FusionFinder
     private final KnownFusionCache mKnownFusionCache;
 
     private final EnsemblDataCache mGeneTransCache;
-    private int mNextFusionId;
+    private final FusionIdGenerator mFusionIds;
     private final List<String> mInvalidReasons;
 
     public FusionFinder(final FusionConfig config, final EnsemblDataCache geneTransCache, final KnownFusionCache knownFusionCache)
@@ -63,7 +61,7 @@ public class FusionFinder
         mGeneTransCache = geneTransCache;
         mKnownFusionCache = knownFusionCache;
 
-        mNextFusionId = 0;
+        mFusionIds = new FusionIdGenerator();
         mInvalidReasons = Lists.newArrayList();
     }
 
@@ -83,8 +81,8 @@ public class FusionFinder
     public static final String INVALID_REASON_PHASING = "Unphased";
     public static final String INVALID_REASON_CODING_TYPE = "Coding";
 
-    public void reset() { mNextFusionId = 0; }
-    public int nextFusionId() { return mNextFusionId++; }
+    public int nextFusionId() { return mFusionIds.nextFusionId(); }
+    public void resetIds() { mFusionIds.reset(); }
 
     public List<GeneFusion> findFusions(final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2)
     {
