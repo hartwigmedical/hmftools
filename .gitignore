@@ -15,6 +15,7 @@ dependency-reduced-pom.xml
 
 # Ignore target directies
 target
+target-intellij
 
 # Ignore log files
 *.log
