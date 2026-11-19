@@ -14,6 +14,9 @@ Metrics not meeting warn/fail QC thresholds are flagged.
   * [General format](#general-format)
   * [Plot descriptions](#plot-descriptions)
   * [Consensus read types](#consensus-read-types)
+* [Variant detection metrics](#variant-detection-metrics)
+  * [Missed variant likelihood](#missed-variant-likelihood)
+  * [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon)
 * [Advanced usage](#advanced-usage)
   * [Generating cohort percentiles](#generating-cohort-percentiles)
   * [Input files in separate directories](#input-files-in-separate-directories)
@@ -34,6 +37,7 @@ Qsee accepts the below pipeline files as input:
   - `.bam_metric.flag_counts.tsv`: tumor (mandatory), normal
   - `.bam_metric.frag_length.tsv`: tumor, normal
   - `.bam_metric.gene_coverage.tsv`: tumor, normal
+  - `.bam_metric.exon_coverage.tsv`: tumor, normal
 - [**COBALT**](https://github.com/hartwigmedical/hmftools/tree/master/cobalt)
   - `.cobalt.gc.median.tsv`: tumor, normal
 - [**ESVEE**](https://github.com/hartwigmedical/hmftools/tree/master/esvee)
@@ -73,6 +77,7 @@ java -jar qsee.jar \
 
 This will generate the following files:
 - `TUMOR_ID.qsee.status.tsv.gz`: QC status (PASS/WARN/FAIL) per sample and per feature with a QC threshold defined
+- `TUMOR_ID.qsee.gene_lod.tsv.gz`: Variant limit of detection per exon in reportable driver genes (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
 - `TUMOR_ID.qsee.vis.data.tsv.gz`: Visualisation raw data
 - `TUMOR_ID.qsee.vis.report.{png,pdf}`: Visualisation comparing samples to an existing cohort, and highlighting samples not meeting QC thresholds (see [**example**](#visualisation))
 
@@ -178,8 +183,8 @@ the global median read depth.
 necessary represent a structural variant.
 
 - **Genes with potential missed variants**: Likelihood that a variant is missed within the respective gene, adjusted for tumor purity 
-(see [BamTools gene panel coverage](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools)). Only genes 
-(up to 20) with missed variant likelihood >1% are shown.
+(see [Missed variant likelihood](#missed-variant-likelihood)). Only genes 
+(up to 20) with missed variant likelihood >2% are shown.
 
 - **Base quality recalibration (BQR)**: Adjusting base quality of SNVs to account for sequencer-specific base quality biases. 
   - `+`: base quality boosted (original quality underestimated). `-`: base quality reduced (original quality overestimated)
@@ -197,6 +202,45 @@ A read group with duplicate reads is collapsed into a consensus read with one of
 - DUAL: Read deduplication based on both forward and reverse strands
 - SINGLE: Read deduplication based on one strand (forward or reverse)
 - NONE: No read deduplication (only 1 read in group)
+
+## Variant detection metrics
+
+Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per gene or exon depth distributions 
+(number of bases per depth range) from [BamTools](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#gene-panel-coverage). 
+A variant is reliably detected if it is supported by >=3 alt reads.
+
+### Missed variant likelihood
+
+Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele is supported by <=2 alt reads, i.e. not reliably 
+detected. MVLH is first calculated per depth range:
+
+```
+theoreticalSampleVaf = purity / alleles
+mvlhForDepth = binomialCDF(x = 2, n = depth, p = theoreticalSampleVaf)
+```
+
+where `depth` is the depth range midpoint, and `alleles` is 1 for sex chromosomes in male samples and 2 otherwise. Tumor samples use the 
+Purple purity, while reference samples use a purity of 1.
+
+Then, the final MVLH is the mean across depth ranges, weighted by base count:
+
+```
+mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
+```
+
+### Limit of detection of variants per exon
+
+Qsee computes the minimum *tumor VAF* (i.e. tumor purity normalised sample VAF) at which a variant is reliably detected >=95% of the time
+given the exon's depth distribution.
+
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%, then divide by tumor purity to get
+`theoreticalTumorVaf`. The resulting value is shown in the `TumorVafLod` column, with the `SampleVafLod` column showing the value
+before purity normalisation.
+
+Assuming a diploid genome, exons are marked in `VariantDetectabilityStatus` with:
+- `PASS` when `TumorVafLod` <= 0.5 (clonal homozygous and heterozygous variants can be reliably detected)
+- `WARN_HET_UNRELIABLE` when `TumorVafLod` < 1.0 (only clonal homozygous variants can be reliably detected)
+- `FAIL` when `TumorVafLod` >= 1.0 (clonal variants cannot be reliably detected or no coverage due to homozygous deletion)
 
 ## Advanced usage
 

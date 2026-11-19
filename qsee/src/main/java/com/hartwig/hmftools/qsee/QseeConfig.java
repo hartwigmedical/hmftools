@@ -81,6 +81,8 @@ public class QseeConfig
     public final boolean AllowMissingInput;
     public final boolean SkipPlot;
 
+    public final boolean WriteLodDetails;
+
     public final String OutputDir;
     public final String OutputId;
 
@@ -100,6 +102,9 @@ public class QseeConfig
 
     public static final String SKIP_PLOT = "skip_plot";
     public static final String SKIP_PLOT_DESC = "Write output files only, without plotting";
+
+    public static final String WRITE_LOD_DETAILS = "write_lod_details";
+    public static final String WRITE_LOD_DETAILS_DESC = "Write exon depth distribution columns to gene LoD file";
 
     public QseeConfig(final ConfigBuilder configBuilder)
     {
@@ -131,6 +136,8 @@ public class QseeConfig
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
         SkipPlot = configBuilder.hasFlag(SKIP_PLOT);
+
+        WriteLodDetails = configBuilder.hasFlag(WRITE_LOD_DETAILS);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -165,6 +172,8 @@ public class QseeConfig
         configBuilder.addFlag(TARGETED_MODE, TARGETED_MODE_DESC);
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
         configBuilder.addFlag(SKIP_PLOT, SKIP_PLOT_DESC);
+
+        configBuilder.addFlag(WRITE_LOD_DETAILS, WRITE_LOD_DETAILS_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
         configBuilder.addConfigItem(OUTPUT_ID, false, OUTPUT_DIR_DESC);
