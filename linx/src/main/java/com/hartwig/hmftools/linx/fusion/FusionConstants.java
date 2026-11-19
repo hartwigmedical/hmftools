@@ -38,6 +38,8 @@ public class FusionConstants
 
     public static final List<String> PROTEINS_REQUIRED_LOST = Lists.newArrayList();
 
+    public static final String ENHANCER_TRANSCRIPT_PREFIX = "@";
+
     static
     {
         // first entries are for V37, second are for V38 in Ensembl

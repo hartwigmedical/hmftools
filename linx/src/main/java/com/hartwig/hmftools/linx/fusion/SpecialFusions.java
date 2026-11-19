@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_PROMISCUOUS_MIN_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_TRANSCRIPT_PREFIX;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MIN_ENHANCER_PARTNER_GENE_DISTANCE;
@@ -369,8 +370,9 @@ public class SpecialFusions
     private BreakendTransData generateEnhancerTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
     {
         TranscriptData transData = new TranscriptData(
-                0, String.format("@%s", knownFusionData.FiveGene), gene.geneId(), false, gene.strand(),
-                knownFusionData.geneRegion().start(), knownFusionData.geneRegion().end(), null, null, "", null);
+                0, String.format("%s%s", ENHANCER_TRANSCRIPT_PREFIX, knownFusionData.FiveGene), gene.geneId(), false,
+                gene.strand(), knownFusionData.geneRegion().start(), knownFusionData.geneRegion().end(),
+                null, null, "", null);
 
         BreakendTransData transcript = new BreakendTransData(
                 gene, transData,  -1, -1, PHASE_NONE, PHASE_NONE, 0, 0);

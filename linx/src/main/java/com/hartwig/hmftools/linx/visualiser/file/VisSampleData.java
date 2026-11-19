@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FU
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class VisSampleData
 {
@@ -30,10 +31,18 @@ public class VisSampleData
     public final List<VisGeneData> getGeneData() { return mGeneData; }
     public final List<VisFusion> getFusions() { return mFusions; }
 
-    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
+    public void addGeneExonData(
+            int clusterId, final String geneId, final String geneName, final String transName, int transId,
+            final String chromosome, final VisGeneAnnotationType annotationType, final ChrBaseRegion regionOverride)
+    {
+        addGeneExonData(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType, regionOverride));
+    }
+
+    public void addGeneExonData(
+            int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final VisGeneAnnotationType annotationType)
     {
-        addGeneExonData(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
+        addGeneExonData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType, null);
     }
 
     public void addGeneExonData(final VisGeneData geneData)

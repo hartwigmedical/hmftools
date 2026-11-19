@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getUndisruptedCopyNumber;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.WRITE_NEO_EPITOPES;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_TRANSCRIPT_PREFIX;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
@@ -125,12 +127,12 @@ public class FusionDisruptionAnalyser
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
-    public final List<GeneFusion> getFusions() { return mFusions; }
-    public final List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
-    public final Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }
-    public final FusionFinder getFusionFinder() { return mFusionFinder; }
-    public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
-    public final SpecialFusions getSpecialFusions() { return mSpecialFusions; }
+    public List<GeneFusion> getFusions() { return mFusions; }
+    public List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
+    public Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }
+    public FusionFinder getFusionFinder() { return mFusionFinder; }
+    public DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
+    public SpecialFusions getSpecialFusions() { return mSpecialFusions; }
 
     public void annotateTranscripts(final List<SvVarData> svList, boolean purgeInvalidTranscripts)
     {
@@ -185,7 +187,7 @@ public class FusionDisruptionAnalyser
         mUniqueFusions.clear();
         mFusionFinder.resetIds();
 
-        final List<SvVarData> svList = fullSvList.stream()
+        List<SvVarData> svList = fullSvList.stream()
                 .filter(x -> x.getLinkedSVs() == null || !x.isSglBreakend()).collect(Collectors.toList());
 
         if(mConfig.IsGermline && mConfig.isSingleSample())
@@ -208,10 +210,10 @@ public class FusionDisruptionAnalyser
             mUniqueFusions.stream().filter(x -> x.knownType() != NONE).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
         }
 
-        final List<BreakendTransData> transcripts = buildTranscriptList(svList, mUniqueFusions);
+        List<BreakendTransData> transcripts = buildTranscriptList(svList, mUniqueFusions);
 
-        final List<LinxBreakend> breakends = Lists.newArrayList();
-        final List<LinxFusion> fusions = Lists.newArrayList();
+        List<LinxBreakend> breakends = Lists.newArrayList();
+        List<LinxFusion> fusions = Lists.newArrayList();
         convertBreakendsAndFusions(mUniqueFusions, mConfig.DriverGenes, transcripts, fusions, breakends);
 
         if(mConfig.isSingleSample())
@@ -226,7 +228,7 @@ public class FusionDisruptionAnalyser
         else
         {
             // write fusions in detail when in batch mode
-            final List<GeneFusion> fusionList = mFusionConfig.LogAllPotentials ? mFusions : mUniqueFusions;
+            List<GeneFusion> fusionList = mFusionConfig.LogAllPotentials ? mFusions : mUniqueFusions;
 
             fusionList.stream()
                     .filter(x -> x.reportable() || !mFusionConfig.LogReportableOnly)
@@ -327,7 +329,7 @@ public class FusionDisruptionAnalyser
                 fusions = fusions.stream().filter(x -> isReportable(x)).collect(Collectors.toList());
             }
 
-            final SvCluster cluster = var.getCluster();
+            SvCluster cluster = var.getCluster();
 
             // check transcript disruptions
             for(GeneFusion fusion : fusions)
@@ -358,8 +360,8 @@ public class FusionDisruptionAnalyser
             if(cluster.getChains().isEmpty())
                 continue;
 
-            final List<GeneFusion> chainFusions = Lists.newArrayList();
-            final List<ValidTraversalData> validPairs = Lists.newArrayList();
+            List<GeneFusion> chainFusions = Lists.newArrayList();
+            List<ValidTraversalData> validPairs = Lists.newArrayList();
 
             for(SvChain chain : cluster.getChains())
             {
@@ -373,12 +375,12 @@ public class FusionDisruptionAnalyser
             LNX_LOGGER.trace("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
 
             // consider fusions from amongst unique gene-pairings
-            final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
+            Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
 
             // allocate fusions to unique SV pairings
             for(GeneFusion fusion : chainFusions)
             {
-                final String name = fusion.name();
+                String name = fusion.name();
 
                 List<GeneFusion> fusions = genePairFusions.get(name);
 
@@ -405,7 +407,7 @@ public class FusionDisruptionAnalyser
         // b) the left-most / lower breakend of each SV with the right-most / upper breakend of SVs higher up in the chain
 
         // whenever a linked pair is traversed by a fusion, it cannot touch or traverse genic regions without disrupting the fusion
-        final List<LinkedPair> linkedPairs = chain.getLinkedPairs();
+        List<LinkedPair> linkedPairs = chain.getLinkedPairs();
 
         for(int lpIndex1 = 0; lpIndex1 <= linkedPairs.size(); ++lpIndex1)
         {
@@ -452,7 +454,7 @@ public class FusionDisruptionAnalyser
             if(genesListLower.isEmpty())
                 continue;
 
-            final List<LinkedPair> traversedPairs = Lists.newArrayList();
+            List<LinkedPair> traversedPairs = Lists.newArrayList();
 
             for(int lpIndex2 = lpIndex1; lpIndex2 <= linkedPairs.size(); ++lpIndex2)
             {
@@ -515,8 +517,8 @@ public class FusionDisruptionAnalyser
 
                 if(mNeoEpitopeWriter != null)
                 {
-                    final LinkedPair lowerLink = lpIndex1 == 0 ? null : linkedPairs.get(lpIndex1 - 1);
-                    final LinkedPair upperLink = lpIndex2 < linkedPairs.size() ? linkedPairs.get(lpIndex2) : null;
+                    LinkedPair lowerLink = lpIndex1 == 0 ? null : linkedPairs.get(lpIndex1 - 1);
+                    LinkedPair upperLink = lpIndex2 < linkedPairs.size() ? linkedPairs.get(lpIndex2) : null;
 
                     double svCopyNumber = upperBreakend != null && lowerBreakend != null ?
                             (lowerBreakend.copyNumber() + upperBreakend.copyNumber()) * 0.5 : lowerSV.copyNumber(true);
@@ -552,7 +554,7 @@ public class FusionDisruptionAnalyser
                     boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
                     boolean fusionLowerToUpper = fusion.upstreamTrans().breakendGeneData().position() == lowerBreakendPos;
 
-                    final List<BreakendGeneData> downstreamGenes = lowerBreakendPos == fusion.downstreamTrans().breakendGeneData().position()
+                    List<BreakendGeneData> downstreamGenes = lowerBreakendPos == fusion.downstreamTrans().breakendGeneData().position()
                             ? genesListLower : genesListUpper;
 
                     boolean nonDisruptiveChain = !traversedPairs.isEmpty() && !downstreamGenes.isEmpty() ?
@@ -710,7 +712,7 @@ public class FusionDisruptionAnalyser
     private boolean hasValidTraversal(
             final List<ValidTraversalData> validPairs, final LinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
     {
-        final ValidTraversalData existingData = validPairs.stream()
+        ValidTraversalData existingData = validPairs.stream()
                 .filter(x -> x.matches(pair, fusionDirection, isPrecodingUpstream)).findFirst().orElse(null);
 
         if(existingData != null)
@@ -759,7 +761,7 @@ public class FusionDisruptionAnalyser
         if(var.isSglBreakend() && !isStart)
         {
             // limit to known fusion genes
-            final List<BreakendGeneData> genesList = var.getGenesList(false);
+            List<BreakendGeneData> genesList = var.getGenesList(false);
 
             // take the genes if any are in an IG region
             if(var.getSglMappings().stream().anyMatch(x -> mFusionFinder.getKnownFusionCache().withinEnhancerRegion(x.Chromosome, x.Position)))
@@ -842,8 +844,8 @@ public class FusionDisruptionAnalyser
 
     private List<GeneFusion> extractUniqueFusions()
     {
-        final Map<String,List<GeneFusion>> svIdPairFusions = Maps.newHashMap();
-        final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
+        Map<String,List<GeneFusion>> svIdPairFusions = Maps.newHashMap();
+        Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
 
         // allocate fusions to unique SV pairings
         for(GeneFusion fusion : mFusions)
@@ -851,7 +853,7 @@ public class FusionDisruptionAnalyser
             if(!persistFusion(fusion))
                 continue;
 
-            final String svIdPair = fusion.svIdPair();
+            String svIdPair = fusion.svIdPair();
 
             List<GeneFusion> fusions = svIdPairFusions.get(svIdPair);
 
@@ -872,7 +874,7 @@ public class FusionDisruptionAnalyser
                     .filter(x -> x.downstreamTrans().TransData.IsCanonical)
                     .collect(Collectors.toList());
 
-            final GeneFusion topFusion = mFusionFinder.findTopReportableFusion(similarFusions);
+            GeneFusion topFusion = mFusionFinder.findTopReportableFusion(similarFusions);
 
             if(topFusion != null && !candidates.contains(topFusion))
             {
@@ -895,7 +897,7 @@ public class FusionDisruptionAnalyser
         // if any gene-pair has multiple candidates, once again take the top one and
         for(Map.Entry<String,List<GeneFusion>> entry : genePairFusions.entrySet())
         {
-            final List<GeneFusion> fusions = entry.getValue();
+            List<GeneFusion> fusions = entry.getValue();
             if(fusions.size() == 1)
             {
                 uniqueFusions.add(fusions.get(0));
@@ -956,7 +958,7 @@ public class FusionDisruptionAnalyser
 
             if(var != null)
             {
-                final SvBreakend breakend = var.getBreakend(transcript.breakendGeneData().isStart());
+                SvBreakend breakend = var.getBreakend(transcript.breakendGeneData().isStart());
 
                 if(breakend != null)
                     transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(breakend));
@@ -979,13 +981,22 @@ public class FusionDisruptionAnalyser
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 
-                final BreakendTransData transUp = fusion.upstreamTrans();
-                final BreakendTransData transDown = fusion.downstreamTrans();
+                BreakendTransData transUp = fusion.upstreamTrans();
+                BreakendTransData transDown = fusion.downstreamTrans();
 
-                mVisSampleData.addGeneExonData(clusterId, transUp.breakendGeneData().geneId(), transUp.geneName(),
-                        transUp.transName(), transUp.transId(), transUp.breakendGeneData().chromosome(), FUSION);
+                ChrBaseRegion enhancerRegion = null;
+                if(transUp.TransData.TransName.startsWith(ENHANCER_TRANSCRIPT_PREFIX))
+                {
+                    enhancerRegion = new ChrBaseRegion(
+                            transUp.breakendGeneData().chromosome(), transUp.TransData.TransStart, transUp.TransData.TransEnd);
+                }
 
-                mVisSampleData.addGeneExonData(clusterId, transDown.breakendGeneData().geneId(), transDown.geneName(),
+                mVisSampleData.addGeneExonData(
+                        clusterId, transUp.breakendGeneData().geneId(), transUp.geneName(),
+                        transUp.transName(), transUp.transId(), transUp.breakendGeneData().chromosome(), FUSION, enhancerRegion);
+
+                mVisSampleData.addGeneExonData(
+                        clusterId, transDown.breakendGeneData().geneId(), transDown.geneName(),
                         transDown.transName(), transDown.transId(), transDown.breakendGeneData().chromosome(), FUSION);
 
                 visFusions.add(new VisFusion(

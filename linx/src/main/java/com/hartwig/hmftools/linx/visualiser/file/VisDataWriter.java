@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisCopyNumberFilename;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisFusionFilename;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisProteinFilename;
@@ -15,8 +14,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_TRANSCRIPT_PREFIX;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
@@ -38,7 +37,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -158,11 +156,11 @@ public class VisDataWriter
     {
         List<VisSvData> svDataList = Lists.newArrayList();
 
-        for(final SvVarData var : variants)
+        for(SvVarData var : variants)
         {
-            final SvCluster cluster = var.getCluster();
+            SvCluster cluster = var.getCluster();
 
-            final List<SvChain> chains = cluster.findChains(var);
+            List<SvChain> chains = cluster.findChains(var);
 
             // repeat an SV for every time it appears in a chain
             int chainCount = chains.isEmpty() ? 1 : chains.size();
@@ -170,11 +168,11 @@ public class VisDataWriter
 
             for(int i = 0; i < chainCount; ++i)
             {
-                final SvChain chain = !chains.isEmpty() ? chains.get(i) : null;
+                SvChain chain = !chains.isEmpty() ? chains.get(i) : null;
                 int chainId = chain == null ? unchainedChainId : chain.id();
 
-                final SvBreakend beStart = var.getBreakend(true);
-                final SvBreakend beEnd = var.getBreakend(false);
+                SvBreakend beStart = var.getBreakend(true);
+                SvBreakend beEnd = var.getBreakend(false);
 
                 svDataList.add(new VisSvData(sampleData.sampleId(), cluster.id(), chainId, var.id(),
                         var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
@@ -191,7 +189,7 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisSvData data : svDataList)
+                for(VisSvData data : svDataList)
                 {
                     mSvFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mSvFileWriter.write(VisSvData.toString(data));
@@ -214,7 +212,7 @@ public class VisDataWriter
         // write out the links from each chain and a link from the chain-end breakends to telomere or centromere
         List<VisSegment> segments = Lists.newArrayList();
 
-        for(final SvCluster cluster : clusters)
+        for(SvCluster cluster : clusters)
         {
             if(cluster.getSvCount() == 1)
             {
@@ -231,7 +229,7 @@ public class VisDataWriter
             // log chains in order of highest to lowest ploidy so that where an SV is is more than 1 chain it will show the max ploidy
             List<SvChain> chains = Lists.newArrayList();
 
-            for(final SvChain chain : cluster.getChains())
+            for(SvChain chain : cluster.getChains())
             {
                 int index = 0;
                 while(index < chains.size())
@@ -245,7 +243,7 @@ public class VisDataWriter
                 chains.add(index, chain);
             }
 
-            for(final SvChain chain : chains)
+            for(SvChain chain : chains)
             {
                 // log the start of the chain
                 boolean startsOnEnd = chain.getFirstSV() == chain.getLastSV(); // closed loop chains eg DMs
@@ -262,7 +260,7 @@ public class VisDataWriter
                     }
                 }
 
-                for(final LinkedPair pair : chain.getLinkedPairs())
+                for(LinkedPair pair : chain.getLinkedPairs())
                 {
                     boolean isRepeat = uniquePairs.stream().anyMatch(x -> x.matches(pair));
 
@@ -275,7 +273,7 @@ public class VisDataWriter
 
                     if(cluster.requiresReplication() || cluster.getChains().size() > 1)
                     {
-                        for(final SvChain otherChain : cluster.getChains())
+                        for(SvChain otherChain : cluster.getChains())
                         {
                             int linkRepeats = (int) otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
                             linkPloidy += linkRepeats * otherChain.jcn();
@@ -286,8 +284,8 @@ public class VisDataWriter
                         linkPloidy = chainPloidy;
                     }
 
-                    final SvBreakend beStart = pair.getBreakend(true);
-                    final SvBreakend beEnd = pair.getBreakend(false);
+                    SvBreakend beStart = pair.getBreakend(true);
+                    SvBreakend beEnd = pair.getBreakend(false);
 
                     segments.add(new VisSegment(sampleData.sampleId(), cluster.id(), chain.id(), beStart.chromosome(),
                             String.valueOf(beStart.position()), String.valueOf(beEnd.position()), linkPloidy, chain.isDoubleMinute()));
@@ -307,13 +305,13 @@ public class VisDataWriter
             }
 
             // finally write out all unchained SVs with telomere and centromere links shown
-            for(final SvVarData var : cluster.getUnlinkedSVs())
+            for(SvVarData var : cluster.getUnlinkedSVs())
             {
                 int chainId = cluster.getChainId(var);
 
                 for(int be = SE_START; be <= SE_END; ++be)
                 {
-                    final SvBreakend breakend = var.getBreakend(be);
+                    SvBreakend breakend = var.getBreakend(be);
 
                     if(breakend == null)
                         continue;
@@ -328,7 +326,7 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisSegment data : segments)
+                for(VisSegment data : segments)
                 {
                     mSegmentFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mSegmentFileWriter.write(VisSegment.toString(data));
@@ -340,7 +338,7 @@ public class VisDataWriter
                 VisSegment.write(generateVisSegmentFilename(mOutputDir, sampleData.sampleId(), mGermline), segments);
             }
         }
-        catch (final IOException e)
+        catch (IOException e)
         {
             LNX_LOGGER.error("error writing to visualiser segments file: {}", e.toString());
         }
@@ -373,44 +371,47 @@ public class VisDataWriter
         if(!mEnabled)
             return;
 
-        final List<VisGeneExon> geneExonList = Lists.newArrayList();
-        final List<VisProteinDomain> proteinList = Lists.newArrayList();
+        List<VisGeneExon> geneExonList = Lists.newArrayList();
+        List<VisProteinDomain> proteinList = Lists.newArrayList();
 
-        for(final VisGeneData geneData : sampleData.getGeneData())
+        for(VisGeneData geneData : sampleData.getGeneData())
         {
             if(geneData.ClusterId < 0) // skip genes not linked to a cluster
                 continue;
 
-            if(checkAddIgExonRegions(sampleData.sampleId(), geneData, geneExonList))
+            if(checkAddEnhancerExonRegions(sampleData.sampleId(), geneData, geneExonList))
                 continue;
 
-            final TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, geneData.TransName);
+            TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, geneData.TransName);
 
             if(transData == null || transData.exons().isEmpty())
                 continue;
 
-            for(final ExonData exonData : transData.exons())
+            for(ExonData exonData : transData.exons())
             {
                 if(geneData.ExonPositionOffsets.isEmpty())
                 {
-                    geneExonList.add(new VisGeneExon(sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
+                    geneExonList.add(new VisGeneExon(
+                            sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
                             geneData.Chromosome, geneData.AnnotationType, exonData.Rank, exonData.Start, exonData.End));
                 }
                 else
                 {
                     // used to more accurately plot pseudogene gene deletions
-                    final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.Rank);
-                    final int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.Rank);
+                    int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.Rank);
+                    int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.Rank);
 
                     int exonStart = exonData.Start + exonPosOffsets[SE_START];
                     int exonEnd = exonData.End + exonPosOffsets[SE_END];
 
-                    geneExonList.add(new VisGeneExon(sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
+                    geneExonList.add(new VisGeneExon(
+                            sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
                             geneData.Chromosome, geneData.AnnotationType, exonData.Rank, exonStart, exonEnd));
 
                     if(exonsLost != null)
                     {
-                        geneExonList.add(new VisGeneExon(sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
+                        geneExonList.add(new VisGeneExon(
+                                sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
                                 geneData.Chromosome, EXON_LOST, exonData.Rank,
                                 exonStart + exonsLost[SE_START], exonEnd + exonsLost[SE_END]));
                     }
@@ -419,17 +420,18 @@ public class VisDataWriter
 
             int transId = geneData.TransId > 0 ? geneData.TransId : transData.TransId;
 
-            final List<TranscriptProteinData> transProteinData = mGeneDataCache.getTranscriptProteinDataMap().get(transId);
+            List<TranscriptProteinData> transProteinData = mGeneDataCache.getTranscriptProteinDataMap().get(transId);
 
             if(transProteinData != null)
             {
-                for(final TranscriptProteinData proteinData : transProteinData)
+                for(TranscriptProteinData proteinData : transProteinData)
                 {
-                    final Integer[] domainPositions = EnsemblDataCache.getProteinDomainPositions(proteinData, transData);
+                    Integer[] domainPositions = EnsemblDataCache.getProteinDomainPositions(proteinData, transData);
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {
-                        proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                        proteinList.add(new VisProteinDomain(
+                                sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                                 domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                     }
                 }
@@ -446,19 +448,22 @@ public class VisDataWriter
 
                 if(fivePrimeUtrStart < fivePrimeUtrEnd)
                 {
-                    proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                    proteinList.add(new VisProteinDomain(
+                            sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                             fivePrimeUtrStart, fivePrimeUtrEnd, PD_FIVE_PRIME_UTR));
                 }
 
                 if(threePrimeUtrStart < threePrimeUtrEnd)
                 {
-                    proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                    proteinList.add(new VisProteinDomain(
+                            sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                             threePrimeUtrStart, threePrimeUtrEnd, PD_THREE_PRIME_UTR));
                 }
             }
             else
             {
-                proteinList.add(new VisProteinDomain(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                proteinList.add(new VisProteinDomain(
+                        sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                         transData.TransStart, transData.TransEnd, PD_NON_CODING));
             }
         }
@@ -467,14 +472,14 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisGeneExon data : geneExonList)
+                for(VisGeneExon data : geneExonList)
                 {
                     mGeneFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mGeneFileWriter.write(VisGeneExon.toString(data));
                     mGeneFileWriter.newLine();
                 }
 
-                for(final VisProteinDomain data : proteinList)
+                for(VisProteinDomain data : proteinList)
                 {
                     mProteinDomainFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mProteinDomainFileWriter.write(VisProteinDomain.toString(data));
@@ -487,25 +492,25 @@ public class VisDataWriter
                 VisProteinDomain.write(generateVisProteinFilename(mOutputDir, sampleData.sampleId(), mGermline), proteinList);
             }
         }
-        catch (final IOException e)
+        catch (IOException e)
         {
             LNX_LOGGER.error("error writing to visualiser gene-exons file: {}", e.toString());
         }
     }
 
-    private boolean checkAddIgExonRegions(final String sampleId, final VisGeneData geneData, final List<VisGeneExon> geneExonList)
+    private boolean checkAddEnhancerExonRegions(final String sampleId, final VisGeneData geneData, final List<VisGeneExon> geneExonList)
     {
         if(!geneData.AnnotationType.equals(FUSION))
             return false;
 
-        if(!geneData.TransName.contains("@IG"))
+        if(!geneData.TransName.startsWith(ENHANCER_TRANSCRIPT_PREFIX) || geneData.RegionOverride == null)
             return false;
 
-        String igGene = geneData.TransName.replace("@", "");
-        ChrBaseRegion igRegion = getIgRegion(igGene, REF_GENOME_VERSION);
+        VisGeneExon enhancerGeneData = new VisGeneExon(
+                sampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
+                geneData.Chromosome, geneData.AnnotationType, 1, geneData.RegionOverride.start(), geneData.RegionOverride.end());
 
-        geneExonList.add(new VisGeneExon(sampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
-                geneData.Chromosome, geneData.AnnotationType, 1, igRegion.start(), igRegion.end()));
+        geneExonList.add(enhancerGeneData);
 
         return true;
     }
@@ -516,7 +521,7 @@ public class VisDataWriter
 
         for(Map.Entry<String,List<SvCNData>> entry : chrCNDataMap.entrySet())
         {
-            final String chromosome = entry.getKey();
+            String chromosome = entry.getKey();
 
             for(SvCNData cnData : entry.getValue())
             {
@@ -529,7 +534,7 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisCopyNumber data : cnDataList)
+                for(VisCopyNumber data : cnDataList)
                 {
                     mCnFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mCnFileWriter.write(VisCopyNumber.toString(data));
@@ -553,7 +558,7 @@ public class VisDataWriter
         {
             if(mBatchOutput)
             {
-                for(final VisFusion visFusion : sampleData.getFusions())
+                for(VisFusion visFusion : sampleData.getFusions())
                 {
                     mFusionFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mFusionFileWriter.write(VisFusion.toString(visFusion));
