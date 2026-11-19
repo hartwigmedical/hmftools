@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
@@ -14,16 +13,10 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
-import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
-import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASON;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.processSvGeneDebug;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MIN_ENHANCER_PARTNER_GENE_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
@@ -36,15 +29,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
-import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 public class FusionFinder
 {
@@ -54,6 +43,7 @@ public class FusionFinder
     private final EnsemblDataCache mGeneTransCache;
     private final FusionIdGenerator mFusionIds;
     private final List<String> mInvalidReasons;
+    private SpecialFusions mSpecialFusions;
 
     public FusionFinder(final FusionConfig config, final EnsemblDataCache geneTransCache, final KnownFusionCache knownFusionCache)
     {
@@ -63,6 +53,8 @@ public class FusionFinder
 
         mFusionIds = new FusionIdGenerator();
         mInvalidReasons = Lists.newArrayList();
+
+        mSpecialFusions = null;
     }
 
     public boolean hasValidConfigData() { return mKnownFusionCache.hasValidData(); }
@@ -76,6 +68,8 @@ public class FusionFinder
         mConfig.AllowExonSkipping = allowExonSkipping;
         mConfig.RequireUpstreamBiotypes = requireUpstreamBiotypes;
     }
+
+    public void setSpecialFusions(final SpecialFusions specialFusions) { mSpecialFusions = specialFusions; }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
@@ -113,7 +107,7 @@ public class FusionFinder
                     if(startIsEnhancerRegion && endIsEnhancerRegion)
                         continue;
 
-                    checkEnhancerFusion(startGene, endGene, potentialFusions);
+                    mSpecialFusions.checkEnhancerFusion(startGene, endGene, potentialFusions);
                     continue;
                 }
 
@@ -448,141 +442,6 @@ public class FusionFinder
             return true;
 
         return tickPhaseForward(upPhase) == downPhase;
-    }
-
-    private void checkEnhancerFusion(
-            final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
-    {
-        // These are allowed to fuse with 5’UTR splice donors from 100kb upstream. Phasing is assumed to be -1
-        // In some specific cases, allow fusions in the 3’UTR region or even downstream of the gene (eg BCL2)
-        // in which case the 3' gene's orientation must be facing back upstream into the coding region
-
-        // orientation in the IG region is no longer checked
-        boolean startIsEnhancerGene = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position());
-        boolean endIsEnhancerGene = mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position());
-
-        if(startIsEnhancerGene == endIsEnhancerGene) // only one end can be
-            return;
-
-        BreakendGeneData enhancerGene = startIsEnhancerGene ? startGene : endGene;
-        BreakendGeneData downGene = startIsEnhancerGene ? endGene : startGene;
-
-        KnownFusionType knownType = NONE;
-
-        KnownFusionData kfData = mKnownFusionCache.getDataByType(ENHANCER_KNOWN_PAIR).stream()
-                .filter(x -> x.ThreeGene.equals(downGene.geneName()))
-                .filter(x -> x.withinGeneRegion(enhancerGene.chromosome(), enhancerGene.position()))
-                .findFirst().orElse(null);
-
-        if(kfData == null)
-        {
-            kfData = mKnownFusionCache.getDataByType(ENHANCER_PROMISCUOUS).stream()
-                    .filter(x -> x.withinGeneRegion(enhancerGene.chromosome(), enhancerGene.position()))
-                    .findFirst().orElse(null);
-
-            // check within the promiscuous region bounds
-            if(kfData == null)
-                return;
-
-            if(enhancerGene.chromosome().equals(downGene.chromosome()))
-            {
-                int distance = abs(enhancerGene.position() - downGene.position());
-
-                if(distance < MIN_ENHANCER_PARTNER_GENE_DISTANCE)
-                    return;
-            }
-        }
-
-        knownType = kfData.Type;
-
-        List<BreakendTransData> downGeneTranscripts = Lists.newArrayList();
-
-        int maxDownStreamDistance = -1;
-        boolean allowCoding = false;
-
-        if(kfData.geneStrand() == null)
-        {
-            maxDownStreamDistance = MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
-            allowCoding = true;
-        }
-        else
-        {
-            if(kfData.downstreamDistance(FS_DOWN) > 0)
-                maxDownStreamDistance = kfData.downstreamDistance(FS_DOWN);
-        }
-
-        for(BreakendTransData transData : downGene.transcripts())
-        {
-            // typically must be prior to the 1st coding base of the 3’ gene partner
-            if(transData.CodingBases == 0 && !transData.isUpstream())
-            {
-                if(transData.getDistanceUpstream() <= MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN)
-                    downGeneTranscripts.add(transData);
-            }
-            else if(transData.codingType() == CODING && allowCoding)
-            {
-                downGeneTranscripts.add(transData);
-            }
-            else if(transData.codingType() == UTR_3P && transData.isUpstream() && maxDownStreamDistance > 0)
-            {
-                int downstreamDistance = transData.getDistanceDownstream();
-
-                if(downstreamDistance <= maxDownStreamDistance)
-                    downGeneTranscripts.add(transData);
-            }
-        }
-
-        BreakendTransData upTrans = generateEnhancerTranscript(enhancerGene, kfData);
-
-        // add new candidates only if no matching IG fusion has already been created
-        // this is done since multiple upstream genes in the IG region can be processed, but all creating identical IG fusions
-        for(BreakendTransData downTrans : downGeneTranscripts)
-        {
-            if(hasMatchingEnhancerFusion(potentialFusions, knownType, upTrans, downTrans))
-                continue;
-
-            GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
-            fusion.setId(nextFusionId());
-            fusion.setKnownType(knownType);
-            potentialFusions.add(fusion);
-        }
-    }
-
-    private static boolean hasMatchingEnhancerFusion(
-            final List<GeneFusion> potentialFusions, final KnownFusionType knownType,
-            final BreakendTransData upTrans, final BreakendTransData downTrans)
-    {
-        for(GeneFusion fusion : potentialFusions)
-        {
-            if(fusion.knownType() != knownType)
-                continue;
-
-            if(fusion.svId(true) != upTrans.breakendGeneData().varId() || fusion.svId(false) != downTrans.breakendGeneData().varId())
-                continue;
-
-            if(!fusion.upstreamTrans().TransData.TransName.equals(upTrans.TransData.TransName))
-                continue;
-
-            if(fusion.downstreamTrans() == downTrans) // straight comparison since not internally generated per fusion
-                return true;
-        }
-
-        return false;
-    }
-
-    private BreakendTransData generateEnhancerTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
-    {
-        TranscriptData transData = new TranscriptData(
-                0, String.format("@%s", knownFusionData.FiveGene), gene.geneId(), false, gene.strand(),
-                knownFusionData.geneRegion().start(), knownFusionData.geneRegion().end(), null, null, "", null);
-
-        BreakendTransData transcript = new BreakendTransData(
-                gene, transData,  -1, -1, PHASE_NONE, PHASE_NONE, 0, 0);
-
-        transcript.setCodingType(ENHANCER);
-        transcript.setRegionType(TranscriptRegionType.IG);
-        transcript.setIsDisruptive(true);
-        return transcript;
     }
 
     public static boolean isIrrelevantSameGene(final BreakendTransData upTrans, final BreakendTransData downTrans)

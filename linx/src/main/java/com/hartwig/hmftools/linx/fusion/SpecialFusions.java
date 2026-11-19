@@ -246,7 +246,7 @@ public class SpecialFusions
         return fusion;
     }
 
-    private void checkEnhancerFusion(
+    public void checkEnhancerFusion(
             final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
     {
         // These are allowed to fuse with 5’UTR splice donors from 100kb upstream. Phasing is assumed to be -1
