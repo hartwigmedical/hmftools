@@ -35,6 +35,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     private static final String FIELD_READ_TYPE = "ReadType";
     private static final String FIELD_STANDARD_MUTATION = "StandardMutation";
     private static final String FIELD_STANDARD_TRINUC_CONTEXT = "StandardTrinucContext";
+    private static final String FIELD_READ_ORIENTATION = "ReadOrientation";
     private static final String FIELD_ORIGINAL_QUAL_BIN = "OriginalQualBin";
 
     // Field value used when records are not grouped by that field
@@ -76,12 +77,14 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         return recordsSorted;
     }
 
-    private static String formGroupingKey(String readType, String standardMutation, String trinucContext, String originalQualBin)
+    private static String formGroupingKey(String readType, String standardMutation, String trinucContext, String readOrientation,
+            String originalQualBin)
     {
         return MultiFieldStringBuilder.formMultiField(
                 FIELD_READ_TYPE, readType,
                 FIELD_STANDARD_MUTATION, standardMutation,
                 FIELD_STANDARD_TRINUC_CONTEXT, trinucContext,
+                FIELD_READ_ORIENTATION, readOrientation,
                 FIELD_ORIGINAL_QUAL_BIN, originalQualBin
         );
     }
@@ -99,6 +102,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
                     bqrRecord.ReadType().toString(),
                     bqrRecord.StandardContext().mutationString(),
                     bqrRecord.StandardContext().TrinucleotideContext(),
+                    bqrRecord.StandardContext().ReadOrientation().name(),
                     baseQualBinner.binRangeStringFrom(bqrRecord.OriginalQuality())
             );
 
@@ -122,6 +126,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
                     bqrRecord.ReadType().toString(),
                     bqrRecord.StandardContext().mutationString(),
                     ANY,
+                    bqrRecord.StandardContext().ReadOrientation().name(),
                     baseQualBinner.binRangeStringFrom(bqrRecord.OriginalQuality())
             );
 
