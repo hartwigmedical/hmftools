@@ -11,11 +11,11 @@ public class FusionRefData
     public final String ThreeGene;
     public final String CancerTypes;
     public final String PubMedId;
-    public final String KnownExonTranscript;
-    public final String KnownExonUpRange;
-    public final String KnownExonDownRange;
+    public final String KnownExonTranscript37;
+    public final String KnownExonUpRange37;
+    public final String KnownExonDownRange37;
     public final String HighImpactPromiscuous;
-    public final String Overrides;
+    public final String OverridesRef37;
     public final String KnownExonTranscriptRef38;
     public final String KnownExonUpRangeRef38;
     public final String KnownExonDownRangeRef38;
@@ -23,8 +23,8 @@ public class FusionRefData
 
     public FusionRefData(
             final KnownFusionType type, final String fiveGene, final String threeGene, final String cancerTypes, final String pubMedId,
-            final String knownExonTranscript, final String knownExonUpRange, final String knownExonDownRange,
-            final String highImpactPromiscuous, final String overrides, final String knownExonTranscriptRef38,
+            final String knownExonTranscript37, final String knownExonUpRange37, final String knownExonDownRange37,
+            final String highImpactPromiscuous, final String overridesRef37, final String knownExonTranscriptRef38,
             final String knownExonUpRangeRef38, final String knownExonDownRangeRef38, final String overridesRef38)
     {
         Type = type;
@@ -32,11 +32,11 @@ public class FusionRefData
         ThreeGene = threeGene;
         CancerTypes = cancerTypes;
         PubMedId = pubMedId;
-        KnownExonTranscript = knownExonTranscript;
-        KnownExonUpRange = knownExonUpRange;
-        KnownExonDownRange = knownExonDownRange;
+        KnownExonTranscript37 = knownExonTranscript37;
+        KnownExonUpRange37 = knownExonUpRange37;
+        KnownExonDownRange37 = knownExonDownRange37;
         HighImpactPromiscuous = highImpactPromiscuous;
-        Overrides = overrides;
+        OverridesRef37 = overridesRef37;
         KnownExonTranscriptRef38 = knownExonTranscriptRef38;
         KnownExonUpRangeRef38 = knownExonUpRangeRef38;
         KnownExonDownRangeRef38 = knownExonDownRangeRef38;
@@ -55,9 +55,9 @@ public class FusionRefData
             return false;
         }
 
-        boolean equalKnownExonRange37 = KnownExonTranscript.equals(other.KnownExonTranscript)
-                && KnownExonUpRange.equals(other.KnownExonUpRange)
-                && KnownExonDownRange.equals(other.KnownExonDownRange);
+        boolean equalKnownExonRange37 = KnownExonTranscript37.equals(other.KnownExonTranscript37)
+                && KnownExonUpRange37.equals(other.KnownExonUpRange37)
+                && KnownExonDownRange37.equals(other.KnownExonDownRange37);
 
         boolean equalKnownExonRange38 = KnownExonTranscriptRef38.equals(other.KnownExonTranscriptRef38)
                 && KnownExonUpRangeRef38.equals(other.KnownExonUpRangeRef38)

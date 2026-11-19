@@ -63,8 +63,8 @@ public class KnownFusionData
     public static final String ALT_DATA = "ALT";
 
     public static final String FILE_DELIM = CSV_DELIM;
-    private static final String OVERRIDES_DELIM = " ";
-    private static final String OVERRIDES_ID_DELIM = "=";
+    public static final String OVERRIDES_DELIM = " ";
+    public static final String OVERRIDES_ID_DELIM = "=";
 
     public static final String NO_ORIENTATION = "0";
 
@@ -166,21 +166,16 @@ public class KnownFusionData
             }
             else if(overrideName.equals(OVERRIDE_ALTS))
             {
-                final String[] altItems = overrideData.split(ITEM_DELIM);
-                int index = 0;
-                while(index < altItems.length)
+                List<ChrBaseRegion> altRegions = loadAltOverrides(overrideData);
+
+                if(altRegions == null)
                 {
-                    if(!altItems[index].equals(ALT_DATA) || altItems.length - index < 4)
-                    {
-                        setInvalid();
-                        return;
-                    }
-
-                    ++index;
-
-                    mThreeGeneAltRegions.add(
-                            new ChrBaseRegion(altItems[index], Integer.parseInt(altItems[index + 1]), Integer.parseInt(altItems[index + 2])));
-                    index += 3;
+                    setInvalid();
+                    return;
+                }
+                else
+                {
+                    mThreeGeneAltRegions.addAll(altRegions);
                 }
             }
             else if(overrideName.equals(OVERRIDE_ENHANCER_RANGE) || overrideName.equals(OVERRIDE_THREE_PRIME_RANGE))
@@ -192,6 +187,29 @@ public class KnownFusionData
                 mGeneRegion = new ChrBaseRegion(rangeItems[1], Integer.parseInt(rangeItems[2]), Integer.parseInt(rangeItems[3]));
             }
         }
+    }
+
+    public static List<ChrBaseRegion> loadAltOverrides(final String overrideData)
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
+        final String[] altItems = overrideData.split(ITEM_DELIM);
+        int index = 0;
+        while(index < altItems.length)
+        {
+            if(!altItems[index].equals(ALT_DATA) || altItems.length - index < 4)
+            {
+                return null;
+            }
+
+            ++index;
+
+            regions.add(
+                    new ChrBaseRegion(altItems[index], Integer.parseInt(altItems[index + 1]), Integer.parseInt(altItems[index + 2])));
+            index += 3;
+        }
+
+        return regions;
     }
 
     public boolean isHighImpactPromiscuous() { return mHighImpactPromiscuous; }

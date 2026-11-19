@@ -84,7 +84,6 @@ public class FusionBedData implements Comparable<FusionBedData>
     {
         return mUpIsStart ? ChrUp : ChrDown;
     }
-
     public String chrEnd()
     {
         return !mUpIsStart ? ChrUp : ChrDown;
@@ -94,17 +93,14 @@ public class FusionBedData implements Comparable<FusionBedData>
     {
         return mUpIsStart ? adjustedUpStart() : adjustedDownStart();
     }
-
     public int posStartEnd()
     {
         return mUpIsStart ? adjustedUpEnd() : adjustedDownEnd();
     }
-
     public int posEndStart()
     {
         return !mUpIsStart ? adjustedUpStart() : adjustedDownStart();
     }
-
     public int posEndEnd()
     {
         return !mUpIsStart ? adjustedUpEnd() : adjustedDownEnd();
@@ -114,7 +110,6 @@ public class FusionBedData implements Comparable<FusionBedData>
     {
         return mUpIsStart ? strandUpChar() : strandDownChar();
     }
-
     public char strandEnd()
     {
         return !mUpIsStart ? strandUpChar() : strandDownChar();

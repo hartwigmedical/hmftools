@@ -6,8 +6,11 @@ import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRI
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDES_DELIM;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDES_ID_DELIM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_DOWN_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_ENHANCER_RANGE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.loadAltOverrides;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
@@ -43,7 +46,9 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class GenerateFusionFiles
@@ -194,9 +199,9 @@ public class GenerateFusionFiles
 
                 if(refGenomeVersion.is37())
                 {
-                    fusionData.add(fusion.KnownExonTranscript);
-                    fusionData.add(fusion.KnownExonUpRange);
-                    fusionData.add(fusion.KnownExonDownRange);
+                    fusionData.add(fusion.KnownExonTranscript37);
+                    fusionData.add(fusion.KnownExonUpRange37);
+                    fusionData.add(fusion.KnownExonDownRange37);
                 }
                 else
                 {
@@ -208,7 +213,7 @@ public class GenerateFusionFiles
                 fusionData.add(fusion.HighImpactPromiscuous);
 
                 if(refGenomeVersion.is37())
-                    fusionData.add(fusion.Overrides);
+                    fusionData.add(fusion.OverridesRef37);
                 else
                     fusionData.add(fusion.OverridesRef38);
 
@@ -305,6 +310,9 @@ public class GenerateFusionFiles
         posDownEnd = threeGeneData.GeneEnd;
         strandDown = threeGeneData.Strand;
 
+        String overrides = refGenomeVersion.is37() ? fusion.OverridesRef37 : fusion.OverridesRef38;
+        String[] overridesStr = overrides.split(" ", -1);
+
         if(fusion.Type == KNOWN_PAIR)
         {
             GeneData fiveGeneData = ensemblDataCache.getGeneDataByName(fusion.FiveGene);
@@ -316,12 +324,29 @@ public class GenerateFusionFiles
 
             bedEntries.add(new FusionBedData(
                     name, chrUp, chrDown, strandUp, strandDown, posUpStart, posUpEnd, posDownStart, posDownEnd));
+
+            if(!overrides.isEmpty())
+            {
+                String overrideData = overrides.split(OVERRIDES_ID_DELIM)[1];
+
+                List<ChrBaseRegion> altRegions = loadAltOverrides(overrideData);
+
+                for(ChrBaseRegion altRegion : altRegions)
+                {
+                    if(HumanChromosome.contains(altRegion.Chromosome))
+                    {
+                        bedEntries.add(new FusionBedData(
+                                name, chrUp, altRegion.Chromosome, strandUp, strandDown,
+                                posUpStart, posUpEnd, altRegion.start(), altRegion.end()));
+                    }
+                }
+            }
+
+            // eg:
+            // ALTS=ALT;GL000228.1;20000;125000;ALT;4;190930000;191030000;ALT;10;135420000;135520000
         }
         else
         {
-            String overrides = refGenomeVersion.is37() ? fusion.Overrides : fusion.OverridesRef38;
-            String[] overridesStr = overrides.split(" ", -1);
-
             String igRangeStr = overridesStr[0].replaceAll(OVERRIDE_ENHANCER_RANGE + "=", "");
             String[] igRangeItems = igRangeStr.split(ITEM_DELIM);
             strandUp = igRangeItems[0].equals(KnownFusionData.NO_ORIENTATION) ? POS_STRAND : Byte.parseByte(igRangeItems[0]);
