@@ -92,6 +92,7 @@ public class FusionDisruptionAnalyser
         mInvalidFusions = Maps.newHashMap();
 
         mSpecialFusions = new SpecialFusions(mGeneDataCache, mFusionFinder);
+        mFusionFinder.setSpecialFusions(mSpecialFusions);
 
         mRnaFusionMapper = null;
 
