@@ -276,17 +276,7 @@ public class FusionFinder
 
             if(upstreamTrans.isExonic())
             {
-                if(!downstreamTrans.isExonic() && !downstreamTrans.isIntronic())
-                {
-                    logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding exonic to non-exonic");
-                    return null;
-                }
-
-                if(upstreamTrans.breakendGeneData().varId() != downstreamTrans.breakendGeneData().varId())
-                {
-                    logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up coding exonic diff SVs");
-                    return null;
-                }
+                // no restrictions on what this can fuse with
 
                 // coding exon to coding exon will require phase adjustments to be exact
                 checkExactMatch = downstreamTrans.isExonic();
