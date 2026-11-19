@@ -118,9 +118,6 @@ public class FusionDisruptionAnalyser
 
         if(mRunFusions)
         {
-            LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
-                    mFusionConfig.RequirePhaseMatch, mFusionConfig.AllowExonSkipping, mFusionConfig.RequireUpstreamBiotypes);
-
             mSpecialFusions.cacheSpecialFusionGenes();
         }
     }

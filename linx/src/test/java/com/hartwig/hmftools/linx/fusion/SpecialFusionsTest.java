@@ -81,7 +81,7 @@ public class SpecialFusionsTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, downPos, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, ORIENT_REV);
 
-        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
+        // tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
@@ -115,7 +115,7 @@ public class SpecialFusionsTest
         kfData.setKnownExonData(transName, "2;3", "5;6");
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
+        // tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
         // first DEL doesn't delete a known region even though it's phased
         List<BreakendGeneData> upGenes = Lists.newArrayList();
@@ -270,7 +270,7 @@ public class SpecialFusionsTest
 
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
+        // tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
         // a DEL linking the 2 regions
         List<BreakendGeneData> upGenes = Lists.newArrayList();

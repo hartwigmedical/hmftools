@@ -79,7 +79,8 @@ public class FusionTest
 
         int codingStart = 300;
         int codingEnd = 998;
-        TranscriptData transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts,  99, codingStart, codingEnd, true, "");
+        TranscriptData transData = createTransExons(
+                geneId1, transId++, POS_STRAND, exonStarts,  99, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId1, transDataList);
@@ -97,7 +98,8 @@ public class FusionTest
 
         codingStart = 10100;
         codingEnd = 10998;
-        transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts, 99, codingStart, codingEnd, true, "");
+        transData = createTransExons(
+                geneId1, transId++, POS_STRAND, exonStarts, 99, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId2, transDataList);
@@ -124,7 +126,7 @@ public class FusionTest
         downGenes.get(2).setPositionalData(CHR_1, 10650, ORIENT_REV);
         downGenes.get(3).setPositionalData(CHR_1, 10850, ORIENT_REV);
 
-        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
+        // tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
         fusions.forEach(x -> x.setKnownType(KNOWN_PAIR));
