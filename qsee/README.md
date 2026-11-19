@@ -240,7 +240,7 @@ before purity normalisation.
 Assuming a diploid genome, exons are marked in `VariantDetectabilityStatus` with:
 - `PASS` when `TumorVafLod` <= 0.5 (clonal homozygous and heterozygous variants can be reliably detected)
 - `WARN_HET_UNRELIABLE` when `TumorVafLod` < 1.0 (only clonal homozygous variants can be reliably detected)
-- `FAIL` when `TumorVafLod` >= 1.0 (no clonal variants can be reliably detected; VAF unreachable)
+- `FAIL` when `TumorVafLod` >= 1.0 (clonal variants cannot be reliably detected or no coverage due to homozygous deletion)
 
 ## Advanced usage
 
