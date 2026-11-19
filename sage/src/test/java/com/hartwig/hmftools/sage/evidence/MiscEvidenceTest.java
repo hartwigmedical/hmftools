@@ -466,5 +466,13 @@ public class MiscEvidenceTest
 
         nm = NumberEvents.calcAdjustedNumMutations(read, refSequence, refGenome);
         assertEquals(0, nm);
+
+        // with indels
+        readBases = REF_BASES_200.substring(120, 130) + "CCC" + REF_BASES_200.substring(130, 135) + REF_BASES_200.substring(137, 139);
+        cigar = "10M3I5M2D3M";
+        read = createSamRecord(readId, CHR_1, 120, readBases, cigar, null);
+
+        nm = NumberEvents.calcAdjustedNumMutations(read, refSequence, refGenome);
+        assertEquals(2, nm);
     }
 }

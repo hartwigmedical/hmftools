@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public final class NumberEvents
@@ -22,7 +23,24 @@ public final class NumberEvents
         Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
 
         if(nm != null && nm instanceof Integer)
-            return (int)nm;
+        {
+            // BWA counts indels for their full length, whereas Sage wants a mutation of 1 per indel
+            int indelAdjustment = 0;
+
+            for(CigarElement cigarElement : record.getCigar())
+            {
+                switch(cigarElement.getOperator())
+                {
+                    case D:
+                    case I:
+                        indelAdjustment += cigarElement.getLength() - 1;
+                        break;
+                }
+            }
+
+            int numMutations = (int)nm - indelAdjustment;
+            return numMutations;
+        }
 
         return calcMutations(record, refSequence, refGenome);
     }
@@ -64,6 +82,17 @@ public final class NumberEvents
 
                 if(readBases[readIndex] != refBases[refIndex])
                     ++errorCount;
+            }
+        }
+
+        for(CigarElement cigarElement : record.getCigar())
+        {
+            switch(cigarElement.getOperator())
+            {
+                case D:
+                case I:
+                    ++errorCount;
+                    break;
             }
         }
 
