@@ -11,7 +11,6 @@ public record GeneLod(
         String geneName,
         int exonRank,
         double medianDepth,
-        double minMissedVariantLikelihood,
         double sampleVafLod,
         double tumorVafLod,
         VariantDetectabilityStatus variantDetectabilityStatus,

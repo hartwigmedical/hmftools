@@ -21,11 +21,9 @@ public class GeneLodFile
     private static final String COL_GENE_NAME = "GeneName";
     private static final String COL_EXON_RANK = "ExonRank";
     private static final String COL_MEDIAN_DEPTH = "MedianDepth";
+    private static final String COL_SAMPLE_VAF_LOD = "SampleVafLod";
     private static final String COL_TUMOR_VAF_LOD = "TumorVafLod";
     private static final String COL_VARIANT_DETECTABILITY_STATUS = "VariantDetectabilityStatus";
-
-    private static final String COL_MIN_MISSED_VARIANT_LIKELIHOOD = "MinMissedVariantLikelihood";
-    private static final String COL_SAMPLE_VAF_LOD = "SampleVafLod";
 
     public static String generateFilename(QseeConfig config)
     {
@@ -50,17 +48,11 @@ public class GeneLodFile
                 COL_SAMPLE_TYPE,
                 COL_GENE_NAME,
                 COL_EXON_RANK,
-                COL_MEDIAN_DEPTH
+                COL_MEDIAN_DEPTH,
+                COL_SAMPLE_VAF_LOD,
+                COL_TUMOR_VAF_LOD,
+                COL_VARIANT_DETECTABILITY_STATUS
         ));
-
-        if(writeLodDetails)
-        {
-            columns.add(COL_MIN_MISSED_VARIANT_LIKELIHOOD);
-            columns.add(COL_SAMPLE_VAF_LOD);
-        }
-
-        columns.add(COL_TUMOR_VAF_LOD);
-        columns.add(COL_VARIANT_DETECTABILITY_STATUS);
 
         depthRanges.forEach(depthRange -> columns.add(depthRangeFieldName(depthRange)));
 
@@ -70,14 +62,7 @@ public class GeneLodFile
             row.set(COL_GENE_NAME, geneLod.geneName());
             row.set(COL_EXON_RANK, geneLod.exonRank());
             row.set(COL_MEDIAN_DEPTH, geneLod.medianDepth(), DECIMAL_FORMAT);
-
-            if(writeLodDetails)
-            {
-                row.set(COL_MIN_MISSED_VARIANT_LIKELIHOOD, geneLod.minMissedVariantLikelihood(), DECIMAL_FORMAT);
-                row.set(COL_SAMPLE_VAF_LOD, geneLod.sampleVafLod(), DECIMAL_FORMAT);
-            }
-
-            // DECIMAL_FORMAT writes infinity (LOD VAF not achievable) as 'Inf' for compatibility with R
+            row.set(COL_SAMPLE_VAF_LOD, geneLod.sampleVafLod(), DECIMAL_FORMAT);
             row.set(COL_TUMOR_VAF_LOD, geneLod.tumorVafLod(), DECIMAL_FORMAT);
 
             row.set(COL_VARIANT_DETECTABILITY_STATUS, geneLod.variantDetectabilityStatus().name());

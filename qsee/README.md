@@ -230,17 +230,17 @@ mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
 
 ### Limit of detection of variants per exon
 
-The LOD VAF is the minimum *tumor VAF* (i.e. sample VAF / purity) at which a variant is reliably detected >=95% of the time given the 
-exon's depth distribution.
+Qsee computes the minimum *tumor VAF* (i.e. tumor purity normalised sample VAF) at which a variant is reliably detected >=95% of the time
+given the exon's depth distribution.
 
-This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%, then divide by purity to get 
-`theoreticalTumorVaf`. Values >= 1 are unreachable (e.g. due to low purity). If MVLH > 5% even at a sample VAF of 1 (exon depth too low), 
-the sample VAF LoD is set to 1.
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%, then divide by tumor purity to get
+`theoreticalTumorVaf`. The resulting value is shown in the `TumorVafLod` column, with the `SampleVafLod` column showing the value
+before purity normalisation.
 
 Assuming a diploid genome, exons are marked in `VariantDetectabilityStatus` with:
-- `PASS` when LOD VAF <= 0.5 (clonal homozygous and heterozygous variants can be reliably detected)
-- `WARN_HET_UNRELIABLE` when LOD VAF < 1.0 (only clonal homozygous variants can be reliably detected)
-- `FAIL` when LOD VAF >= 1.0 (no clonal variants can be reliably detected)
+- `PASS` when `TumorVafLod` <= 0.5 (clonal homozygous and heterozygous variants can be reliably detected)
+- `WARN_HET_UNRELIABLE` when `TumorVafLod` < 1.0 (only clonal homozygous variants can be reliably detected)
+- `FAIL` when `TumorVafLod` >= 1.0 (no clonal variants can be reliably detected; VAF unreachable)
 
 ## Advanced usage
 

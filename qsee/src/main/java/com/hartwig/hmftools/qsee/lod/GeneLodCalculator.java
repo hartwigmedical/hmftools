@@ -71,7 +71,6 @@ public class GeneLodCalculator
             if(!reportableGenes.contains(exonDepth.Gene))
                 continue;
 
-            double minMissedVariantLikelihood = LimitOfDetectionCalcs.calcMissedVariantLikelihood(exonDepth.DepthCounts, 1);
             double sampleVafLod = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
 
             double tumorVafLod = sampleVafLod / tumorPurity;
@@ -80,8 +79,7 @@ public class GeneLodCalculator
             GeneLod geneLod = new GeneLod(
                     sampleId, sampleType,
                     exonDepth.Gene, exonDepth.ExonRank, exonDepth.MedianDepth,
-                    minMissedVariantLikelihood, sampleVafLod,
-                    tumorVafLod, variantDetectabilityStatus,
+                    sampleVafLod, tumorVafLod, variantDetectabilityStatus,
                     exonDepth.DepthCounts
             );
 
