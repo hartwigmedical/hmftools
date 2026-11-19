@@ -62,13 +62,6 @@ public class FusionFinder
     public final KnownFusionCache getKnownFusionCache() { return mKnownFusionCache; }
     public final EnsemblDataCache getGeneTransCache() { return mGeneTransCache; }
 
-    public void setFusionParams(boolean requirePhaseMatch, boolean allowExonSkipping, boolean requireUpstreamBiotypes)
-    {
-        mConfig.RequirePhaseMatch = requirePhaseMatch;
-        mConfig.AllowExonSkipping = allowExonSkipping;
-        mConfig.RequireUpstreamBiotypes = requireUpstreamBiotypes;
-    }
-
     public void setSpecialFusions(final SpecialFusions specialFusions) { mSpecialFusions = specialFusions; }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
@@ -127,7 +120,7 @@ public class FusionFinder
 
                 for(BreakendTransData upstreamTrans : upGene.transcripts())
                 {
-                    if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, mConfig.RequireUpstreamBiotypes))
+                    if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, true))
                     {
                         logInvalidReasonInfo(upstreamTrans, null, INVALID_REASON_CODING_TYPE, "invalid up trans");
                         continue;
@@ -224,7 +217,7 @@ public class FusionFinder
 
     public static GeneFusion checkFusionLogic(final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionConfig config)
     {
-        if(!isValidUpstreamTranscript(upstreamTrans, true, config.RequireUpstreamBiotypes))
+        if(!isValidUpstreamTranscript(upstreamTrans, true, true))
         {
             logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid up trans");
             return null;
@@ -283,7 +276,7 @@ public class FusionFinder
 
             if(upstreamTrans.isExonic())
             {
-                if(!downstreamTrans.isExonic() && (!config.AllowExonSkipping || !downstreamTrans.isIntronic()))
+                if(!downstreamTrans.isExonic() && !downstreamTrans.isIntronic())
                 {
                     logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding exonic to non-exonic");
                     return null;
@@ -344,7 +337,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "exon-exon inexact phasing");
             }
 
-            if(phaseMatched || !config.RequirePhaseMatch)
+            if(phaseMatched)
             {
                 return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
             }
@@ -362,7 +355,7 @@ public class FusionFinder
                 phaseMatched = upstreamTrans.Phase == downstreamTrans.Phase;
             }
 
-            if(!phaseMatched && config.AllowExonSkipping
+            if(!phaseMatched
             && (!upstreamTrans.breakendGeneData().geneId().equals(downstreamTrans.breakendGeneData().geneId()) || exonDelDupCandidate))
             {
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
@@ -421,12 +414,9 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "inexact unphased");
             }
 
-            if(phaseMatched || !config.RequirePhaseMatch)
-            {
-                GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
-                fusion.setExonsSkipped(phaseExonsSkippedUp, phaseExonsSkippedDown);
-                return fusion;
-            }
+            GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
+            fusion.setExonsSkipped(phaseExonsSkippedUp, phaseExonsSkippedDown);
+            return fusion;
         }
 
         return null;
