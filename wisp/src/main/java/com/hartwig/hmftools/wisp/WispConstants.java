@@ -22,15 +22,18 @@ public class WispConstants
     public static final double LOD_MIN_PROB_DIFF_PERC = 0.001;
 
     // somatic variants
+    public static final double SAGE_APPEND_CURRENT_VERSION = 5.1;
     public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
     public static final double SUBCLONAL_VCN_THRESHOLD = 0.7;
     public static final double MAX_REPEAT_COUNT = 3;
     public static final double MIN_AVG_EDGE_DISTANCE = 0.06;
     public static final double MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA = 0.1;
     public static final double MAX_GERMLINE_AF = 0.01;
-    public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
+    public static final double MAX_GERMLINE_AF_MAX = 0.05;
+    public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 25;
 
-    public static final int MIN_QUAL_PER_AD = 18;
+    public static final int MIN_QUAL_PER_AD = 21;
+    public static final int MIN_QUAL_PER_AD_SAGE_V5 = 18;
     public static final int MIN_QUAL_PER_AD_DUAL_ULTIMA = 34;
     public static final byte MIN_DUAL_QUAL_FILTER_THRESHOLD = 50;
     public static final double BQR_MIN_ERROR_RATE = 1e-5;

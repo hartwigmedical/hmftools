@@ -327,7 +327,7 @@ public class ChromosomeTask implements Callable<Void>
 
             double ponThreshold = min(ponFactor * (variantVaf - PON_INDEL_ARTEFACT_VAF_REDUCTION), ponMinThreshold);
 
-            if(variant.ponSampleCount() < ponThreshold)
+            if(variant.ponMaxReadCount() < ponThreshold)
                 ponFilter = false;
         }
 

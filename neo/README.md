@@ -85,7 +85,7 @@ Call Neo to evaluate the neoepitope allele peptides. This requires all previous 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 ```
-java -cp neo.jar com.hartwig.hmftools.neo.scorer.NeoScorer
+java -cp neo.jar com.hartwig.hmftools.neo.score.NeoScorer
     -sample SAMPLE_ID
     -cancer_type Lung
     -ref_genome_version 37 

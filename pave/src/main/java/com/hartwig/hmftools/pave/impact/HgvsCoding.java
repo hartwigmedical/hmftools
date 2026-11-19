@@ -293,7 +293,16 @@ public final class HgvsCoding
         {
             // move forward to the start of the duplicated section
             // Neg strand doesn't need this adjustment because it's coding base is on the upper side of the INDEL
-            ++codingBase;
+            if(variant.isRealignedVariant())
+            {
+                // walk back to start of repeat
+                int mcLength = variant.microhomology().length();
+                codingBase -= (mcLength - 1);
+            }
+            else
+            {
+                ++codingBase;
+            }
         }
 
         // intronic bases with a +ve nearest exon need to be similarly shifted +1 to the start of the duplication

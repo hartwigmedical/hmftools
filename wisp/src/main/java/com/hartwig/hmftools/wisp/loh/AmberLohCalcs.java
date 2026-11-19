@@ -121,6 +121,7 @@ public class AmberLohCalcs
             int totalLohSupportCount = 0;
             int totalLohSiteCount = 0;
             int totalLohRegionCount = 0;
+            int totalLohRegionDepth = 0;
             double totalLohCopyNumber = 0;
             double totalRegionAf = 0;
 
@@ -140,6 +141,7 @@ public class AmberLohCalcs
                 for(SiteData siteData : regionData.Sites)
                 {
                     totalLohSupportCount += siteData.Support;
+                    totalLohRegionDepth += siteData.SampleDepth;
                     totalLohCopyNumber += regionCopyNumber;
                     totalRegionAf += regionAverageAf;
 
@@ -170,11 +172,11 @@ public class AmberLohCalcs
 
             double lohMeanCN = totalLohCopyNumber / totalLohSiteCount;
 
-            PoissonDistribution poissonDistribution = new PoissonDistribution(0.5 * totalLohSupportCount);
-            int observed = (int)round(lohMedianAf * totalLohSupportCount);
+            PoissonDistribution poissonDistribution = new PoissonDistribution(0.5 * totalLohRegionDepth);
+            int observed = (int)round(lohMedianAf * totalLohRegionDepth);
             double lohProbability = poissonDistribution.cumulativeProbability(observed);
 
-            double lohLod = LodCalcs.calcLimitOfDetection(LOW_PROBABILITY, lohMeanCN, totalLohSupportCount);
+            double lohLod = LodCalcs.calcLimitOfDetection(LOW_PROBABILITY, lohMeanCN, totalLohRegionDepth);
 
             return new AmberLohResult(
                     totalLohRegionCount, totalLohSiteCount, rawEstimatedPurity, lohImpliedPurity, lohPercent, lohLod, lohMeanCN, lohMedianAf,

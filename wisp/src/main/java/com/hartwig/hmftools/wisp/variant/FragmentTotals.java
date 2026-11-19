@@ -2,6 +2,7 @@ package com.hartwig.hmftools.wisp.variant;
 
 import static com.hartwig.hmftools.wisp.WispConstants.MAX_COPY_NUMBER_FOR_FITTING;
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 public class FragmentTotals
 {
@@ -121,5 +122,12 @@ public class FragmentTotals
     public double weightedCopyNumber()
     {
         return mDepthToCopyNumberWeightingTotal > 0 ? mCnSampleDepthTotal / mDepthToCopyNumberWeightingTotal : 0;
+    }
+
+    public String toString()
+    {
+        return format("variants(%d) sample(frags=%d depth=%d wDepth=%.0f) minors(1=%d 2+=%d) cn(w=%.3f varW=%.3f)",
+                mVariantCount, mSampleFragsTotal, mSampleDepthTotal, weightedSampleDepth(),
+                mOneFragmentCount, mTwoPlusCount, weightedCopyNumber(), weightedVariantCopyNumber());
     }
 }

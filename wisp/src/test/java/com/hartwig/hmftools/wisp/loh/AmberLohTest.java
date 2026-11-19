@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.purity;
+package com.hartwig.hmftools.wisp.loh;
 
 import static org.junit.Assert.assertEquals;
 

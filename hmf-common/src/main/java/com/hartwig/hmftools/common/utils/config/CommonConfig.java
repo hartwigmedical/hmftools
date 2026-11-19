@@ -16,6 +16,9 @@ public final class CommonConfig
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_DESC = "Sample ID";
 
+    public static final String PATIENT = "patient";
+    public static final String PATIENT_DESC = "Patient ID";
+
     public static final String TUMOR = "tumor";
     public static final String TUMOR_DESC = "Tumor ID";
     public static final String TUMOR_IDS_DESC = TUMOR_DESC + PLURALS_DESC;
