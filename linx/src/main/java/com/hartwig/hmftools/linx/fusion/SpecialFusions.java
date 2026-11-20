@@ -250,7 +250,7 @@ public class SpecialFusions
     public void checkEnhancerFusion(
             final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
     {
-        // These are allowed to fuse with 5’UTR splice donors from 100kb upstream. Phasing is assumed to be -1
+        // These are allowed to fuse with 5’UTR splice donors from 1MB upstream. Phasing is assumed to be -1
         // In some specific cases, allow fusions in the 3’UTR region or even downstream of the gene (eg BCL2)
         // in which case the 3' gene's orientation must be facing back upstream into the coding region
 
