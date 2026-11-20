@@ -34,6 +34,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRIDIAN_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.V_CHORD_DIR_CFG;
@@ -47,6 +49,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import org.jetbrains.annotations.Nullable;
+
 public class PipelineSourcePaths
 {
     public final SourceType Source;
@@ -58,7 +62,8 @@ public class PipelineSourcePaths
     public final String Lilac;
     public final String Chord;
     public final String Peach;
-    public final String Virus;
+    public final String VirusInterpreter;
+    @Nullable public final String Viridian;
     public final String SageSomatic;
     public final String PaveSomatic;
     public final String SomaticUnfilteredVcf;
@@ -87,7 +92,8 @@ public class PipelineSourcePaths
 
     private PipelineSourcePaths(
             final SourceType source, final String linx, final String cobalt, final String purple, final String linxGermline,
-            final String cuppa, final String lilac, final String chord, final String peach, final String virus,
+            final String cuppa, final String lilac, final String chord, final String peach, final String virusInterpreter,
+            @Nullable final String viridian,
             final String sageSomaticDir, final String paveSomaticDir, final String somaticUnfilteredVcf,
             final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
             final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord,
@@ -102,7 +108,8 @@ public class PipelineSourcePaths
         Lilac = lilac;
         Chord = chord;
         Peach = peach;
-        Virus = virus;
+        VirusInterpreter = virusInterpreter;
+        Viridian = viridian;
         SageSomatic = sageSomaticDir;
         PaveSomatic = paveSomaticDir;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
@@ -142,7 +149,10 @@ public class PipelineSourcePaths
                 resolveSamplePath(sampleDir, defaultToolDirs.lilacDir(), fileSources.Lilac, sampleId, referenceId),
                 resolveSamplePath(sampleDir, defaultToolDirs.chordDir(), fileSources.Chord, sampleId, referenceId),
                 resolveSamplePath(sampleDir, defaultToolDirs.peachDir(), fileSources.Peach, sampleId, referenceId),
-                resolveSamplePath(sampleDir, defaultToolDirs.virusInterpreterDir(), fileSources.Virus, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.virusInterpreterDir(), fileSources.VirusInterpreter, sampleId, referenceId),
+                fileSources.Viridian != null
+                        ? resolveSamplePath(sampleDir, "", fileSources.Viridian, sampleId, referenceId)
+                        : null,
                 resolveSamplePath(sampleDir, defaultToolDirs.sageSomaticDir(), fileSources.SageSomatic, sampleId, referenceId),
                 resolveSamplePath(sampleDir, defaultToolDirs.paveSomaticDir(), fileSources.PaveSomatic, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, referenceId),
@@ -191,6 +201,7 @@ public class PipelineSourcePaths
             addPathConfig(configBuilder, CUPPA_DIR_CFG, CUPPA_DIR_DESC, sourceType);
             addPathConfig(configBuilder, PEACH_DIR_CFG, PEACH_DIR_DESC, sourceType);
             addPathConfig(configBuilder, VIRUS_DIR_CFG, VIRUS_DIR_DESC, sourceType);
+            addPathConfig(configBuilder, VIRIDIAN_DIR_CFG, VIRIDIAN_DIR_DESC, sourceType);
             addPathConfig(configBuilder, SAGE_DIR_CFG, SAGE_DIR_DESC, sourceType);
             addPathConfig(configBuilder, PAVE_SOMATIC_DIR_CFG, PAVE_SOMATIC_DIR_DESC, sourceType);
             addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceType);
@@ -249,6 +260,7 @@ public class PipelineSourcePaths
                 getConfiguredToolDir(configBuilder, CHORD_DIR_CFG, sourceType),
                 getConfiguredToolDir(configBuilder, PEACH_DIR_CFG, sourceType),
                 getConfiguredToolDir(configBuilder, VIRUS_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, VIRIDIAN_DIR_CFG, sourceType),
                 getConfiguredToolDir(configBuilder, SAGE_DIR_CFG, sourceType),
                 getConfiguredToolDir(configBuilder, PAVE_SOMATIC_DIR_CFG, sourceType),
                 getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceType),
