@@ -77,27 +77,36 @@ public class BiallelicModel
 
         PoissonDistribution poissonDist = new PoissonDistribution(conservativeAd);
 
-        double probNoWildtypeOrLoh = 1 - poissonDist.cumulativeProbability((int)readCountAtThreshold);
+        double probNoWildtypeGivenLoh = 1 - poissonDist.cumulativeProbability((int)readCountAtThreshold);
 
-        double probWildtypeOrLohRelative = probNoWildtypeOrLoh == 0 ? PROB_UPPER_LIMIT : 0.5 * (1 - probNoWildtypeOrLoh) / probNoWildtypeOrLoh;
+        double probWildtypeGivenLohRelative = probNoWildtypeGivenLoh == 0 ? PROB_UPPER_LIMIT : 0.5 * (1 - probNoWildtypeGivenLoh) / probNoWildtypeGivenLoh;
+        probWildtypeGivenLohRelative = capProbability(probWildtypeGivenLohRelative);
 
         double probabilityLohFloored = max(probabilityLoh, BIALLELIC_LOH_BASE_ERROR_RATE);
-        double probNoWildtypeOrNoLohRaw = probabilityLohFloored / (probWildtypeOrLohRelative + probabilityLohFloored);
+        double probNoWildtypeGivenNoLohRaw = probabilityLohFloored / (probWildtypeGivenLohRelative + probabilityLohFloored);
 
-        double minAlleleDiff = max(min(abs(variantCN - minorAlleleCN), abs(variantCN - (segmentCN - minorAlleleCN))), 1 / PROB_UPPER_LIMIT);
+        probNoWildtypeGivenNoLohRaw = capProbability(probNoWildtypeGivenNoLohRaw);
+
+        double minAlleleDiff = max(min(abs(variantCN - minorAlleleCN), abs(variantCN - (segmentCN - minorAlleleCN))), PROB_LOWER_LIMIT);
         double minCNDiff = max(abs(variantCN - segmentCN), 1 / PROB_UPPER_LIMIT);
 
-        double probNoWildtypeOrNoLohAdjusted = Math.log(minAlleleDiff / minCNDiff);
+        double probNoWildtypeGivenNoLohAdjusted = Math.log(minAlleleDiff / minCNDiff);
 
-        double probNoWildtypeOrNoLoh = calcScaledAdjustment(probNoWildtypeOrNoLohRaw, probNoWildtypeOrNoLohAdjusted);
-        probNoWildtypeOrNoLoh = min(max(probNoWildtypeOrNoLoh, 0), 1);
+        double probNoWildtypeGivenNoLoh = calcScaledAdjustment(probNoWildtypeGivenNoLohRaw, probNoWildtypeGivenNoLohAdjusted);
+        probNoWildtypeGivenNoLoh = min(max(probNoWildtypeGivenNoLoh, 0), 1);
 
-        double biallelicProb = probabilityLoh * probNoWildtypeOrLoh + (1 - probabilityLoh) * probNoWildtypeOrNoLoh;
+        double biallelicProb = probabilityLoh * probNoWildtypeGivenLoh + (1 - probabilityLoh) * probNoWildtypeGivenNoLoh;
 
         return biallelicProb;
     }
 
     private static final double PROB_UPPER_LIMIT = 1e10;
+    private static final double PROB_LOWER_LIMIT = 1 / PROB_UPPER_LIMIT;
+
+    private static double capProbability(double probability)
+    {
+        return min(max(probability, PROB_LOWER_LIMIT), PROB_UPPER_LIMIT);
+    }
 
     private static double calcScaledAdjustment(double origValue, double adjustment, boolean upper)
     {
