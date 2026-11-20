@@ -10,6 +10,7 @@ public enum CategoryType
     // ordering matters as described below where comparers share loaded data
 
     PURITY, // CN is dependent on purity
+    MUTATION_BURDEN,
     DRIVER,
     COPY_NUMBER,
     GENE_COPY_NUMBER,
@@ -51,7 +52,7 @@ public enum CategoryType
 
     public static List<CategoryType> purpleCategories()
     {
-        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL);
+        return Lists.newArrayList(PURITY, MUTATION_BURDEN, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL);
     }
 
     public static List<CategoryType> linxCategories()
@@ -61,7 +62,7 @@ public enum CategoryType
 
     public static List<CategoryType> panelCategories()
     {
-        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION);
+        return Lists.newArrayList(PURITY, MUTATION_BURDEN, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION);
     }
 
     public static Set<CategoryType> purpleSomaticOnlyCategories()

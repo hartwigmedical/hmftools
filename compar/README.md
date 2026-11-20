@@ -35,11 +35,12 @@ The key configuration values to set are:
 
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
-The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CUPPA_IMAGE,
-CHORD, LILAC_QC, LILAC_ALLELE, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
-CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS, RNA_SUMMARY, RNA_GENE_DATA, RNA_TRANSCRIPT_DATA, RNA_NOVEL_SPLICE_JUNCTION, RNA_FUSION.
+The available categories are: PURITY, MUTATION_BURDEN, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION,
+DISRUPTION, CUPPA, CUPPA_IMAGE, CHORD, LILAC_QC, LILAC_ALLELE, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS,
+GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER, CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS,
+RNA_SUMMARY, RNA_GENE_DATA, RNA_TRANSCRIPT_DATA, RNA_NOVEL_SPLICE_JUNCTION, RNA_FUSION.
 
-The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE, V_CHORD.
+The category PANEL is equivalent to PURITY, MUTATION_BURDEN, DRIVER, SOMATIC_VARIANT, FUSION and DISRUPTION.
 
 
 ### Optional configuration
@@ -98,7 +99,7 @@ Specify one or more tool directories to override the pipeline default paths.
 
 | Category                                                                           | Config Path Id    |
 |------------------------------------------------------------------------------------|-------------------|
-| PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL                        | purple_dir        |
+| PURITY, MUTATION_BURDEN, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL       | purple_dir        |
 | FUSION, DISRUPTION                                                                 | linx_dir          |
 | GERMLINE_SV                                                                        | linx_germline_dir |
 | CUPPA                                                                              | cuppa_dir         |
@@ -177,6 +178,7 @@ Use `N/A` in a field column for a value that should not be compared.
 | Category                  | Key                                                                   |
 |---------------------------|-----------------------------------------------------------------------|
 | PURITY                    | `PURITY`                                                              |
+| MUTATION_BURDEN           | `MUTATION_BURDEN`                                                     |
 | SOMATIC_VARIANT           | `Chromosome:Position:Ref:Alt`                                         |
 | SOMATIC_VARIANT           | `GeneName:HgvsProtein`, e.g. `BRAF:p.V600E`                           |
 | SOMATIC_VARIANT           | `GeneName`, for an `Absent` row only                                  |
@@ -205,13 +207,14 @@ An `Absent` row means the run must not find that item. Its field values are not 
 
 #### By category
 
-##### Purity
-There is one record per sample. A sample with no expected findings row is not compared, and a sample with expected findings but no
+##### Purity and mutation burden
+Each has one record per sample. A sample with no expected findings row is not compared, and a sample with expected findings but no
 pipeline output gives `INVALID_NEW`.
 
 ```tsv
 SampleId	Category	Key	FieldValues	Remark
-DEMO_001	PURITY	PURITY	Purity=0.65;Ploidy=3.1;MsStatus=MSS	
+DEMO_001	PURITY	PURITY	Purity=0.65;Ploidy=3.1	
+DEMO_001	MUTATION_BURDEN	MUTATION_BURDEN	MsStatus=MSS	
 ```
 
 ##### Somatic variants
@@ -404,19 +407,25 @@ Data key: SampleId
 | Gender                        | Exact                   |
 | GermlineAberrations           | Exact                   |
 | FitMethod                     | Exact                   |
-| MsStatus                      | Exact                   |
-| TmbStatus                     | Exact                   |
-| TmlStatus                     | Exact                   |
 | Purity                        | Threshold [0.04]        |
 | Ploidy                        | Threshold [0.1]         |
 | Contamination                 | Threshold [0.005]       |
-| TmbPerMb                      | Threshold [0.1, 5%]     |
-| MsIndelsPerMb                 | Threshold [0.1, 5%]     |
-| Tml                           | Threshold [1, 5%]       |
 | CopyNumberSegments            | Threshold [5, 20%]      |
 | UnsupportedCopyNumberSegments | Threshold [5, 20%]      |
 | SvTmb                         | Threshold [5, 5%]       |
 | TincLevel                     | Threshold [0.1]         |
+
+### Mutation Burden
+Data key: SampleId
+
+| Field         | Match Type & Thresholds |
+|---------------|-------------------------|
+| MsStatus      | Exact                   |
+| TmbStatus     | Exact                   |
+| TmlStatus     | Exact                   |
+| TmbPerMb      | Threshold [0.1, 5%]     |
+| MsIndelsPerMb | Threshold [0.1, 5%]     |
+| Tml           | Threshold [1, 5%]       |
 
 ### Somatic Variant
 Data key: SampleId, Chromosome, Position, Ref, Alt and VariantType (SNP/MNP/INDEL/UNDEFINED)

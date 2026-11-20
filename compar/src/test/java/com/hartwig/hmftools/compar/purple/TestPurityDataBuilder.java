@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.RunMode;
@@ -63,7 +64,20 @@ public class TestPurityDataBuilder
     public static final TestComparableItemBuilder<TestPurityDataBuilder, PurityData> BUILDER =
             new TestComparableItemBuilder<>(TestPurityDataBuilder::new, TestPurityDataBuilder::build, ALTERNATE_INITIALIZER);
 
+    public static final TestComparableItemBuilder<TestPurityDataBuilder, MutationBurdenData> MUTATION_BURDEN_BUILDER =
+            new TestComparableItemBuilder<>(TestPurityDataBuilder::new, TestPurityDataBuilder::buildMutationBurden, ALTERNATE_INITIALIZER);
+
     private PurityData build()
+    {
+        return new PurityData(buildPurityContext(), new PurityComparer(null, Collections.emptyMap()).fieldsList());
+    }
+
+    private MutationBurdenData buildMutationBurden()
+    {
+        return new MutationBurdenData(buildPurityContext(), new MutationBurdenComparer(null, Collections.emptyMap()).fieldsList());
+    }
+
+    private PurityContext buildPurityContext()
     {
         FittedPurity bestFit = new FittedPurity(purity, -1, ploidy, -1, -1, -1);
 
@@ -92,28 +106,23 @@ public class TestPurityDataBuilder
                 .maxDiploidProportion(-1)
                 .build();
 
-        PurityComparer purityComparer = new PurityComparer(null, Collections.emptyMap());
-
-        return new PurityData(
-                ImmutablePurityContext.builder()
-                        .gender(gender)
-                        .bestFit(bestFit)
-                        .method(fitMethod)
-                        .qc(qc)
-                        .microsatelliteIndelsPerMb(msIndels)
-                        .tumorMutationalBurdenPerMb(tmb)
-                        .tumorMutationalLoad(tml)
-                        .svTumorMutationalBurden(svTmb)
-                        .microsatelliteStatus(msStatus)
-                        .tumorMutationalLoadStatus(tmlStatus)
-                        .tumorMutationalBurdenStatus(tmbStatus)
-                        .runMode(RunMode.TUMOR_GERMLINE)
-                        .targeted(false)
-                        .score(score)
-                        .polyClonalProportion(-1)
-                        .wholeGenomeDuplication(false)
-                        .build(),
-                purityComparer.fieldsList()
-        );
+        return ImmutablePurityContext.builder()
+                .gender(gender)
+                .bestFit(bestFit)
+                .method(fitMethod)
+                .qc(qc)
+                .microsatelliteIndelsPerMb(msIndels)
+                .tumorMutationalBurdenPerMb(tmb)
+                .tumorMutationalLoad(tml)
+                .svTumorMutationalBurden(svTmb)
+                .microsatelliteStatus(msStatus)
+                .tumorMutationalLoadStatus(tmlStatus)
+                .tumorMutationalBurdenStatus(tmbStatus)
+                .runMode(RunMode.TUMOR_GERMLINE)
+                .targeted(false)
+                .score(score)
+                .polyClonalProportion(-1)
+                .wholeGenomeDuplication(false)
+                .build();
     }
 }
