@@ -29,9 +29,6 @@ public class PurityComparer extends ItemComparer
         Purity,
         Ploidy,
         Contamination,
-        TmbPerMb,
-        MsIndelsPerMb,
-        Tml,
         CopyNumberSegments,
         UnsupportedCopyNumberSegments,
         SvTmb,
@@ -39,9 +36,6 @@ public class PurityComparer extends ItemComparer
         Gender,
         GermlineAberrations,
         FitMethod,
-        MsStatus,
-        TmbStatus,
-        TmlStatus,
         TincLevel;
     }
 
@@ -63,21 +57,6 @@ public class PurityComparer extends ItemComparer
                 Fields.Contamination.toString(),
                 getOrMakeFieldCheck(fieldCheckMap, Fields.Contamination.toString(), 0.005, null),
                 "%.4f"));
-
-        mFields.add(new FieldInfo(
-                Fields.TmbPerMb.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.TmbPerMb.toString(), 0.1, 0.05),
-                "%.2f"));
-
-        mFields.add(new FieldInfo(
-                Fields.MsIndelsPerMb.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.MsIndelsPerMb.toString(), 0.1, 0.05),
-                "%.2f"));
-
-        mFields.add(new FieldInfo(
-                Fields.Tml.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.Tml.toString(), 1.0, 0.05),
-                null));
 
         mFields.add(new FieldInfo(
                 Fields.CopyNumberSegments.toString(),
@@ -108,18 +87,6 @@ public class PurityComparer extends ItemComparer
 
         mFields.add(new FieldInfo(
                 Fields.FitMethod.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.FitMethod.toString()),
-                null));
-
-        mFields.add(new FieldInfo(
-                Fields.MsStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.MsStatus.toString()),
-                null));
-
-        mFields.add(new FieldInfo(
-                Fields.TmbStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TmbStatus.toString()),
-                null));
-
-        mFields.add(new FieldInfo(
-                Fields.TmlStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TmlStatus.toString()),
                 null));
 
         mFields.add(new FieldInfo(

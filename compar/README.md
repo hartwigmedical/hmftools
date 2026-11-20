@@ -35,11 +35,12 @@ The key configuration values to set are:
 
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
-The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CUPPA_IMAGE,
-CHORD, LILAC_QC, LILAC_ALLELE, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
-CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS, RNA_SUMMARY, RNA_GENE_DATA, RNA_TRANSCRIPT_DATA, RNA_NOVEL_SPLICE_JUNCTION, RNA_FUSION.
+The available categories are: PURITY, MUTATION_BURDEN, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION,
+DISRUPTION, CUPPA, CUPPA_IMAGE, CHORD, LILAC_QC, LILAC_ALLELE, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS,
+GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER, CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS,
+RNA_SUMMARY, RNA_GENE_DATA, RNA_TRANSCRIPT_DATA, RNA_NOVEL_SPLICE_JUNCTION, RNA_FUSION.
 
-The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE, V_CHORD.
+The category PANEL is equivalent to PURITY, MUTATION_BURDEN, DRIVER, SOMATIC_VARIANT, FUSION and DISRUPTION.
 
 
 ### Optional configuration
@@ -50,7 +51,8 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 | output_id                                               | Outfile file suffix                                                                                                                                   |
 | driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                         |
 | restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                              |
-| write_detailed                                          | Write a file per compared category                                                                                                                    |
+| write_types                                             | Output files to write, separated by ';': GENERIC, TYPE_SPECIFIC, FIELD_CONFIG (see [Output Files](#output-files)). Default: GENERIC;TYPE_SPECIFIC     |
+| write_detailed                                          | Adds TYPE_SPECIFIC to `write_types`                                                                                                                   |
 | somatic_unfiltered_vcf_old & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                         |
 | liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                              |
 | include_matches                                         | Also include matching entries in output file(s)                                                                                                       |
@@ -97,7 +99,7 @@ Specify one or more tool directories to override the pipeline default paths.
 
 | Category                                                                           | Config Path Id    |
 |------------------------------------------------------------------------------------|-------------------|
-| PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL                        | purple_dir        |
+| PURITY, MUTATION_BURDEN, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL       | purple_dir        |
 | FUSION, DISRUPTION                                                                 | linx_dir          |
 | GERMLINE_SV                                                                        | linx_germline_dir |
 | CUPPA                                                                              | cuppa_dir         |
@@ -139,9 +141,18 @@ by using the `pipeline_format_file_old` and/or `pipeline_format_file_new` argume
 > Compar supports output comparison from OncoAnalyser v3.0 onwards.
 
 ### Output Files
-Output files are named the same for one sample or many: `compar.tsv` for all categories, or one `compar.<category>.tsv`
-per category with `write_detailed`. When set, `output_id` follows `compar`, e.g.
-`compar.compar-2026-10-01T10-35-26.somatic_variant.tsv`. Every row starts with its `SampleId`.
+`write_types` sets which files are written, separated by ';'. The default is `GENERIC;TYPE_SPECIFIC`.
+
+| Write type    | File                      | Content                                                                       |
+|---------------|---------------------------|-------------------------------------------------------------------------------|
+| GENERIC       | `compar.tsv`              | Rows for all categories. Source labels and `curation_cache` need this file    |
+| TYPE_SPECIFIC | `compar.<category>.tsv`   | One file per category, with an Old and New column for each field              |
+| FIELD_CONFIG  | `compar.field_config.tsv` | The field config the run used (see [Field Config Files](#field-config-files)) |
+
+`write_detailed` adds TYPE_SPECIFIC to the write types.
+
+Output files are named the same for one sample or many. When set, `output_id` follows `compar`, e.g.
+`compar.compar-2026-10-01T10-35-26.somatic_variant.tsv`. Every row of `compar.tsv` and `compar.<category>.tsv` starts with its `SampleId`.
 
 ### Expected Findings Files
 Set `expected_findings_files_old` in place of the old sample directory to compare a run with expected values. Separate files with ';'.
@@ -167,6 +178,7 @@ Use `N/A` in a field column for a value that should not be compared.
 | Category                  | Key                                                                   |
 |---------------------------|-----------------------------------------------------------------------|
 | PURITY                    | `PURITY`                                                              |
+| MUTATION_BURDEN           | `MUTATION_BURDEN`                                                     |
 | SOMATIC_VARIANT           | `Chromosome:Position:Ref:Alt`                                         |
 | SOMATIC_VARIANT           | `GeneName:HgvsProtein`, e.g. `BRAF:p.V600E`                           |
 | SOMATIC_VARIANT           | `GeneName`, for an `Absent` row only                                  |
@@ -195,13 +207,14 @@ An `Absent` row means the run must not find that item. Its field values are not 
 
 #### By category
 
-##### Purity
-There is one record per sample. A sample with no expected findings row is not compared, and a sample with expected findings but no
+##### Purity and mutation burden
+Each has one record per sample. A sample with no expected findings row is not compared, and a sample with expected findings but no
 pipeline output gives `INVALID_NEW`.
 
 ```tsv
 SampleId	Category	Key	FieldValues	Remark
-DEMO_001	PURITY	PURITY	Purity=0.65;Ploidy=3.1;MsStatus=MSS	
+DEMO_001	PURITY	PURITY	Purity=0.65;Ploidy=3.1	
+DEMO_001	MUTATION_BURDEN	MUTATION_BURDEN	MsStatus=MSS	
 ```
 
 ##### Somatic variants
@@ -285,9 +298,8 @@ These defaults can be overridden with `-field_config_file`, pointing to a TSV fi
 If `-strict_field_config` is also set, every compared field for every category being run must have an entry in the file, and Compar will exit
 with an error if any are missing.
 
-Optionally, a Compar run also writes out the field config it actually used (i.e. after applying any overrides) to a `.field_config.tsv` file in the
-output directory. This is a record of exactly what was compared for that run, and can itself be used as a `-field_config_file` input to repeat
-the comparison later with the same settings.
+With `FIELD_CONFIG` in `write_types`, Compar writes the field config it used, overrides included, to `compar.field_config.tsv`.
+Pass it as `-field_config_file` to repeat the comparison.
 
 ### Curation Cache
 
@@ -303,7 +315,8 @@ to it.
 Source labels identify each OLD/NEW comparison in the curation cache and appear in previous comparison details.
 A label is semicolon-separated `key=value` fields in this order: `kind`, `version`, optional `reference`, optional `config`, e.g.
 `kind=pipeline;version=v34;reference=GRCh38;config=standard`. A label in any other form is kept as plain text.
-Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output.
+Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output
+(see [Output Files](#output-files)).
 
 #### Cache columns
 
@@ -394,19 +407,25 @@ Data key: SampleId
 | Gender                        | Exact                   |
 | GermlineAberrations           | Exact                   |
 | FitMethod                     | Exact                   |
-| MsStatus                      | Exact                   |
-| TmbStatus                     | Exact                   |
-| TmlStatus                     | Exact                   |
 | Purity                        | Threshold [0.04]        |
 | Ploidy                        | Threshold [0.1]         |
 | Contamination                 | Threshold [0.005]       |
-| TmbPerMb                      | Threshold [0.1, 5%]     |
-| MsIndelsPerMb                 | Threshold [0.1, 5%]     |
-| Tml                           | Threshold [1, 5%]       |
 | CopyNumberSegments            | Threshold [5, 20%]      |
 | UnsupportedCopyNumberSegments | Threshold [5, 20%]      |
 | SvTmb                         | Threshold [5, 5%]       |
 | TincLevel                     | Threshold [0.1]         |
+
+### Mutation Burden
+Data key: SampleId
+
+| Field         | Match Type & Thresholds |
+|---------------|-------------------------|
+| MsStatus      | Exact                   |
+| TmbStatus     | Exact                   |
+| TmlStatus     | Exact                   |
+| TmbPerMb      | Threshold [0.1, 5%]     |
+| MsIndelsPerMb | Threshold [0.1, 5%]     |
+| Tml           | Threshold [1, 5%]       |
 
 ### Somatic Variant
 Data key: SampleId, Chromosome, Position, Ref, Alt and VariantType (SNP/MNP/INDEL/UNDEFINED)

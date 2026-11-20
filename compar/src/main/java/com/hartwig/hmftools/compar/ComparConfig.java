@@ -88,7 +88,7 @@ public class ComparConfig
     public final String OutputId;
     public final String CurationCacheFile;
 
-    public final List<WriteType> WriteTypes;
+    public final Set<WriteType> WriteTypes;
     public final boolean IncludeMatches;
     public final int Threads;
 
@@ -161,15 +161,11 @@ public class ComparConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
         CurationCacheFile = configBuilder.getValue(CURATION_CACHE);
 
-        WriteTypes = Lists.newArrayList();
+        WriteTypes = Sets.newHashSet(WriteType.fromConfigStr(configBuilder.getValue(WRITE_TYPES)));
 
         if(configBuilder.hasFlag(WRITE_DETAILED_FILES))
         {
             WriteTypes.add(WriteType.TYPE_SPECIFIC);
-        }
-        else
-        {
-            WriteTypes.addAll(WriteType.fromConfigStr(configBuilder.getValue(WRITE_TYPES)));
         }
 
         IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
@@ -515,7 +511,7 @@ public class ComparConfig
         OutputId = "";
         IncludeMatches = false;
         Threads = 0;
-        WriteTypes = WriteType.DEFAULT_WRITE_TYPES;
+        WriteTypes = Sets.newHashSet(WriteType.DEFAULT_WRITE_TYPES);
 
         DriverGenes = Sets.newHashSet();
         IgnoreGenes = Collections.emptySet();

@@ -1,17 +1,24 @@
 package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.compar.ComparConfig.CATEGORIES;
+import static com.hartwig.hmftools.compar.ComparConfig.FIELD_CONFIG_FILE;
 import static com.hartwig.hmftools.compar.ComparConfig.MATCH_LEVEL;
 import static com.hartwig.hmftools.compar.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -63,6 +70,36 @@ public class FieldConfigFileTest
                 }
             }
         }
+    }
+
+    @Test
+    public void writtenFieldConfigIncludesOverrides() throws IOException
+    {
+        File overridesFile = temp.newFile();
+        Files.write(overridesFile.toPath(), List.of(
+                "Category\tField\tCompared\tAbsoluteThreshold\tPercentThreshold",
+                "PURITY\tPloidy\ttrue\t0.3\t",
+                "PURITY\tContamination\tfalse\t\t"));
+
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        ComparConfig.addConfig(configBuilder);
+        configBuilder.setValue(CATEGORIES, PURITY.toString());
+        configBuilder.setValue(SAMPLE, "TEST");
+        configBuilder.setValue(OUTPUT_DIR, temp.getRoot().getAbsolutePath());
+        configBuilder.setValue(FIELD_CONFIG_FILE, overridesFile.getAbsolutePath());
+        ComparConfig config = new ComparConfig(configBuilder);
+
+        FieldCheckCache fieldCheckCache = new FieldCheckCache();
+        fieldCheckCache.processOverridesFile(config);
+        fieldCheckCache.writeFieldOverridesFile(config);
+
+        FieldCheckCache writtenConfig = new FieldCheckCache();
+        writtenConfig.loadOverrides(FieldConfigFile.generateFileName(config.formOutputFilePrefix()));
+        Map<String,FieldCheck> purityChecks = writtenConfig.getCategoryFieldCheckOverrides(PURITY);
+
+        assertThreshold("Ploidy", 0.3, purityChecks.get("Ploidy").AbsDiffThreshold);
+        assertFalse(purityChecks.get("Contamination").IsCompared);
+        assertTrue(purityChecks.get("Purity").IsCompared);
     }
 
     private static void assertThreshold(final String context, final Double expected, final Double actual)

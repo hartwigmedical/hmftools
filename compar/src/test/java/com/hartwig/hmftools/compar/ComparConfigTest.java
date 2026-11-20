@@ -5,11 +5,15 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.compar.ComparConfig.SOURCE_LABEL;
 import static com.hartwig.hmftools.compar.ComparConfig.EXPECTED_FINDINGS_FILES;
 import static com.hartwig.hmftools.compar.ComparConfig.WRITE_DETAILED_FILES;
+import static com.hartwig.hmftools.compar.ComparConfig.WRITE_TYPES;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.ExpectedCache.FLD_STATUS;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
+import static com.hartwig.hmftools.compar.common.WriteType.FIELD_CONFIG;
+import static com.hartwig.hmftools.compar.common.WriteType.GENERIC;
+import static com.hartwig.hmftools.compar.common.WriteType.TYPE_SPECIFIC;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
@@ -140,13 +145,24 @@ public class ComparConfigTest
     @Test
     public void testSourceLabelConfig()
     {
-        assertTrue(createLabelConfig("pipeline a", "pipeline b", false).isValid());
-        assertFalse(createLabelConfig("pipeline a", null, false).isValid());
-        assertFalse(createLabelConfig(" ", "pipeline b", false).isValid());
-        assertFalse(createLabelConfig("pipeline a", "pipeline b", true).isValid());
+        assertTrue(createOutputConfig("pipeline a", "pipeline b", null, false).isValid());
+        assertFalse(createOutputConfig("pipeline a", null, null, false).isValid());
+        assertFalse(createOutputConfig(" ", "pipeline b", null, false).isValid());
+        assertFalse(createOutputConfig("pipeline a", "pipeline b", "TYPE_SPECIFIC", false).isValid());
     }
 
-    private static ComparConfig createLabelConfig(final String oldLabel, final String newLabel, boolean writeDetailedOnly)
+    @Test
+    public void testWriteTypes()
+    {
+        assertEquals(Set.of(GENERIC, TYPE_SPECIFIC), createOutputConfig(null, null, null, false).WriteTypes);
+        assertEquals(Set.of(GENERIC), createOutputConfig(null, null, "GENERIC", false).WriteTypes);
+        assertEquals(Set.of(GENERIC, TYPE_SPECIFIC), createOutputConfig(null, null, null, true).WriteTypes);
+        assertEquals(Set.of(TYPE_SPECIFIC), createOutputConfig(null, null, "TYPE_SPECIFIC", true).WriteTypes);
+        assertEquals(Set.of(GENERIC, FIELD_CONFIG, TYPE_SPECIFIC), createOutputConfig(null, null, "GENERIC;FIELD_CONFIG", true).WriteTypes);
+    }
+
+    private static ComparConfig createOutputConfig(
+            final String oldLabel, final String newLabel, final String writeTypes, final boolean writeDetailed)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         ComparConfig.addConfig(configBuilder);
@@ -154,12 +170,17 @@ public class ComparConfigTest
         configBuilder.setValue("sample", "TEST");
         configBuilder.setValue("sample_dir_old", "/default_old");
         configBuilder.setValue("sample_dir_new", "/default_new");
-        configBuilder.setValue(SOURCE_LABEL + "_old", oldLabel);
+
+        if(oldLabel != null)
+            configBuilder.setValue(SOURCE_LABEL + "_old", oldLabel);
 
         if(newLabel != null)
             configBuilder.setValue(SOURCE_LABEL + "_new", newLabel);
 
-        configBuilder.setValue(WRITE_DETAILED_FILES, writeDetailedOnly);
+        if(writeTypes != null)
+            configBuilder.setValue(WRITE_TYPES, writeTypes);
+
+        configBuilder.setValue(WRITE_DETAILED_FILES, writeDetailed);
 
         return new ComparConfig(configBuilder);
     }
