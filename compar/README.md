@@ -50,7 +50,8 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 | output_id                                               | Outfile file suffix                                                                                                                                   |
 | driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                         |
 | restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                              |
-| write_detailed                                          | Write a file per compared category                                                                                                                    |
+| write_types                                             | Output files to write, separated by ';': GENERIC, TYPE_SPECIFIC, FIELD_CONFIG (see [Output Files](#output-files)). Default: GENERIC;TYPE_SPECIFIC     |
+| write_detailed                                          | Adds TYPE_SPECIFIC to `write_types`                                                                                                                   |
 | somatic_unfiltered_vcf_old & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                         |
 | liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                              |
 | include_matches                                         | Also include matching entries in output file(s)                                                                                                       |
@@ -139,9 +140,18 @@ by using the `pipeline_format_file_old` and/or `pipeline_format_file_new` argume
 > Compar supports output comparison from OncoAnalyser v3.0 onwards.
 
 ### Output Files
-Output files are named the same for one sample or many: `compar.tsv` for all categories, or one `compar.<category>.tsv`
-per category with `write_detailed`. When set, `output_id` follows `compar`, e.g.
-`compar.compar-2026-10-01T10-35-26.somatic_variant.tsv`. Every row starts with its `SampleId`.
+`write_types` sets which files are written, separated by ';'. The default is `GENERIC;TYPE_SPECIFIC`.
+
+| Write type    | File                      | Content                                                                       |
+|---------------|---------------------------|-------------------------------------------------------------------------------|
+| GENERIC       | `compar.tsv`              | Rows for all categories. Source labels and `curation_cache` need this file    |
+| TYPE_SPECIFIC | `compar.<category>.tsv`   | One file per category, with an Old and New column for each field              |
+| FIELD_CONFIG  | `compar.field_config.tsv` | The field config the run used (see [Field Config Files](#field-config-files)) |
+
+`write_detailed` adds TYPE_SPECIFIC to the write types.
+
+Output files are named the same for one sample or many. When set, `output_id` follows `compar`, e.g.
+`compar.compar-2026-10-01T10-35-26.somatic_variant.tsv`. Every row of `compar.tsv` and `compar.<category>.tsv` starts with its `SampleId`.
 
 ### Expected Findings Files
 Set `expected_findings_files_old` in place of the old sample directory to compare a run with expected values. Separate files with ';'.
@@ -285,9 +295,8 @@ These defaults can be overridden with `-field_config_file`, pointing to a TSV fi
 If `-strict_field_config` is also set, every compared field for every category being run must have an entry in the file, and Compar will exit
 with an error if any are missing.
 
-Optionally, a Compar run also writes out the field config it actually used (i.e. after applying any overrides) to a `.field_config.tsv` file in the
-output directory. This is a record of exactly what was compared for that run, and can itself be used as a `-field_config_file` input to repeat
-the comparison later with the same settings.
+With `FIELD_CONFIG` in `write_types`, Compar writes the field config it used, overrides included, to `compar.field_config.tsv`.
+Pass it as `-field_config_file` to repeat the comparison.
 
 ### Curation Cache
 
@@ -303,7 +312,8 @@ to it.
 Source labels identify each OLD/NEW comparison in the curation cache and appear in previous comparison details.
 A label is semicolon-separated `key=value` fields in this order: `kind`, `version`, optional `reference`, optional `config`, e.g.
 `kind=pipeline;version=v34;reference=GRCh38;config=standard`. A label in any other form is kept as plain text.
-Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output.
+Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output
+(see [Output Files](#output-files)).
 
 #### Cache columns
 
