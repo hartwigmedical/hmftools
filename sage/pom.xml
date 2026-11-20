@@ -11,7 +11,7 @@
     <artifactId>sage</artifactId>
     <packaging>jar</packaging>
     <version>${sage.version}</version>
-    <name>HMF Tools - SAGE</name>
+    <name>HMF Tools - Sage</name>
 
     <dependencies>
         <dependency>

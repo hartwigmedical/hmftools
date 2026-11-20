@@ -11,7 +11,7 @@
     <artifactId>taur</artifactId>
     <packaging>jar</packaging>
     <version>${taur.version}</version>
-    <name>TAUR - FASTQ adjustment routines</name>
+    <name>HMF Tools - Taur</name>
 
     <dependencies>
         <dependency>
