@@ -77,7 +77,7 @@ public class SbxBamUtils
 
         if(!ycTagStr.startsWith(SBX_YC_TAG_DELIM_LIT))
         {
-            String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM);
+            String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM, -1);
 
             if(ycTagComponents.length < 2)
                 return null;
