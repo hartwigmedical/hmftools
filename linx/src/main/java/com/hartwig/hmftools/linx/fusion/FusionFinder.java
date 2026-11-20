@@ -327,10 +327,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "exon-exon inexact phasing");
             }
 
-            if(phaseMatched)
-            {
-                return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
-            }
+            return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
         }
         else
         {
@@ -408,8 +405,6 @@ public class FusionFinder
             fusion.setExonsSkipped(phaseExonsSkippedUp, phaseExonsSkippedDown);
             return fusion;
         }
-
-        return null;
     }
 
     private static boolean exonToExonInPhase(final BreakendTransData upTrans, final BreakendTransData downTrans)

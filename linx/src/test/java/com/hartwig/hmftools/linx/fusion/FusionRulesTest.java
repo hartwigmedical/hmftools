@@ -220,21 +220,27 @@ public class FusionRulesTest
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isExonic());
-        assertNull(checkFusionLogic(trans1, trans2, params));
+        GeneFusion fusion = checkFusionLogic(trans1, trans2, params);
+        assertNotNull(fusion);
+        assertFalse(fusion.phaseMatched());
 
         // also invalid exonic fusion
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 2, PHASE_2, 11, getCodingBases(codingStart, codingEnd));
 
-        assertNull(checkFusionLogic(trans1, trans2, params));
+        fusion = checkFusionLogic(trans1, trans2, params);
+        assertNotNull(fusion);
+        assertFalse(fusion.phaseMatched());
 
         // valid exonic fusion
         trans2 = createTranscript(
                 gene2, transId2, true, 50, 250, codingStart, codingEnd, "",
                 2, 2, PHASE_0, 12, getCodingBases(codingStart, codingEnd));
 
-        assertNotNull(checkFusionLogic(trans1, trans2, params));
+        fusion = checkFusionLogic(trans1, trans2, params);
+        assertNotNull(fusion);
+        assertTrue(fusion.phaseMatched());
 
         // exon to exon but both pre-coding
         gene1.setPositionalData(CHR_1, 90, ORIENT_FWD);
