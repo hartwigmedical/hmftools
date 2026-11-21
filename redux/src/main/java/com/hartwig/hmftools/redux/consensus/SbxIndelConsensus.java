@@ -62,9 +62,13 @@ public class SbxIndelConsensus
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
         int outerUnclippedPosition = -1;
+        int outerReadEndPosition = 0;
 
         for(ReadParseState read : readStates)
         {
+            int readEnd = read.Read.getAlignmentEnd();
+            outerReadEndPosition = max(outerReadEndPosition, readEnd);
+
             if(consensusState.IsForward)
             {
                 int readStart = read.Read.getAlignmentStart();
@@ -76,7 +80,6 @@ public class SbxIndelConsensus
             }
             else
             {
-                int readEnd = read.Read.getAlignmentEnd();
                 int readUnclippedPosition = readEnd + rightSoftClipLength(read.Read);
                 outerUnclippedPosition = max(outerUnclippedPosition, readUnclippedPosition);
             }
@@ -172,6 +175,22 @@ public class SbxIndelConsensus
 
             if(cigarElements.get(0).getOperator() == S)
                 consensusUnclippedStart -= cigarElements.get(0).getLength();
+        }
+
+        // fail building consensus if the alignment bounds are now outside the contig
+        if(consensusAlignmentStart < 1)
+        {
+            consensusState.setOutcome(INDEL_FAIL);
+            return;
+        }
+        else if(consensusAlignmentEnd > outerReadEndPosition)
+        {
+            int maxContigPosition = consensusState.refGenome().getChromosomeLength(consensusState.Chromosome);
+            if(consensusAlignmentEnd > maxContigPosition)
+            {
+                consensusState.setOutcome(INDEL_FAIL);
+                return;
+            }
         }
 
         consensusState.setBoundaries(consensusUnclippedStart, consensusUnclippedEnd, consensusAlignmentStart, consensusAlignmentEnd);

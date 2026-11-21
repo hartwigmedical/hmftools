@@ -236,4 +236,6 @@ public class ConsensusState
 
         return false;
     }
+
+    public RefGenome refGenome() { return mRefGenome; }
 }
