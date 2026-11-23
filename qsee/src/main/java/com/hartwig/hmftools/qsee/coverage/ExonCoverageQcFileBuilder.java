@@ -51,7 +51,8 @@ public class ExonCoverageQcFileBuilder
                             sampleType,
                             exonDepths,
                             mConfig.ExcludedExons,
-                            reportableGenes
+                            reportableGenes,
+                            mConfig.QcThresholds
                     );
 
                     coverageQcPerExon.addAll(coverageQcPerExonForSample);

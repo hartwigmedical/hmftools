@@ -2,7 +2,6 @@ package com.hartwig.hmftools.qsee.coverage;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.LOD_VAF_WARN_THRESHOLD;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,23 +15,23 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 
 public class ExonExclusionsFileBuilder
 {
-    private static final String MIN_HIGH_LOD_VAF_SAMPLE_FRACTION = "min_high_lod_vaf_sample_fraction";
-    private static final String MIN_HIGH_LOD_VAF_SAMPLE_FRACTION_DESC = "Min fraction of tumor samples with LodVaf > " + LOD_VAF_WARN_THRESHOLD + " for an exon to be excluded";
-    private static final double DEFAULT_MIN_HIGH_LOD_VAF_SAMPLE_FRACTION = 0.95;
+    private static final String MIN_LOW_COVERAGE_SAMPLE_FRACTION = "min_low_coverage_sample_fraction";
+    private static final String MIN_LOW_COVERAGE_SAMPLE_FRACTION_DESC = "Min fraction of tumor samples with exon status WARN for an exon to be excluded";
+    private static final double DEFAULT_MIN_LOW_COVERAGE_SAMPLE_FRACTION = 0.95;
 
     private final QseeConfig mConfig;
-    private final double mMinHighLodVafSampleFraction;
+    private final double mMinLowCoverageSampleFraction;
 
-    public ExonExclusionsFileBuilder(QseeConfig config, double minHighLodVafSampleFraction)
+    public ExonExclusionsFileBuilder(QseeConfig config, double minLowCoverageSampleFraction)
     {
         mConfig = config;
-        mMinHighLodVafSampleFraction = minHighLodVafSampleFraction;
+        mMinLowCoverageSampleFraction = minLowCoverageSampleFraction;
     }
 
     private record Exon(String geneName, int exonRank) {}
 
     @VisibleForTesting
-    static ExonExclusions calcExonExclusions(List<ExonCoverageQc> coverageQcPerExon, double minHighLodVafSampleFraction)
+    static ExonExclusions calcExonExclusions(List<ExonCoverageQc> coverageQcPerExon, double minLowCoverageSampleFraction)
     {
         Map<Exon,List<ExonCoverageQc>> coverageQcByExon = new HashMap<>();
         for(ExonCoverageQc exonCoverageQc : coverageQcPerExon)
@@ -49,10 +48,10 @@ public class ExonExclusionsFileBuilder
         {
             List<ExonCoverageQc> exonCoverageQcPerSample = coverageQcByExon.get(exon);
 
-            long highLodVafSampleCount = exonCoverageQcPerSample.stream().filter(x -> x.lodVaf() > LOD_VAF_WARN_THRESHOLD).count();
-            int minHighLodVafSampleCount = (int) Math.ceil(exonCoverageQcPerSample.size() * minHighLodVafSampleFraction);
+            long lowCoverageSampleCount = exonCoverageQcPerSample.stream().filter(x -> x.variantDetectabilityStatus() == VariantDetectabilityStatus.WARN).count();
+            int minLowCoverageSampleCount = (int) Math.ceil(exonCoverageQcPerSample.size() * minLowCoverageSampleFraction);
 
-            if(highLodVafSampleCount >= minHighLodVafSampleCount)
+            if(lowCoverageSampleCount >= minLowCoverageSampleCount)
                 exonExclusions.add(exon.geneName(), exon.exonRank());
         }
 
@@ -68,7 +67,7 @@ public class ExonExclusionsFileBuilder
         }
 
         List<ExonCoverageQc> coverageQcPerExon = new ExonCoverageQcFileBuilder(mConfig).run();
-        ExonExclusions exonExclusions = calcExonExclusions(coverageQcPerExon, mMinHighLodVafSampleFraction);
+        ExonExclusions exonExclusions = calcExonExclusions(coverageQcPerExon, mMinLowCoverageSampleFraction);
 
         String filename = ExonExclusions.generateFilename(mConfig.OutputDir, mConfig.OutputId);
         exonExclusions.write(filename);
@@ -78,12 +77,12 @@ public class ExonExclusionsFileBuilder
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         QseeConfig.registerConfig(configBuilder);
-        configBuilder.addDecimal(MIN_HIGH_LOD_VAF_SAMPLE_FRACTION, MIN_HIGH_LOD_VAF_SAMPLE_FRACTION_DESC, DEFAULT_MIN_HIGH_LOD_VAF_SAMPLE_FRACTION);
+        configBuilder.addDecimal(MIN_LOW_COVERAGE_SAMPLE_FRACTION, MIN_LOW_COVERAGE_SAMPLE_FRACTION_DESC, DEFAULT_MIN_LOW_COVERAGE_SAMPLE_FRACTION);
         configBuilder.checkAndParseCommandLine(args);
 
         QseeConfig config = new QseeConfig(configBuilder);
-        double minHighLodVafSampleFraction = configBuilder.getDecimal(MIN_HIGH_LOD_VAF_SAMPLE_FRACTION);
-        ExonExclusionsFileBuilder exonExclusionsFileBuilder = new ExonExclusionsFileBuilder(config, minHighLodVafSampleFraction);
+        double minLowCoverageSampleFraction = configBuilder.getDecimal(MIN_LOW_COVERAGE_SAMPLE_FRACTION);
+        ExonExclusionsFileBuilder exonExclusionsFileBuilder = new ExonExclusionsFileBuilder(config, minLowCoverageSampleFraction);
         exonExclusionsFileBuilder.run();
     }
 }

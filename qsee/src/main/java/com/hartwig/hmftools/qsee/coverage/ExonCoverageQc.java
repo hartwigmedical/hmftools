@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.qsee.coverage;
 
-import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.LOD_VAF_WARN_THRESHOLD;
+import static com.hartwig.hmftools.qsee.feature.FeatureType.EXON_VARIANT_LOD;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,8 @@ import java.util.Map;
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 public record ExonCoverageQc(
         String sampleId,
@@ -21,28 +23,49 @@ public record ExonCoverageQc(
         Map<DepthRange,Integer> depthCounts
 )
 {
+    public static final String LOD_VAF = "LOD_VAF";
+    public static final String MEDIAN_DEPTH = "MEDIAN_DEPTH";
+
     private static VariantDetectabilityStatus determineVariantDetectabilityStatus(
-            double lodVaf,
+            SampleType sampleType,
             String geneName,
             int exonRank,
-            ExonExclusions exonExclusions
+            double medianDepth,
+            double lodVaf,
+            ExonExclusions exonExclusions,
+            ThresholdRegistry qcThresholds
     ){
         if(exonExclusions.isExcluded(geneName, exonRank))
             return VariantDetectabilityStatus.EXCLUDED;
 
-        if(lodVaf > LOD_VAF_WARN_THRESHOLD)
+        boolean lodVafFails = isWarn(qcThresholds, sampleType, LOD_VAF, lodVaf);
+        boolean medianDepthFails = isWarn(qcThresholds, sampleType, MEDIAN_DEPTH, medianDepth);
+
+        if(lodVafFails || medianDepthFails)
             return VariantDetectabilityStatus.WARN;
 
         return VariantDetectabilityStatus.PASS;
     }
 
-    public static ExonCoverageQc from(String sampleId, SampleType sampleType, ExonDepth exonDepth, ExonExclusions exonExclusions)
+    private static boolean isWarn(ThresholdRegistry qcThresholds, SampleType sampleType, String featureName, double value)
     {
+        return qcThresholds.getThreshold(sampleType, EXON_VARIANT_LOD, featureName, QcStatusType.WARN)
+                .getSampleQcStatus(value).type() == QcStatusType.WARN;
+    }
+
+    public static ExonCoverageQc from(
+            String sampleId,
+            SampleType sampleType,
+            ExonDepth exonDepth,
+            ExonExclusions exonExclusions,
+            ThresholdRegistry qcThresholds
+    ){
         double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
 
         VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(
-                lodVaf,
-                exonDepth.Gene, exonDepth.ExonRank, exonExclusions
+                sampleType,
+                exonDepth.Gene, exonDepth.ExonRank, exonDepth.MedianDepth,
+                lodVaf, exonExclusions, qcThresholds
         );
 
         return new ExonCoverageQc(
@@ -58,7 +81,8 @@ public record ExonCoverageQc(
             SampleType sampleType,
             List<ExonDepth> exonDepths,
             ExonExclusions exonExclusions,
-            List<String> reportableGenes
+            List<String> reportableGenes,
+            ThresholdRegistry qcThresholds
     ){
         List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
@@ -67,7 +91,7 @@ public record ExonCoverageQc(
             if(!reportableGenes.contains(exonDepth.Gene))
                 continue;
 
-            coverageQcPerExon.add(from(sampleId, sampleType, exonDepth, exonExclusions));
+            coverageQcPerExon.add(from(sampleId, sampleType, exonDepth, exonExclusions, qcThresholds));
         }
 
         return coverageQcPerExon;

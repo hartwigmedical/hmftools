@@ -240,8 +240,8 @@ since at high depth, random sequencing errors alone can produce 3 alt reads, mea
 overly optimistic.
 
 Exons are marked in `VariantDetectabilityStatus` with:
-- `PASS` when `LodVaf` <= 0.05
-- `WARN` when `LodVaf` > 0.05
+- `WARN` when `LodVaf` or `MedianDepth` fails its threshold (`EXON_VARIANT_LOD` thresholds `LOD_VAF` and `MEDIAN_DEPTH`)
+- `PASS` otherwise
 - `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
   sequences)
 
@@ -294,7 +294,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.coverage.ExonExclusionsFileBuilder \
 where `sample_data_dir` contains the `*.bam_metric.exon_coverage.tsv` files for multiple tumor samples.
 
 This writes:
-- `qsee.exon_exclusions.tsv`: The exon exclusions file. Contains exons where `LodVaf` > 0.05 (i.e. `WARN`) in >=0.95 of tumor samples (or configure with `-min_high_lod_vaf_sample_fraction`).
+- `qsee.exon_exclusions.tsv`: The exon exclusions file. Contains exons with status `WARN` (fails `LOD_VAF` or `MEDIAN_DEPTH` threshold) in >=0.95 of tumor samples (or configure with `-min_low_coverage_sample_fraction`).
 - `multisample.qsee.exon_coverage_qc.tsv.gz`: Per sample `LodVaf` values used to derive the exclusions.
 
 ### Input files in separate directories
@@ -374,6 +374,6 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 - `-skip_categories`: A comma separated list of categories to skip prep for. Valid options: BASE_QUAL_RECALIBRATION, COVERAGE_DISTRIBUTION, DISCORDANT_FRAG_FREQ, DUPLICATE_FREQ, FRAG_LENGTH_DISTRIBUTION, GC_BIAS, MISSED_GENE_VARIANT, MS_INDEL_ERROR
 - `-skip_plot`: Write the output files (vis data, QC status) only, without plotting
 - `-write_cohort_features`: If provided, write the raw feature values when calculating cohort percentiles. 
-- `-min_high_lod_vaf_sample_fraction`: Min fraction of tumor samples with `LodVaf` > 0.05 for an exon to be excluded when generating the exon exclusions file (default: 0.95)
+- `-min_low_coverage_sample_fraction`: Min fraction of tumor samples with exon status `WARN` for an exon to be excluded when generating the exon exclusions file (default: 0.95)
 - `-threads`: Number of threads to use for parallel processing (one sample per thread)
 - `-log_level`: Log level (default: `INFO`). See [log4j docs](https://logging.apache.org/log4j/2.x/manual/customloglevels.html) for valid values

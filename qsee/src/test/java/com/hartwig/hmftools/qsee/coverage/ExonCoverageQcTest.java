@@ -9,6 +9,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.junit.Test;
 
@@ -54,7 +55,7 @@ public class ExonCoverageQcTest
         };
 
         List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQc.fromExonDepths(
-                SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, EXON_EXCLUSIONS, List.of(REPORTABLE_GENE));
+                SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, EXON_EXCLUSIONS, List.of(REPORTABLE_GENE), ThresholdRegistry.createDefault(false));
 
         assertEquals(4, coverageQcPerExon.size()); // Non-reportable gene excluded
 
