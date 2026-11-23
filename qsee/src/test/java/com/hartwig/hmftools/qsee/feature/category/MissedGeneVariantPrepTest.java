@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.qsee.common.ReportableGenes;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.coverage.ExonExclusions;
 import com.hartwig.hmftools.qsee.feature.Feature;
@@ -80,7 +81,7 @@ public class MissedGeneVariantPrepTest
     @Test
     public void canGetGermlineMissedVariantLikelihoods()
     {
-        List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(DRIVER_GENES, SampleType.NORMAL);
+        List<String> reportableGenes = ReportableGenes.forSampleType(DRIVER_GENES, SampleType.NORMAL);
         List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(EXON_DEPTHS, reportableGenes, EXON_EXCLUSIONS, 1, Gender.FEMALE);
 
         List<Feature> expectedFeatures = List.of(
@@ -94,7 +95,7 @@ public class MissedGeneVariantPrepTest
     @Test
     public void canGetSomaticMissedVariantLikelihoods()
     {
-        List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(DRIVER_GENES, SampleType.TUMOR);
+        List<String> reportableGenes = ReportableGenes.forSampleType(DRIVER_GENES, SampleType.TUMOR);
         List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(EXON_DEPTHS, reportableGenes, EXON_EXCLUSIONS, 0.5, Gender.MALE);
 
         List<Feature> expectedFeatures = List.of(

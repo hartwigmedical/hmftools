@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
+import com.hartwig.hmftools.qsee.common.ReportableGenes;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.coverage.ExonExclusions;
 import com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs;
@@ -58,25 +58,6 @@ public class MissedGeneVariantPrep implements CategoryPrep
         String baseDir = mConfig.getPurpleDir(sampleId);
         String purityFile = PurplePurity.generateFilename(baseDir, sampleId);
         return PurplePurity.read(purityFile);
-    }
-
-    public static List<String> getReportableGenes(List<DriverGene> driverGenes, SampleType sampleType)
-    {
-        List<String> reportableGenes = new ArrayList<>();
-
-        for(DriverGene driverGene : driverGenes)
-        {
-            boolean isRelevantReportableGene = sampleType == SampleType.TUMOR
-                    ? driverGene.reportSomatic()
-                    : driverGene.reportGermline();
-
-            if(isRelevantReportableGene)
-            {
-                reportableGenes.add(driverGene.gene());
-            }
-        }
-
-        return reportableGenes;
     }
 
     @VisibleForTesting
@@ -128,7 +109,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
     public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
         List<ExonDepth> exonCoverage = loadExonCoverage(sampleId, sampleType);
-        List<String> reportableGenes = getReportableGenes(mConfig.DriverGenes, sampleType);
+        List<String> reportableGenes = ReportableGenes.forSampleType(mConfig.DriverGenes, sampleType);
 
         double purity;
         Gender gender;

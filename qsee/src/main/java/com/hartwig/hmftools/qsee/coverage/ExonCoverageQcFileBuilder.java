@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.QseeConfig;
+import com.hartwig.hmftools.qsee.common.ReportableGenes;
 import com.hartwig.hmftools.qsee.common.SampleType;
-import com.hartwig.hmftools.qsee.feature.category.MissedGeneVariantPrep;
 
 import org.apache.logging.log4j.Level;
 
@@ -44,7 +44,7 @@ public class ExonCoverageQcFileBuilder
                 try
                 {
                     List<ExonDepth> exonDepths = loadExonCoverage(sampleId, sampleType);
-                    List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(mConfig.DriverGenes, sampleType);
+                    List<String> reportableGenes = ReportableGenes.forSampleType(mConfig.DriverGenes, sampleType);
 
                     List<ExonCoverageQc> coverageQcPerExonForSample = ExonCoverageQc.fromExonDepths(
                             sampleId,
