@@ -253,7 +253,8 @@ public class DriverGeneAnnotator implements CohortFileInterface
                         .eventType(driverEvent.Type)
                         .build());
 
-                mVisSampleData.addGeneExonData(clusterId, dgData.GeneInfo.GeneId, dgData.GeneInfo.GeneName,
+                mVisSampleData.addGeneExonData(
+                        clusterId, dgData.GeneInfo.GeneId, dgData.GeneInfo.GeneName,
                         "", 0, dgData.GeneInfo.Chromosome, DRIVER);
             }
         }

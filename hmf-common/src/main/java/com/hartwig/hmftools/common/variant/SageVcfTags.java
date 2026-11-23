@@ -16,6 +16,9 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 
 public final class SageVcfTags
 {
+    public static final String SAGE_VERSION_TAG = "sageVersion";
+    public static final String SAGE_APPEND_TAG = "sageAppendVersion";
+
     public static final String TIER = "TIER";
     public static final String TIER_DESC = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
 

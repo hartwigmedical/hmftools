@@ -33,7 +33,7 @@ The key configuration values to set are:
 | TOOL_dir_old & TOOL_dir_new **  | Tool path overrides - each pipeline tool directory eg 'linx_dir_old' - relative path to 'sample_dir' if specified, otherwise absolute path           |
 | output_dir                      | Path for output file                                                                                                                                 |
 
-** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
+** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), viridian, sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
 The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CUPPA_IMAGE,
 CHORD, LILAC_QC, LILAC_ALLELE, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
@@ -104,7 +104,8 @@ Specify one or more tool directories to override the pipeline default paths.
 | CHORD                                                                              | chord_dir         |
 | LILAC_QC, LILAC_ALLELE                                                             | lilac_dir         |
 | PEACH                                                                              | peach_dir         |
-| VIRUS                                                                              | virus_dir         |
+| VIRUS, from VirusInterpreter                                                       | virus_dir         |
+| VIRUS, from Viridian                                                               | viridian_dir      |
 | CIDER                                                                              | cider_dir         |
 | TEAL                                                                               | teal_dir          |
 | V_CHORD                                                                            | v_chord_dir       |
@@ -579,14 +580,18 @@ Data key: SampleId, Gene, HaplotypeName
 | PrescriptionUrls | Exact                   |
 
 ### Virus
-Data key: SampleId, Name
+Data key: SampleId, virus group
 
-| Field            | Match Type & Thresholds |
-|------------------|-------------------------|
-| Reported         | Exact                   |
-| Integrations     | Threshold [20%]         |
-| MeanCoverage     | Threshold [15%]         |
-| DriverLikelihood | Exact                   |
+| Field              | Match Type & Thresholds |
+|--------------------|-------------------------|
+| VirusName          | Exact                   |
+| Reported           | Exact                   |
+| Interpretation     | Exact                   |
+| Integrations       | Exact                   |
+| MeanCoverage       | Threshold [10%]         |
+| PercentageCovered  | Threshold [10%]         |
+| CopiesPerTumorCell | Threshold [10%]         |
+| ClonalityStatus    | Exact                   |
 
 ### Flagstat
 For both tumor and germline sample

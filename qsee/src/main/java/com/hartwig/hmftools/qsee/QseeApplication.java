@@ -14,6 +14,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeaturePrep;
 import com.hartwig.hmftools.qsee.feature.SampleFeatures;
+import com.hartwig.hmftools.qsee.lod.GeneLodCalculator;
 import com.hartwig.hmftools.qsee.plot.QseePlot;
 import com.hartwig.hmftools.qsee.plot.QseePlotConfig;
 import com.hartwig.hmftools.qsee.plot.VisDataFile;
@@ -84,6 +85,9 @@ public class QseeApplication
 
         String qcStatusFile = QcStatusFile.generateFilename(mConfig);
         QcStatusFile.write(qcStatusFile, multiSampleFeatures);
+
+        GeneLodCalculator geneLodCalculator = new GeneLodCalculator(mConfig);
+        geneLodCalculator.run();
 
         if(mConfig.SkipPlot)
         {

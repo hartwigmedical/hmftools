@@ -3,6 +3,9 @@ package com.hartwig.hmftools.linx.visualiser.file;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import org.jetbrains.annotations.Nullable;
 
 public class VisGeneData
 {
@@ -22,8 +25,11 @@ public class VisGeneData
     // exons by rank and their adjusted positions for exons not retained in this cluster
     public final Map<Integer,int[]> ExonsLostOffsets;
 
-    public VisGeneData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final VisGeneAnnotationType annotationType)
+    public final ChrBaseRegion RegionOverride; // used for enhancer regions with matched data in Ensembl
+
+    public VisGeneData(
+            int clusterId, final String geneId, final String geneName, final String transName, int transId,
+            final String chromosome, final VisGeneAnnotationType annotationType, @Nullable final ChrBaseRegion regionOverride)
     {
         ClusterId = clusterId;
         GeneId = geneId;
@@ -32,6 +38,7 @@ public class VisGeneData
         TransId = transId;
         Chromosome = chromosome;
         AnnotationType = annotationType;
+        RegionOverride = regionOverride;
 
         ExonPositionOffsets = Maps.newHashMap();
         ExonsLostOffsets = Maps.newHashMap();

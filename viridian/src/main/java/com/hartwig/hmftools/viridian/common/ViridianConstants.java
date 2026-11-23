@@ -2,6 +2,8 @@ package com.hartwig.hmftools.viridian.common;
 
 import java.util.Set;
 
+import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
+
 public class ViridianConstants
 {
     public static final String APP_NAME = "Viridian";
@@ -73,6 +75,14 @@ public class ViridianConstants
     // Minimum alignment score for reads aligning to virus genomes.
     public static final int VIRAL_READ_MIN_ALIGN_SCORE = 30;
 
+    // Above 0, BWA-MEM drops weak secondary alignments, which is undesirable because we want all possible alignments to virus genomes.
+    public static final float VIRAL_READ_CHAIN_OVERLAP_FACTOR = 0;
+
+    // Matches BWA-MEM's seed occurrence cap in chaining, which exceeds any virus group's genome count. Lower, BWA-MEM
+    // skips a read's short seeds when its longer matches hit many genomes, so reads aligned to a genome would depend on
+    // how many related genomes the reference holds.
+    public static final int VIRAL_READ_SEED_MAX_OCCURRENCE = BwaMemAlignParams.DEFAULT.memMaxOccurrence();
+
     // Candidate reads submitted to BWA per alignment call (bounds memory usage).
     public static final int VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
 
@@ -128,6 +138,14 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(VIRAL_READ_MIN_ALIGN_SCORE >= 19))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_READ_CHAIN_OVERLAP_FACTOR >= 0.0 && VIRAL_READ_CHAIN_OVERLAP_FACTOR < 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_READ_SEED_MAX_OCCURRENCE > 0))
         {
             throw new IllegalStateException();
         }

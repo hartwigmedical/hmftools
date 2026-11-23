@@ -20,18 +20,12 @@ public class FusionConfig
 
     public static boolean LOG_INVALID_REASON = false;
 
-    // dynamic parameters
-    public boolean AllowExonSkipping;
-    public boolean RequirePhaseMatch;
-    public boolean RequireUpstreamBiotypes;
-
     private static final List<FusionSvGeneDebug> FusionDebugSvGenes = Lists.newArrayList();
 
     private static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     private static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     private static final String LOG_ALL_POTENTIALS = "log_all_potential_fusions";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
-    private static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
     private static final String WRITE_ALL_VIS_FUSIONS = "write_all_vis_fusions";
     private static final String FUSION_DEBUG_SV_GENES = "fusion_debug_sv_genes";
@@ -54,11 +48,8 @@ public class FusionConfig
         LOG_INVALID_REASON = configBuilder.hasFlag(LOG_INVALID_REASONS);
 
         LogReportableOnly = configBuilder.hasFlag(LOG_REPORTABLE_ONLY);
-        RequirePhaseMatch = configBuilder.hasFlag(SKIP_UNPHASED_FUSIONS);
         LogAllPotentials = configBuilder.hasFlag(LOG_ALL_POTENTIALS);
         WriteAllVisFusions = configBuilder.hasFlag(WRITE_ALL_VIS_FUSIONS);
-        RequireUpstreamBiotypes = true;
-        AllowExonSkipping = true;
 
         if(configBuilder.hasValue(FUSION_DEBUG_SV_GENES))
         {
@@ -80,9 +71,6 @@ public class FusionConfig
         LogAllPotentials = false;
         LogReportableOnly = false;
         WriteAllVisFusions = false;
-        AllowExonSkipping = true;
-        RequirePhaseMatch = false;
-        RequireUpstreamBiotypes = true;
     }
 
     public static boolean processSvGeneDebug(final String gene, final int svId)
@@ -97,7 +85,6 @@ public class FusionConfig
         configBuilder.addInteger(
                 PRE_GENE_BREAKEND_DISTANCE, "Distance after to a breakend to consider in a gene", DEFAULT_PRE_GENE_PROMOTOR_DISTANCE);
 
-        configBuilder.addFlag(SKIP_UNPHASED_FUSIONS, "Skip unphased fusions");
         configBuilder.addFlag(WRITE_NEO_EPITOPES, "Search for neo-epitopes from fusions");
 
         configBuilder.addConfigItem(RNA_FUSIONS_FILE, "Sample RNA fusion data to match vs Linx fusions");

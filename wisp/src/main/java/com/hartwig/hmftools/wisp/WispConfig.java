@@ -12,10 +12,16 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PATIENT;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PATIENT_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -44,13 +50,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.wisp.variant.ProbeVariantCache;
 
 public class WispConfig
 {
@@ -69,8 +75,6 @@ public class WispConfig
     public final String FragmentLengthDir;
     public final List<SimpleVariant> ExcludedSomatics;
 
-    public final ProbeVariantCache ProbeVariants;
-
     public final String OutputDir;
     public final String PlotDir;
     public final String OutputId;
@@ -85,13 +89,12 @@ public class WispConfig
     public final boolean WriteAllSummaryMethods;
     public final boolean AllowMissingSamples;
     public final boolean DisableDualFragments;
+    public final boolean SkipReferenceId;
+    public final boolean InferVcfReferenceId;
     public final int Threads;
 
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
-    private static final String PATIENT_ID = "patient_id";
-    private static final String TUMOR_ID = "tumor_id";
-    private static final String REFERENCE_ID = "reference_id";
     private static final String AMBER_EXTRA_TUMOR_ID = "amber_extra_tumor_id";
     private static final String SAMPLES = "samples";
     private static final String PURITY_METHODS = "purity_methods";
@@ -106,19 +109,28 @@ public class WispConfig
     private static final String GC_RATIO_MIN = "gc_ratio_min";
     private static final String WRITE_TYPES = "write_types";
     private static final String WRITE_ALL_SUMMARY_METHODS = "write_all_summary_methods";
-    private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
     private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
     private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
     private static final String APPLY_REF_VARIANT_FILTERS = "apply_ref_variant_filters";
     private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
     private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
     private static final String EXCLUDED_SOMATICS_FILE = "excluded_somatics";
+    private static final String INFER_VCF_REFERENCE_ID = "infer_vcf_reference_id";
+    private static final String SKIP_REFERENCE_ID = "skip_reference_id";
+
+    // support for old config names until next version
+    private static final String PATIENT_ID_OLD_CFG = "patient_id";
+    private static final String TUMOR_ID_OLD_CFG = "tumor_id";
+    private static final String REFERENCE_ID_OLD_CFG = "reference_id";
 
     public WispConfig(final ConfigBuilder configBuilder)
     {
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
+
+        InferVcfReferenceId = configBuilder.hasFlag(INFER_VCF_REFERENCE_ID);
+        SkipReferenceId = configBuilder.hasFlag(SKIP_REFERENCE_ID);
 
         Samples = Lists.newArrayList();
         loadSampleData(configBuilder);
@@ -163,8 +175,6 @@ public class WispConfig
         PlotDir = checkAddDirSeparator(configBuilder.getValue(PLOT_DIR, OutputDir));
 
         CT_LOGGER.debug("writing results to outputDir({}) and plots({})", OutputDir, PlotDir);
-
-        ProbeVariants = new ProbeVariantCache(configBuilder.getValue(PROBE_VARIANTS_FILE));
 
         RefGenome = configBuilder.hasValue(REF_GENOME) ? loadRefGenome(configBuilder.getValue(REF_GENOME)) : null;
 
@@ -248,7 +258,7 @@ public class WispConfig
     public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
-    public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
+    public boolean hasSyntheticTumor() { return (PurpleDir == null || PurpleDir.isEmpty()) && OutputDir != null; }
     public boolean multiplePatients() { return Samples.size() > 1; }
     public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.SampleIds.size()).sum() > 1; }
 
@@ -277,13 +287,36 @@ public class WispConfig
                 filename = SampleDataDir + filename;
 
             Samples.addAll(SampleData.loadSampleDataFile(filename));
+
+            if(!SkipReferenceId && !InferVcfReferenceId)
+            {
+                for(SampleData sampleData : Samples)
+                {
+                    if(!sampleData.hasReference())
+                    {
+                        CT_LOGGER.info("patient({}) missing required reference ID", sampleData.PatientId);
+                        System.exit(1);
+                    }
+                }
+            }
         }
         else
         {
+            String patientId = configBuilder.getValue(PATIENT, configBuilder.getValue(PATIENT_ID_OLD_CFG));
+            String referenceId = configBuilder.getValue(REFERENCE, configBuilder.getValue(REFERENCE_ID_OLD_CFG));
+            String tumorId = configBuilder.getValue(TUMOR, configBuilder.getValue(TUMOR_ID_OLD_CFG));
+
+            if(referenceId == null)
+            {
+                if(!SkipReferenceId && !InferVcfReferenceId)
+                {
+                    CT_LOGGER.info("patient({}) missing required reference ID", patientId);
+                    System.exit(1);
+                }
+            }
+
             Samples.add(new SampleData(
-                    configBuilder.getValue(PATIENT_ID),
-                    configBuilder.getValue(TUMOR_ID),
-                    configBuilder.getValue(REFERENCE_ID),
+                    patientId, tumorId, referenceId,
                     sampleIdsFromStr(configBuilder.getValue(SAMPLES)),
                     "", GcRatioMin > 0,
                     configBuilder.getValue(AMBER_EXTRA_TUMOR_ID)));
@@ -323,9 +356,14 @@ public class WispConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,ReferenceId,SampleIds");
-        configBuilder.addConfigItem(PATIENT_ID, false, "Patient ID");
-        configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor ID");
-        configBuilder.addConfigItem(REFERENCE_ID, false, "Original reference ID");
+        configBuilder.addConfigItem(PATIENT, false, PATIENT_DESC);
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
+
+        configBuilder.addConfigItem(PATIENT_ID_OLD_CFG, false, "Patient ID, use 'patient' instead");
+        configBuilder.addConfigItem(TUMOR_ID_OLD_CFG, false, "Original tumor ID, use 'tumor' instead");
+        configBuilder.addConfigItem(REFERENCE_ID_OLD_CFG, false, "Original reference ID, use 'reference' instead");
+
         configBuilder.addConfigItem(AMBER_EXTRA_TUMOR_ID, false, "Secondary Amber tumor ID");
         configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 
@@ -351,7 +389,6 @@ public class WispConfig
                         + Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        configBuilder.addPath(PROBE_VARIANTS_FILE, false, "File defining the probe variants");
         configBuilder.addPath(EXCLUDED_SOMATICS_FILE, false, "File with somatic variants to ignore");
 
         configBuilder.addDecimal(
@@ -362,6 +399,8 @@ public class WispConfig
         configBuilder.addFlag(APPLY_REF_VARIANT_FILTERS, "For externally validated variants, only apply qual-per-AD and chip filteres");
         configBuilder.addFlag(DISABLE_DUAL_FRAGS, "Disable use of dual fragments in purity calcs");
         configBuilder.addFlag(ALLOW_MISSING_SAMPLES, "Continue if samples are missing data");
+        configBuilder.addFlag(INFER_VCF_REFERENCE_ID, "Infer reference ID from VCF's first entry if not specified");
+        configBuilder.addFlag(SKIP_REFERENCE_ID, "Set to intentionally not supply a reference ID");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,
@@ -374,5 +413,53 @@ public class WispConfig
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
+    }
+
+    @VisibleForTesting
+    public WispConfig(final RefGenomeInterface refGenome)
+    {
+        this(refGenome, 0);
+    }
+
+    @VisibleForTesting
+    public WispConfig(final RefGenomeInterface refGenome, double gcRatioMin)
+    {
+        SampleDataDir = null;
+
+        Samples = Lists.newArrayList();
+        PurityMethods = Lists.newArrayList();
+        SomaticVcf = null;
+        SomaticDir = null;
+        PurpleDir = null;
+        AmberDir = null;
+        CobaltDir = null;
+        BqrDir = null;
+        FragmentLengthDir = null;
+        OutputDir = null;
+        OutputId = "";
+
+        SEQUENCING_TYPE = ILLUMINA;
+
+        PlotDir = null;
+
+        RefGenome = refGenome;
+
+        NoiseReadsPerMillion = DEFAULT_NOISE_READS_PER_MILLION;
+        NoiseReadsPerMillionDualStrand = DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
+
+        GcRatioMin = gcRatioMin;
+        BqrQualThreshold = DEFAULT_BQR_MIN_QUAL;
+        SkipBqr = false;
+        SkipSubclonalFilter = false;
+        ApplyRefVariantFilters = false;
+        AllowMissingSamples = false;
+        DisableDualFragments = false;
+
+        WriteTypes = Sets.newHashSet();
+        WriteAllSummaryMethods = false;
+        Threads = 0;
+        ExcludedSomatics = Collections.emptyList();
+        InferVcfReferenceId = false;
+        SkipReferenceId = false;
     }
 }

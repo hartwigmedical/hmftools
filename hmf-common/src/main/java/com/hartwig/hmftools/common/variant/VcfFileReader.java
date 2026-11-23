@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -23,6 +24,7 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class VcfFileReader implements AutoCloseable
 {
@@ -143,5 +145,47 @@ public class VcfFileReader implements AutoCloseable
             LOGGER.error("failed to read variants from file({}): {}", mFilename, e.toString());
             return null;
         }
+    }
+
+    public static Double parseToolVersion(final VCFHeader vcfHeader, final String toolName)
+    {
+        VCFHeaderLine version = vcfHeader.getMetaDataLine(toolName);
+
+        if(version == null)
+            return null;
+
+        return parseToolVersion(version.getValue());
+    }
+
+    @VisibleForTesting
+    public static Double parseToolVersion(final String versionStr)
+    {
+        // extract the numerical part of the version if possible
+        StringBuilder numericalValue = new StringBuilder();
+        boolean hasDecimal = false;
+
+        for(int i = 0; i < versionStr.length(); ++i)
+        {
+            char c = versionStr.charAt(i);
+
+            if(c == '.')
+            {
+                if(i == 0 || hasDecimal)
+                    break;
+
+                numericalValue.append(c);
+                hasDecimal = true;
+            }
+            else
+            {
+                int digit = c - '0';
+                if(digit >= 0 && digit <= 9)
+                    numericalValue.append(c);
+                else
+                    break;
+            }
+        }
+
+        return numericalValue.isEmpty() ? null : Double.parseDouble(numericalValue.toString());
     }
 }

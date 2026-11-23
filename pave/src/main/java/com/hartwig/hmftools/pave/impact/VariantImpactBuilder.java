@@ -33,8 +33,10 @@ public class VariantImpactBuilder
         if(variant.getImpacts().isEmpty())
             return null;
 
-        // find the canonical and worst transcript and their effects
-        // favour driver genes over others, otherwise take the gene with the highest impact
+        // find the coding impacts of the canonical transcript and any other transcripts with 'worse' impacts,
+        // ie more impactful to the gene
+
+        // favour driver genes over others, otherwise take the gene with the worst impact
 
         VariantTransImpact worstImpact = null;
         int worstRank = -1;
@@ -62,6 +64,7 @@ public class VariantImpactBuilder
                 worstRank = -1;
                 worstCanonicalImpact = null;
                 worstCanonicalRank = -1;
+                canonicalGeneName = "";
                 worstGeneName = "";
             }
             else if(hasDriverGene && !isDriverGene)
@@ -79,13 +82,14 @@ public class VariantImpactBuilder
                 {
                     worstRank = rank;
                     worstImpact = transImpact;
+                    worstGeneName = geneName;
                 }
 
                 if(transImpact.TransData.IsCanonical && rank > worstCanonicalRank)
                 {
                     worstCanonicalRank = rank;
                     worstCanonicalImpact = transImpact;
-                    worstGeneName = geneName;
+                    canonicalGeneName = geneName;
                 }
             }
 
@@ -104,7 +108,9 @@ public class VariantImpactBuilder
                                 geneName, transImpact.TransData.TransName, transImpact.hgvsCoding(), transImpact.hgvsProtein(),
                                 transImpact.effectsStr(), codingEffect));
 
-                        canonicalGeneName = geneName;
+                        if(canonicalGeneName.isEmpty())
+                            canonicalGeneName = geneName;
+
                         canonicalSpliceRegion |= transImpact.inSpliceRegion();
                     }
                 }
@@ -113,6 +119,7 @@ public class VariantImpactBuilder
             }
         }
 
+        String geneName = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = NONE;
@@ -125,9 +132,10 @@ public class VariantImpactBuilder
             worstCodingEffect = determineCodingEffect(worstImpact);
         }
 
+        geneName = !canonicalGeneName.isEmpty() ? canonicalGeneName : worstGeneName;
+
         if(worstCanonicalImpact != null)
         {
-            canonicalGeneName = worstGeneName;
             canonicalEffect = worstCanonicalImpact.effectsStr();
             canonicalCodingEffect = determineCodingEffect(worstCanonicalImpact);
             canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCoding();
@@ -137,7 +145,7 @@ public class VariantImpactBuilder
         }
 
         return new VariantImpact(
-                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                geneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableTransData, worstCodingEffect, variant.getImpacts().size());
     }
 

@@ -3,11 +3,15 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.SAM_DICTIONARY_V37;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.chromosomeOrdinal;
 
 import java.util.Collections;
 import java.util.List;
@@ -102,13 +106,20 @@ public class TestUtils
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar)
     {
+        return createSamRecord(readId, chrStr, readStart, readBases, cigar, 0);
+    }
+
+    public static SAMRecord createSamRecord(
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final Integer numMutations)
+    {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+        recordBuilder.getHeader().setSequenceDictionary(SAM_DICTIONARY_V37);
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
-        HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
+        int chrIndex = !chrStr.equals(NO_CHROMOSOME_NAME) ? chromosomeOrdinal(chrStr) : NO_CHROMOSOME_INDEX;
 
         SAMRecord record = recordBuilder.addFrag(
-                readId, chromosome.ordinal(), readStart, false, false,
+                readId, chrIndex, readStart, false, false,
                 cigar, readBases, DEFAULT_BASE_QUAL, false);
 
         record.setReadBases(readBases.getBytes());
@@ -117,17 +128,18 @@ public class TestUtils
         record.setBaseQualities(baseQuals);
 
         record.setReferenceName(chrStr);
-        record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
+        record.setReferenceIndex(chrIndex); // need to override since no header is present
 
         record.setMateReferenceName(chrStr);
-        record.setMateReferenceIndex(chromosome.ordinal());
+        record.setMateReferenceIndex(chrIndex);
         record.setMateAlignmentStart(readStart + 300);
         record.setMateNegativeStrandFlag(true);
         record.setMappingQuality(DEFAULT_MAP_QUAL);
         record.setAttribute(MATE_CIGAR_ATTRIBUTE, cigar);
 
-        // to be correct this should match the cigar element count
-        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
+        if(numMutations != null)
+            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, numMutations);
+
         record.setFirstOfPairFlag(true);
 
         record.setReadPairedFlag(true);

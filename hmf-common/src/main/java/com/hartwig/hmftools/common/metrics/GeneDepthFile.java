@@ -213,14 +213,17 @@ public final class GeneDepthFile
 
         for(DepthRange depthRange : depthRanges)
         {
-            String fieldName = depthRange.lower() == depthRange.upper()
-                    ? format("%s%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower())
-                    : format("%s%d_%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower(), depthRange.upper());
-
-            joiner.add(fieldName);
+            joiner.add(depthRangeFieldName(depthRange));
         }
 
         return joiner.toString();
+    }
+
+    public static String depthRangeFieldName(final DepthRange depthRange)
+    {
+        return depthRange.lower() == depthRange.upper()
+                ? format("%s%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower())
+                : format("%s%d_%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower(), depthRange.upper());
     }
 
     private static String toString(final GeneDepth depth, boolean forExons)
