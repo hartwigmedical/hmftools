@@ -894,15 +894,14 @@ The purity file `TUMOR.purple.purity.tsv` contains a single row with a summary o
 | diploidProportion              | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele                                                                                                                                |
 | ploidy                         | Average ploidy of the tumor sample after adjusting for purity                                                                                                                                                |
 | [gender](#1-sex-determination) | One of `MALE` or `FEMALE`                                                                                                                                                                                    |
-| status                         | Either PASS or one or more warning or fail status.  Warnings include `WARN_DELETED_GENES`, `WARN_HIGH_COPY_NUMBER_NOISE`, `FAIL_CONTAMINATION`, `FAIL_NO_TUMOR`, `WARN_GENDER_MISMATCH` or `WARN_LOW_PURITY` |
+| status                         | [Fit method](#5-sample-purity-and-ploidy) used to determine purity. One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`. The QC status is written to `QCStatus` in the purity QC file (see below) |
 | polyclonalProportion           | Proportion of copy number regions that are more than 0.25 from a whole copy number                                                                                                                           |
 | minPurity                      | Minimum purity with score within 10% of best                                                                                                                                                                 |
 | maxPurity                      | Maximum purity with score within 10% of best                                                                                                                                                                 |
 | minPloidy                      | Minimum ploidy with score within 10% of best                                                                                                                                                                 |
 | maxPloidy                      | Maximum ploidy with score within 10% of best                                                                                                                                                                 |
 | minDiploidProportion           | Min estimation for diploid proportion                                                                                                                                                                        |
-| maxDiploidProportion           | Min estimation for diploid proportion                                                                                                                                                                        |
-| version                        | Version of Purple                                                                                                                                                                                            |
+| maxDiploidProportion           | Max estimation for diploid proportion                                                                                                                                                                        |
 | somaticPenalty                 | Penalty from somatic variants with implied variant copy numbers that are inconsistent with the minor and major allele copy number                                                                            |
 | wholeGenomeDuplication         | True if more than 10 autosomes have major allele copy number > 1.5                                                                                                                                           |
 | msIndelsPerMb                  | Microsatellite indels per mega base                                                                                                                                                                          |
@@ -919,8 +918,8 @@ The purity QC `TUMOR.purple.purity.qc` contains the following status values:
 
 | Column                        | Description                                                                                                                                     |
 |-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| QCStatus                      | As per 'status' as described above                                                                                                              |
-| Method                        | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`                                                                                      |
+| QCStatus                      | Either `PASS` or a comma-separated list of one or more [warning or fail statuses](#11-determine-a-qc-status-for-the-tumor): `WARN_DELETED_GENES`, `WARN_HIGH_COPY_NUMBER_NOISE`, `WARN_GENDER_MISMATCH`, `WARN_LOW_PURITY`, `WARN_TINC`, `FAIL_CONTAMINATION`, `FAIL_NO_TUMOR` or `FAIL_TINC` |
+| Method                        | Fit method, as per `status` in the purity file. One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`                                      |
 | CopyNumberSegments            | Total number of copy number segments in sample                                                                                                  |
 | UnsupportedCopyNumberSegments | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality                          |
 | Purity                        | As described above                                                                                                                              |
@@ -928,8 +927,10 @@ The purity QC `TUMOR.purple.purity.qc` contains the following status values:
 | CobaltGender                  | Gender from Cobalt data                                                                                                                         |
 | DeletedGenes                  | Number of genes with copy number < 0.5                                                                                                          |
 | Contamination                 | Rate of contamination in tumor sample as determined by Amber.                                                                                   |
-| GermlineAberration            | Any germline chromosomal aberrations detected, one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X} |
+| GermlineAberrations           | Germline chromosomal aberrations detected, `NONE` or one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X,TERTRASOMY_9} |
 | AmberMeanDepth                | As calculated by Amber                                                                                                                          |
+| LohPercent                    | Proportion of autosomal bases in LOH segments (minor allele copy number < 0.5)                                                                  |
+| TincLevel                     | Tumor-in-normal contamination (TINC) level, 0 if not available                                                                                  |
 
 GermlineAberration is calculated from the COBALT ratios as follows:
 | Aberration | Gender | Ratio Criteria |
