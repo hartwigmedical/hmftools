@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.prep.QseePrepConfig.TARGETED_MODE;
-import static com.hartwig.hmftools.qsee.prep.QseePrepConfig.TARGETED_MODE_DESC;
+import static com.hartwig.hmftools.qsee.QseeConfig.TARGETED_MODE;
+import static com.hartwig.hmftools.qsee.QseeConfig.TARGETED_MODE_DESC;
 
 import java.util.ArrayList;
 import java.util.Comparator;

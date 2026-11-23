@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static java.lang.Math.round;
@@ -36,6 +38,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.evidence.QualCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -113,6 +116,11 @@ public final class VariantContextFactory
 
         if(variant.nearIndel())
             builder.attribute(NEARBY_INDEL_FLAG, true);
+
+        if(variant.tier() == VariantTier.HOTSPOT)
+            builder.attribute(HOTSPOT_FLAG, true);
+        else if(variant.nearHotspot())
+            builder.attribute(NEAR_HOTSPOT_FLAG, true);
 
         final VariantContext context = builder.make();
         if(context.isNotFiltered())

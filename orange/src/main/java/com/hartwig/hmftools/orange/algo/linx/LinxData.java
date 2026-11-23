@@ -56,4 +56,5 @@ public interface LinxData
 
     @NotNull
     List<String> reportableEventPlots();
+    List<String> reportableEventPlotTitles();
 }

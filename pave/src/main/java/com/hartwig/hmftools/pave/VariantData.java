@@ -246,11 +246,11 @@ public class VariantData
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }
 
-    public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequece, final int repeatCount)
+    public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequence, final int repeatCount)
     {
         mLocalPhaseSetId = localPhaseSet;
         mMicrohomology = microHomology;
-        mRepeatSequence = repeatSequece;
+        mRepeatSequence = repeatSequence;
         mRepeatCount = repeatCount;
     }
 

@@ -58,6 +58,7 @@ public class PonCache
 
     // PON file config
     public static final String PON_FILE = "pon_file";
+    public static final String PON_FILE_DESC = "File with PON entries";
 
     // annotations
     public static final String PON_COUNT = "PON_COUNT"; // samples in cohort with the variant

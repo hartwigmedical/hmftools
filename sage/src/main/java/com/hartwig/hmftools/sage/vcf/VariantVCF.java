@@ -3,6 +3,11 @@ package com.hartwig.hmftools.sage.vcf;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.SAGE_VERSION_TAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.NEAR_HOTSPOT_DESC;
+import static com.hartwig.hmftools.common.variant.HotspotType.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
@@ -69,7 +74,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
 
 import java.util.Collections;
 import java.util.List;
@@ -164,7 +168,7 @@ public class VariantVCF implements AutoCloseable
                 LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LOCAL_PHASE_SET_DESC));
 
         // standard fields
-        header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
+        header.addMetaDataLine(new VCFHeaderLine(SAGE_VERSION_TAG, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
@@ -199,6 +203,9 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(MAP_QUAL_FACTOR, 1, VCFHeaderLineType.Float, MAP_QUAL_FACTOR_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TINC_RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, TINC_RECOVERED_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT_FLAG, 0, VCFHeaderLineType.Flag, HOTSPOT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(NEAR_HOTSPOT_FLAG, 0, VCFHeaderLineType.Flag, NEAR_HOTSPOT_DESC));
 
         // genotype fields
         addGenotypeHeader(header);

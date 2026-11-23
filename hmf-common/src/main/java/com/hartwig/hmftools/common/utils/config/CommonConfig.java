@@ -16,6 +16,9 @@ public final class CommonConfig
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_DESC = "Sample ID";
 
+    public static final String PATIENT = "patient";
+    public static final String PATIENT_DESC = "Patient ID";
+
     public static final String TUMOR = "tumor";
     public static final String TUMOR_DESC = "Tumor ID";
     public static final String TUMOR_IDS_DESC = TUMOR_DESC + PLURALS_DESC;
@@ -32,7 +35,8 @@ public final class CommonConfig
     public static final String REFERENCE_BAM_DESC = "Reference BAM file";
     public static final String REFERENCE_BAMS_DESC = REFERENCE_BAM_DESC + PLURALS_DESC;
 
-    public static final String RNA_SAMPLE_ID = "rna_sample";
+    public static final String RNA_SAMPLE_ID = "rna_sample"; // remove duplicate once unused
+    public static final String RNA_SAMPLE = "rna_sample";
     public static final String RNA_SAMPLE_DESC = "RNA sample ID";
 
     public static final String RNA_BAM = "rna_bam";

@@ -9,7 +9,8 @@
     }
   ],
   "refGenomeVersion": "V37",
-  "pipelineVersion": "6.0",
+  "pipelineVersion": "3.0",
+  "sequencingType":"ILLUMINA",
   "purple": {
     "fit": {
       "qc": {
@@ -53,7 +54,10 @@
         "driverInterpretation": "HIGH",
         "reportedStatus": "REPORTED",
         "likelihoodMethod": "HOTSPOT",
-        "isCanonical": true
+        "isCanonical": true,
+        "reportedStatus": "REPORTED",
+        "driverInterpretation": "HIGH",
+        "category": "ONCO"
       },
       {
         "driverLikelihood": 1.0,
@@ -61,7 +65,10 @@
         "isCanonical": true,
         "likelihoodMethod": "DEL",
         "transcript": "ENST00000371953",
-        "type": "DEL"
+        "type": "DEL",
+        "reportedStatus": "REPORTED",
+        "driverInterpretation": "HIGH",
+        "category": "TSG"
       }
     ],
     "germlineDrivers": [],
@@ -142,11 +149,23 @@
         "arm": "P",
         "type": "GAIN",
         "copyNumber": 2.0,
-        "relativeCopyNumber": 1.7
+        "relativeCopyNumber": 1.7,
+        "driverInterpretation": "HIGH"
       }
     ],
     "somaticGainsDels": [
       {
+        "driver": {
+          "gene": "PTEN",
+          "transcript": "ENST00000371953",
+          "type": "DEL",
+          "driverLikelihood": 1.0,
+          "likelihoodMethod": "HOTSPOT",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "isCanonical": false,
+          "category": "TSG"
+        },
         "interpretation": "PARTIAL_DEL",
         "gene": "PTEN",
         "chromosome": "10",
@@ -294,7 +313,7 @@
   "lilac": {
     "alleles": [
       {
-        "geneClass": "PASS",
+        "geneClass": "MHC_CLASS_1",
         "allele": "A*01:01",
         "qcStatus": "PASS",
         "tumorCopyNumber": 2.0,
@@ -308,7 +327,9 @@
         "somaticInframeIndel": 0.0
       },
       {
+        "geneClass": "MHC_CLASS_1",
         "allele": "A*01:01",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 1.83,
         "refFragments": 211,
         "tumorFragments": 1609,
@@ -320,7 +341,9 @@
         "somaticInframeIndel": 0.0
       },
       {
+        "geneClass": "MHC_CLASS_1",
         "allele": "B*08:01",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 1.83,
         "refFragments": 217,
         "tumorFragments": 753,
@@ -332,7 +355,9 @@
         "somaticInframeIndel": 0.0
       },
       {
+        "geneClass": "MHC_CLASS_1",
         "allele": "B*40:02",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 2.0,
         "refFragments": 196,
         "tumorFragments": 726,
@@ -344,7 +369,9 @@
         "somaticInframeIndel": 0.0
       },
       {
+        "geneClass": "MHC_CLASS_1",
         "allele": "C*03:04",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 2.0,
         "refFragments": 213,
         "tumorFragments": 772,
@@ -356,7 +383,9 @@
         "somaticInframeIndel": 0.0
       },
       {
+        "geneClass": "MHC_CLASS_1",
         "allele": "C*07:01",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 1.83,
         "refFragments": 225,
         "tumorFragments": 772,
@@ -863,9 +892,18 @@
     "purplePurityRangePlot": "plot/tumor_sample.purity.range.png",
     "purpleRainfallPlot": "plot/tumor_sample.somatic.rainfall.png",
     "linxDriverPlots": [
-      "plot/tumor_sample.cluster3.png",
-      "plot/tumor_sample.cluster2.png",
-      "plot/tumor_sample.cluster1.png"
+      {
+        "filename": "plot/tumor_sample.cluster-1.DEL.png",
+        "title": "title-1"
+      },
+      {
+        "filename": "plot/tumor_sample.cluster-2.DEL.png",
+        "title": "title-2"
+      },
+      {
+        "filename": "plot/tumor_sample.cluster-3.DEL.png",
+        "title": "title-3"
+      }
     ],
     "cuppaSummaryPdf": "plot/tumor_sample.cuppa.vis.png",
     "qSeePdf": null

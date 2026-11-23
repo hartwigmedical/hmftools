@@ -33,7 +33,7 @@ Argument | Description
 ---|---
 tumor | Comma separated names of the tumor sample
 tumor_bam | Comma separated paths to indexed tumor BAM file
-output_vcf | Name of the output VCF
+output_vcf | Path of the output VCF
 ref_genome | Path to reference genome fasta file
 ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf

@@ -6,6 +6,7 @@
   "configuredPrimaryTumor": [],
   "refGenomeVersion": "V37",
   "pipelineVersion": null,
+  "sequencingType":"ILLUMINA",
   "purple": {
     "fit": {
       "qc": {

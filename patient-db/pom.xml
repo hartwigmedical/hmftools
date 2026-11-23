@@ -110,7 +110,7 @@
                         </database>
                         <target>
                             <packageName>com.hartwig.hmftools.patientdb.database.hmfpatients</packageName>
-                            <directory>target/generated-sources/jooq</directory>
+                            <directory>${project.build.directory}/generated-sources/jooq</directory>
                         </target>
                     </generator>
                 </configuration>

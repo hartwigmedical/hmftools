@@ -7,17 +7,83 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+
+import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static int calcAdjustedNumMutations(final SAMRecord record, final RefSequence refSequence)
+    public static int calcAdjustedNumMutations(
+            final SAMRecord record, final RefSequence refSequence, @Nullable final RefGenomeInterface refGenome)
     {
-        int nm = getOrCalcNm(record, refSequence);
+        Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
 
-        int additionalIndels = 0;
+        if(nm != null && nm instanceof Integer)
+        {
+            // BWA counts indels for their full length, whereas Sage wants a mutation of 1 per indel
+            int indelAdjustment = 0;
+
+            for(CigarElement cigarElement : record.getCigar())
+            {
+                switch(cigarElement.getOperator())
+                {
+                    case D:
+                    case I:
+                        indelAdjustment += cigarElement.getLength() - 1;
+                        break;
+                }
+            }
+
+            int numMutations = (int)nm - indelAdjustment;
+            return numMutations;
+        }
+
+        return calcMutations(record, refSequence, refGenome);
+    }
+
+    public static int calcMutations(final SAMRecord record, final RefSequence refSequence, @Nullable final RefGenomeInterface refGenome)
+    {
+        String contig = record.getReferenceName();
+        int errorCount = 0;
+        byte[] readBases = record.getReadBases();
+
+        for(AlignmentBlock alignment : record.getAlignmentBlocks())
+        {
+            int alignmentLength = alignment.getLength();
+            int referenceStart = alignment.getReferenceStart();
+            int referenceEnd = referenceStart + alignmentLength - 1;
+            int readIndexStart = alignment.getReadStart() - 1; // since is 1-based
+
+            byte[] refBases;
+
+            if(referenceStart >= refSequence.Start && referenceEnd <= refSequence.End)
+            {
+                refBases = refSequence.baseRange(referenceStart, referenceEnd);
+            }
+            else
+            {
+                // can occur for RNA reads with N-splits spanning past the end of the ref sequence
+                refBases = refGenome.getBases(contig, referenceStart, referenceEnd);
+            }
+
+            if(refBases == null || refBases.length != alignmentLength)
+                break;
+
+            int readIndex = readIndexStart;
+
+            for(int refIndex = 0; refIndex < alignmentLength; ++refIndex, ++readIndex)
+            {
+                if(readIndex >= readBases.length)
+                    break;
+
+                if(readBases[readIndex] != refBases[refIndex])
+                    ++errorCount;
+            }
+        }
 
         for(CigarElement cigarElement : record.getCigar())
         {
@@ -25,23 +91,12 @@ public final class NumberEvents
             {
                 case D:
                 case I:
-                    additionalIndels += cigarElement.getLength() - 1;
+                    ++errorCount;
                     break;
             }
         }
 
-        return nm - additionalIndels;
-    }
-
-    private static int getOrCalcNm(final SAMRecord record, final RefSequence refSequence)
-    {
-        Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
-
-        if(nm != null && nm instanceof Integer)
-            return (int)nm;
-
-        int offset = refSequence.Start - 1;
-        return SequenceUtil.calculateSamNmTag(record, refSequence.Bases, offset);
+        return errorCount;
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)

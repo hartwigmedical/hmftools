@@ -3,7 +3,7 @@ package com.hartwig.hmftools.qsee.status;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
-import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature;
 
 public class PurpleQCStatusConverter
 {

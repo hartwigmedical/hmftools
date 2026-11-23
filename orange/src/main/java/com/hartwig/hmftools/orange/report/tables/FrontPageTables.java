@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
+import static com.hartwig.hmftools.orange.algo.QcStatusInterpretation.isFailNoTumor;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
@@ -213,7 +214,7 @@ public class FrontPageTables
 
     private static void addQCWarningInCaseOfFail(final PurpleQC qc, final BaseTable table, final Cells cells)
     {
-        boolean isFailNoTumor = QcStatusInterpretation.isFailNoTumor(qc);
+        boolean isFailNoTumor = isFailNoTumor(qc);
         boolean isContaminated = QcStatusInterpretation.hasTumorContaminated(qc);
 
         if(isFailNoTumor || isContaminated)
@@ -241,6 +242,9 @@ public class FrontPageTables
 
     private static String purityString(final PurpleFit purpleFit)
     {
+        if(isFailNoTumor(purpleFit.qc()))
+            return "NA";
+
         return format("%s (%s-%s)",
                 formatPercentage(purpleFit.purity()), formatPercentage(purpleFit.minPurity()), formatPercentage(purpleFit.maxPurity()));
     }
@@ -289,7 +293,6 @@ public class FrontPageTables
         if(includeGermline)
         {
             addCellEntry(table, cells, "DPYD status:", peachGeneStatus(report.peach(), "DPYD"));
-            // addCellEntry(table, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
         }
 
         return table;
@@ -478,8 +481,9 @@ public class FrontPageTables
         return buildGenomeWideFeaturesAtX(docCtx, report, width, docCtx.marginLeft(), reportResources);
     }
 
-    public static BaseTable buildGenomeWideFeaturesAtX(final DocumentContext docCtx, final OrangeRecord report, float width, float xStart,
-            final ReportResources reportResources) throws IOException
+    public static BaseTable buildGenomeWideFeaturesAtX(
+            final DocumentContext docCtx, final OrangeRecord report, float width, float xStart, final ReportResources reportResources)
+            throws IOException
     {
         boolean includeGermline = !report.tumorOnlyMode();
 

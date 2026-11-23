@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE;
@@ -122,13 +123,28 @@ public final class FileCommon
         return formOutputFile(outputDir, sampleId, PREP_FILE_ID, fileId, null);
     }
 
-    public static List<String> formPrepBamFilenames(final String outputDir, final List<String> sampleIds)
+    public static List<String> formPrepBamFilenames(final String outputDir, final List<String> sampleIds, @Nullable final String outputId)
     {
         List<String> bamFiles = Lists.newArrayListWithExpectedSize(sampleIds.size());
 
         for(String sampleId : sampleIds)
         {
-            String bamFile = format("%s%s.%s.bam", outputDir, sampleId, PREP_FILE_ID);
+            // first look for a prep BAM with the output ID (as used when running the full Esvee routine), otherwise fall back to one
+            // without this (as would exist when debugging the full prep BAM)
+            String bamFile = format("%s%s.%s", outputDir, sampleId, PREP_FILE_ID);
+
+            if(outputId != null)
+            {
+                String bamFileWithId = bamFile + FILE_NAME_DELIM + outputId + BAM_EXTENSION;
+
+                if(Files.exists(Paths.get(bamFileWithId)))
+                {
+                    bamFiles.add(bamFileWithId);
+                    continue;
+                }
+            }
+
+            bamFile += BAM_EXTENSION;
 
             if(!Files.exists(Paths.get(bamFile)))
                 return Collections.emptyList();

@@ -159,7 +159,10 @@ public class SvVisualiser implements AutoCloseable
     {
         if(!mConfig.ClusterIds.isEmpty())
         {
-            submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false, false);
+            for(int clusterId : mConfig.ClusterIds)
+            {
+                submitCluster(clusterId, mConfig.ChainIds, false, false);
+            }
         }
 
         if(!mConfig.Chromosomes.isEmpty())
@@ -195,7 +198,7 @@ public class SvVisualiser implements AutoCloseable
     {
         for(Integer clusterId : clusterIds)
         {
-            submitCluster(List.of(clusterId), Collections.EMPTY_LIST, true, reportable);
+            submitCluster(clusterId, Collections.EMPTY_LIST, true, reportable);
         }
     }
 
@@ -336,39 +339,37 @@ public class SvVisualiser implements AutoCloseable
         return exonList;
     }
 
-    private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles, boolean reportable)
+    private void submitCluster(final int clusterId, final List<Integer> chainIds, boolean skipSingles, boolean reportable)
     {
         List<VisSvData> clusterSvs = mSampleData.SvData.stream()
-                .filter(x -> clusterIds.contains(x.ClusterId))
+                .filter(x -> clusterId == x.ClusterId)
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
                 .collect(toList());
 
-        String clusterIdsStr = clusterIds.stream().map(x -> String.valueOf(x)).collect(Collectors.joining("_"));
-
         if(clusterSvs.isEmpty())
         {
-            VIS_LOGGER.warn("cluster({}) not present in svAnnotations file", clusterIdsStr);
+            VIS_LOGGER.warn("cluster({}) not present in svAnnotations file", clusterId);
             return;
         }
 
         if(mCircosConfig.exceedsMaxPlotSvCount(clusterSvs.size()))
         {
-            VIS_LOGGER.warn("clusterIds({}) svCount({}) exceeds limit({})",
-                    clusterIdsStr, clusterSvs.size(), mCircosConfig.MaxPlotSvCount);
+            VIS_LOGGER.warn("clusterId({}) svCount({}) exceeds limit({})",
+                    clusterId, clusterSvs.size(), mCircosConfig.MaxPlotSvCount);
             return;
         }
 
         List<VisSegment> clusterSegments = mSampleData.Segments.stream()
-                .filter(x -> clusterIds.contains(x.ClusterId))
+                .filter(x -> clusterId == x.ClusterId)
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
                 .collect(toList());
 
         List<VisGeneExon> clusterExons = mSampleData.Exons.stream()
-                .filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
+                .filter(x -> clusterId == x.ClusterId).distinct().collect(toList());
 
         if(clusterSvs.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
-            VIS_LOGGER.debug("skipping simple cluster({})", clusterIdsStr);
+            VIS_LOGGER.debug("skipping simple cluster({})", clusterId);
             return;
         }
 
@@ -377,7 +378,7 @@ public class SvVisualiser implements AutoCloseable
         segmentChainIds.removeAll(linkChainIds);
         if(!segmentChainIds.isEmpty())
         {
-            VIS_LOGGER.warn("cluster({}) contains chain ids({}) not found in the links", clusterIdsStr, segmentChainIds);
+            VIS_LOGGER.warn("cluster({}) contains chain ids({}) not found in the links", clusterId, segmentChainIds);
             return;
         }
 
@@ -393,9 +394,9 @@ public class SvVisualiser implements AutoCloseable
         }
         else
         {
-            fileId += formVisPlotClusterPrefix(clusterIdsStr);
+            fileId += formVisPlotClusterPrefix(String.valueOf(clusterId));
 
-            if(clusterIds.size() == 1 && !reportable)
+            if(!reportable)
             {
                 String resolvedTypeString = clusterSvs.get(0).ClusterResolvedType.toString();
                 fileId += ".resolved_type-" + resolvedTypeString;
@@ -409,11 +410,11 @@ public class SvVisualiser implements AutoCloseable
             fileId += ".debug";
 
         List<VisProteinDomain> clusterProteinDomains = mSampleData.ProteinDomains.stream()
-                .filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
+                .filter(x -> clusterId == x.ClusterId).distinct().collect(toList());
 
-        List<VisFusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
+        List<VisFusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterId == x.ClusterId).collect(toList());
 
-        ColorPickerFactory colorPickerFactory = clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors;
+        ColorPickerFactory colorPickerFactory = ColorPicker::chainColors;
 
         submitFiltered(
                 colorPickerFactory, fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains,

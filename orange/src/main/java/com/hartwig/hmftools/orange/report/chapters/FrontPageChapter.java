@@ -75,12 +75,13 @@ public class FrontPageChapter implements ReportChapter
 
         document.setCursorY(savedY); // reset cursor to same line
         float genomeTableLeft = document.marginLeft() + nestedTableWidth + 4 * 5;
-        BaseTable genomeTable =
-                FrontPageTables.buildGenomeWideFeaturesAtX(document, mReport, nestedTableWidth, genomeTableLeft, mReportResources);
+        BaseTable genomeTable = FrontPageTables.buildGenomeWideFeaturesAtX(
+                document, mReport, nestedTableWidth, genomeTableLeft, mReportResources);
+
         float rightFinalY = document.addTableNoAdvance(genomeTable);
 
         // Draw box borders around both sections
-        float bottomY = Math.min(leftFinalY, rightFinalY) - 20;
+        float bottomY = Math.min(leftFinalY, rightFinalY) - 10;
         float borderBoxesWidths = nestedTableWidth + 10;
         float borderBoxesHeight = savedY - bottomY;
         drawBoxBorder(document, driverTableLeft - 5, bottomY, borderBoxesWidths, borderBoxesHeight);

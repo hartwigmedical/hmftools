@@ -37,7 +37,8 @@ public class VisFusion
     public final String RegionTypeDown;
     public final int FusedExonDown;
 
-    public VisFusion(final String sampleId, int clusterId, boolean reportable,
+    public VisFusion(
+            final String sampleId, int clusterId, boolean reportable,
             final String geneNameUp, final String transcriptUp,
             final String chrUp, int posUp, int strandUp, final String regionTypeUp, int fusedExonUp,
             final String geneNameDown, final String transcriptDown,

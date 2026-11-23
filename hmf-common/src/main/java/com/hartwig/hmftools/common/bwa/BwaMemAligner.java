@@ -66,6 +66,7 @@ public class BwaMemAligner implements IBwaMemAligner
         setScoringMatrix(aligner, alignParams);
 
         aligner.setMinSeedLengthOption(alignParams.seedLengthMin());
+        aligner.setSplitWidthOption(alignParams.seed2MaxOccurrence());
         aligner.setMaxMemIntvOption(alignParams.seed3MaxOccurrence());
         aligner.setMaxSeedOccurencesOption(alignParams.memMaxOccurrence());
         aligner.setSplitFactorOption(alignParams.memReseedFactor());

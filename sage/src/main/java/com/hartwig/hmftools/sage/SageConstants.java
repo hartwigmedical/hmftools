@@ -131,7 +131,11 @@ public class SageConstants
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     public static final double JITTER_QUAL_BOOST_MAX_PERC = 1.3;
-    public static final byte DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
+
+    public static final int BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD = 36;
+    public static final int BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD = 24;
+    public static final int BASE_QUAL_FIXED_PENALTY_RANGE = BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD - BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD;
+    public static final int BASE_QUAL_FIXED_PENALTY_MAX = 12;
 
     public static final int READ_EDGE_PENALTY_0 = 15;
     public static final int READ_EDGE_PENALTY_1 = 5;

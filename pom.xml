@@ -77,13 +77,13 @@
         <isofox.version>2.1</isofox.version>
         <lilac.version>2.1</lilac.version>
         <linx.version>2.4</linx.version>
-        <neo.version>1.2</neo.version>
+        <neo.version>1.4</neo.version>
         <orange.version>5.1</orange.version>
         <orange-datamodel.version>local-SNAPSHOT</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <panel-builder.version>1.2</panel-builder.version>
         <patient-db.version>3.0</patient-db.version>
-        <pave.version>1.9</pave.version>
+        <pave.version>2.0</pave.version>
         <peach.version>2.0</peach.version>
         <purple.version>4.5</purple.version>
         <qsee.version>1.0</qsee.version>
@@ -423,4 +423,18 @@
             <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
         </repository>
     </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>intellij</id>
+            <activation>
+                <property>
+                    <name>idea.maven.embedder.version</name>
+                </property>
+            </activation>
+            <build>
+                <directory>${project.basedir}/target-intellij</directory>
+            </build>
+        </profile>
+    </profiles>
 </project>

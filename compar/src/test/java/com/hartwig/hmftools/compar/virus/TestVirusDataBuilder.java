@@ -3,27 +3,35 @@ package com.hartwig.hmftools.compar.virus;
 import java.util.Collections;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.virusinterpreter.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType;
+import com.hartwig.hmftools.common.viridian.ClonalityStatus;
+import com.hartwig.hmftools.common.viridian.ReportQcStatus;
+import com.hartwig.hmftools.common.viridian.VirusReport;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestVirusDataBuilder
 {
-    public String name = "Human betaherpesvirus 6B";
-    public boolean reported = true;
+    public String virusName = "Human papillomavirus type 16";
+    public String virusGroup = "Human papillomavirus";
+    public VirusType reportingType = VirusType.HPV;
     public int integrations = 4;
-    public double meanCoverage = 20;
-    public VirusLikelihoodType driverLikelihood = VirusLikelihoodType.HIGH;
+    public double coverage = 0.9;
+    public double meanDepth = 20;
+    public Double copiesPerTumorCell = 2.0;
+    public ClonalityStatus clonalityStatus = ClonalityStatus.CLONAL;
+    public boolean reported = true;
 
     private static final Consumer<TestVirusDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
-        b.name = "ref";
-        b.reported = false;
+        b.virusName = "Human gammaherpesvirus 4";
+        b.virusGroup = "Human gammaherpesvirus 4";
+        b.reportingType = VirusType.EBV;
         b.integrations = 40;
-        b.meanCoverage = 2;
-        b.driverLikelihood = VirusLikelihoodType.LOW;
+        b.coverage = 0.2;
+        b.meanDepth = 2;
+        b.copiesPerTumorCell = 0.2;
+        b.clonalityStatus = ClonalityStatus.NOT_CLONAL;
+        b.reported = false;
     };
 
     public static final TestComparableItemBuilder<TestVirusDataBuilder, VirusData> BUILDER =
@@ -31,21 +39,10 @@ public class TestVirusDataBuilder
 
     private VirusData build()
     {
-        return new VirusData(
-                ImmutableAnnotatedVirus.builder()
-                        .name(name)
-                        .integrations(integrations)
-                        .meanCoverage(meanCoverage)
-                        .reported(reported)
-                        .virusDriverLikelihoodType(driverLikelihood)
-                        .taxid(-1)
-                        .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
-                        .interpretation(VirusType.EBV)
-                        .percentageCovered(-1)
-                        .expectedClonalCoverage(null)
-                        .blacklisted(null)
-                        .build(),
-                new VirusComparer(null, Collections.emptyMap()).fieldsList()
-        );
+        return VirusData.fromViridian(
+                new VirusReport(
+                        virusName, virusGroup, ReportQcStatus.NO_ABNORMALITIES, reportingType, integrations, coverage, meanDepth,
+                        copiesPerTumorCell, clonalityStatus, reported),
+                new VirusComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

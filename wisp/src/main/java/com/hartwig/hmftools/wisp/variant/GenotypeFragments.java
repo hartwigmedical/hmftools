@@ -3,6 +3,7 @@ package com.hartwig.hmftools.wisp.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -12,7 +13,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.SageVcfTags;
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 
 import htsjdk.variant.variantcontext.Genotype;
 
@@ -33,8 +34,10 @@ public class GenotypeFragments
     private final List<FilterReason> mFilterReasons;
     private final List<FilterReason> mDualFilterReasons;
 
-    public static final List<String> REQUIRED_GENOTYPE_FIELDS = List.of(
-            READ_CONTEXT_COUNT, READ_CONTEXT_QUALITY, UMI_TYPE_COUNTS, READ_STRAND_BIAS, AVG_EDGE_DISTANCE_PERC);
+    protected static final List<String> REQUIRED_GENOTYPE_FIELDS = List.of(
+            READ_CONTEXT_COUNT, READ_CONTEXT_QUALITY, UMI_TYPE_COUNTS, READ_STRAND_BIAS, AVG_EDGE_DISTANCE_PERC, AVG_RECALIBRATED_BASE_QUAL);
+
+    protected static final String AVG_BASE_QUAL_OLD_TAG = "ABQ";
 
     public GenotypeFragments(
             final String sampleName, final int alleleCount, final int depth, final double qualTotal, final UmiTypeCounts umiCounts,
@@ -101,5 +104,61 @@ public class GenotypeFragments
     public String toString()
     {
         return format("%d/%d umi(total=%d allele=%d)", AlleleCount, Depth, UmiCounts.totalCount(), UmiCounts.alleleCount());
+    }
+
+    private static final List<Integer> READ_COUNT_AD_TYPES = Lists.newArrayList(
+            VariantReadSupport.FULL.ordinal(), VariantReadSupport.PARTIAL_CORE.ordinal(), VariantReadSupport.REALIGNED.ordinal());
+
+    public static GenotypeFragments buildFragments(final Genotype genotype, boolean disableDualFragments, boolean checkZeroedUmis)
+    {
+        int depth = genotype.getDP();
+        UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
+
+        // check for zero-filled defaults in the tumor from an older VCF - is this still required if Sage must be v4.x or higher?
+        if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS && umiTypeCounts.isZeroed() && checkZeroedUmis)
+            umiTypeCounts = UmiTypeCounts.NO_UMI_COUNTS;
+
+        int qualTotal = parseReadArrayAttribute(genotype, READ_CONTEXT_QUALITY);
+        int alleleCount = parseReadArrayAttribute(genotype, READ_CONTEXT_COUNT);
+
+        if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS)
+        {
+            // override basic AD and DP if UMI counts are set
+            depth = umiTypeCounts.totalCount();
+            alleleCount = umiTypeCounts.alleleCount();
+
+            if(disableDualFragments) // convert to single (ie fragments withi duplicate evidence)
+            {
+                umiTypeCounts.AlleleSingle += umiTypeCounts.AlleleDual;
+                umiTypeCounts.AlleleDual = 0;
+
+                umiTypeCounts.TotalSingle += umiTypeCounts.TotalDual;
+                umiTypeCounts.TotalDual = 0;
+            }
+        }
+        else
+        {
+            umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
+        }
+
+        return new GenotypeFragments(
+                genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts, genotype);
+    }
+
+    public static int parseReadArrayAttribute(final Genotype genotype, final String vcfTag)
+    {
+        int attributeTotal = 0;
+
+        if(genotype.getAD()[1] > 0)
+        {
+            String[] countsStr = genotype.getExtendedAttribute(vcfTag, 0).toString().split(LIST_SEPARATOR, -1);
+
+            for(Integer rcType : READ_COUNT_AD_TYPES)
+            {
+                attributeTotal += Integer.parseInt(countsStr[rcType]);
+            }
+        }
+
+        return attributeTotal;
     }
 }
