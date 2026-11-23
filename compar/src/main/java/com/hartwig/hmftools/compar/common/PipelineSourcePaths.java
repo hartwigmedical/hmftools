@@ -149,10 +149,9 @@ public class PipelineSourcePaths
                 resolveSamplePath(sampleDir, defaultToolDirs.lilacDir(), fileSources.Lilac, sampleId, referenceId),
                 resolveSamplePath(sampleDir, defaultToolDirs.chordDir(), fileSources.Chord, sampleId, referenceId),
                 resolveSamplePath(sampleDir, defaultToolDirs.peachDir(), fileSources.Peach, sampleId, referenceId),
-                resolveSamplePath(sampleDir, defaultToolDirs.virusInterpreterDir(), fileSources.VirusInterpreter, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.virusDir(), fileSources.VirusInterpreter, sampleId, referenceId),
                 fileSources.Viridian != null
-                        ? resolveSamplePath(sampleDir, "", fileSources.Viridian, sampleId, referenceId)
-                        : null,
+                        ? resolveSamplePath(sampleDir, "", fileSources.Viridian, sampleId, referenceId) : null,
                 resolveSamplePath(sampleDir, defaultToolDirs.sageSomaticDir(), fileSources.SageSomatic, sampleId, referenceId),
                 resolveSamplePath(sampleDir, defaultToolDirs.paveSomaticDir(), fileSources.PaveSomatic, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, referenceId),

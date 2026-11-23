@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.virus;
+package com.hartwig.hmftools.datamodel.viridian;
 
 public enum VirusInterpretation
 {

@@ -10,10 +10,9 @@ import com.hartwig.hmftools.datamodel.orange.OrangePlot;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.viridian.ViridianRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -139,14 +138,13 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addViralPresence(final DocumentContext document) throws IOException
     {
-        VirusInterpreterData virusInterpreter = mReport.virusInterpreter();
+        ViridianRecord viridian = mReport.viridian();
 
-        if(virusInterpreter != null)
+        if(viridian != null)
         {
             String driverVirusTitle = "Viruses";
-            String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
-            document.addTable(ViralPresenceTable.build(document, titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), mReportResources));
-        }
+            String titleDrivers = driverVirusTitle + " (" + viridian.reportableViruses().size() + ")";
+            document.addTable(ViralPresenceTable.build(document, titleDrivers, contentWidth(), viridian.reportableViruses(), mReportResources));        }
     }
 
     private void addBreakendDisruptions(final DocumentContext document) throws IOException

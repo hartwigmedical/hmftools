@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DB_V6
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V2_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V2_2_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V3_0_FORMAT;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V3_1_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIP5_V6_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
@@ -32,7 +33,7 @@ public class PipelineToolDirectoriesTest
         PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
                 configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("pave/germline", victim.paveGermlineDir());
-        assertEqualDirectories(OA_V3_0_FORMAT, victim);
+        assertEqualDirectories(OA_V3_1_FORMAT, victim);
     }
 
     @Test
@@ -101,7 +102,7 @@ public class PipelineToolDirectoriesTest
 
         PipelineToolDirectories victim =
                 PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
-        assertEquals(OA_V2_0_FORMAT, victim);
+        assertEquals(OA_V3_1_FORMAT, victim);
     }
 
     @Test
@@ -194,8 +195,7 @@ public class PipelineToolDirectoriesTest
         assertEquals(expected.tealDir(), victim.tealDir());
         assertEquals(expected.tumorFlagstatDir(), victim.tumorFlagstatDir());
         assertEquals(expected.tumorMetricsDir(), victim.tumorMetricsDir());
-        assertEquals(expected.virusBreakendDir(), victim.virusBreakendDir());
-        assertEquals(expected.virusInterpreterDir(), victim.virusInterpreterDir());
+        assertEquals(expected.virusDir(), victim.virusDir());
         assertEquals(expected.qseeDir(), victim.qseeDir());
     }
 }
