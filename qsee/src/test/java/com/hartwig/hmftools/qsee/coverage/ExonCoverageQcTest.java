@@ -12,7 +12,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 
 import org.junit.Test;
 
-public class ExonCoverageQcFileBuilderTest
+public class ExonCoverageQcTest
 {
     private static final String SAMPLE_ID = "TUMOR_SAMPLE";
     private static final String REPORTABLE_GENE = "REPORTABLE_GENE";
@@ -53,7 +53,7 @@ public class ExonCoverageQcFileBuilderTest
                 { 4, 0.132, VariantDetectabilityStatus.EXCLUDED }, // Excluded despite high LoD VAF
         };
 
-        List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQcFileBuilder.calcCoverageQcPerExon(
+        List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQc.fromExonDepths(
                 SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, EXON_EXCLUSIONS, List.of(REPORTABLE_GENE));
 
         assertEquals(4, coverageQcPerExon.size()); // Non-reportable gene excluded

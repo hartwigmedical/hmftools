@@ -2,14 +2,12 @@ package com.hartwig.hmftools.qsee.coverage;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.LOD_VAF_WARN_THRESHOLD;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -35,56 +33,6 @@ public class ExonCoverageQcFileBuilder
         return GeneDepthFile.readExonCoverage(filePath);
     }
 
-    private static VariantDetectabilityStatus determineVariantDetectabilityStatus(
-            double lodVaf,
-            String geneName,
-            int exonRank,
-            ExonExclusions exonExclusions
-    ){
-        if(exonExclusions.isExcluded(geneName, exonRank))
-            return VariantDetectabilityStatus.EXCLUDED;
-
-        if(lodVaf > LOD_VAF_WARN_THRESHOLD)
-            return VariantDetectabilityStatus.WARN;
-
-        return VariantDetectabilityStatus.PASS;
-    }
-
-    @VisibleForTesting
-    static List<ExonCoverageQc> calcCoverageQcPerExon(
-            String sampleId,
-            SampleType sampleType,
-            List<ExonDepth> exonDepths,
-            ExonExclusions exonExclusions,
-            List<String> reportableGenes
-    ){
-        List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
-
-        for(ExonDepth exonDepth : exonDepths)
-        {
-            if(!reportableGenes.contains(exonDepth.Gene))
-                continue;
-
-            double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
-
-            VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(
-                    lodVaf,
-                    exonDepth.Gene, exonDepth.ExonRank, exonExclusions
-            );
-
-            ExonCoverageQc exonCoverageQc = new ExonCoverageQc(
-                    sampleId, sampleType,
-                    exonDepth.Gene, exonDepth.ExonRank, exonDepth.MedianDepth,
-                    lodVaf, variantDetectabilityStatus,
-                    exonDepth.DepthCounts
-            );
-
-            coverageQcPerExon.add(exonCoverageQc);
-        }
-
-        return coverageQcPerExon;
-    }
-
     public List<ExonCoverageQc> run()
     {
         List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
@@ -98,7 +46,7 @@ public class ExonCoverageQcFileBuilder
                     List<ExonDepth> exonDepths = loadExonCoverage(sampleId, sampleType);
                     List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(mConfig.DriverGenes, sampleType);
 
-                    List<ExonCoverageQc> coverageQcPerExonForSample = calcCoverageQcPerExon(
+                    List<ExonCoverageQc> coverageQcPerExonForSample = ExonCoverageQc.fromExonDepths(
                             sampleId,
                             sampleType,
                             exonDepths,
