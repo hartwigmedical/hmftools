@@ -10,6 +10,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.metrics.ExonDepth;
+import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.SampleType;
 
@@ -24,6 +26,7 @@ public class BamMetricsData
     @Nullable private final BamMetricSummary mBamMetricSummary;
     @Nullable private final BamMetricCoverage mBamMetricCoverage;
     @Nullable private final BamFlagStats mBamFlagStats;
+    @Nullable private final List<ExonDepth> mExonDepths;
 
     private final List<String> mMissingInputPaths;
 
@@ -38,10 +41,12 @@ public class BamMetricsData
         mBamMetricSummary = loadBamMetricSummary();
         mBamMetricCoverage = loadBamMetricCoverage();
         mBamFlagStats = loadBamFlagStats();
+        mExonDepths = loadExonDepths();
     }
 
     @VisibleForTesting
-    public BamMetricsData(@Nullable BamMetricSummary summary, BamMetricCoverage coverage, BamFlagStats flagStats, List<String> missingInputPaths)
+    public BamMetricsData(@Nullable BamMetricSummary summary, BamMetricCoverage coverage, BamFlagStats flagStats,
+            List<ExonDepth> exonDepths, List<String> missingInputPaths)
     {
         mConfig = null;
         mSampleId = null;
@@ -52,11 +57,13 @@ public class BamMetricsData
         mBamMetricSummary = summary;
         mBamMetricCoverage = coverage;
         mBamFlagStats = flagStats;
+        mExonDepths = exonDepths;
     }
 
     public BamMetricSummary bamMetricSummary() { return mBamMetricSummary; }
     public BamMetricCoverage bamMetricCoverage() { return mBamMetricCoverage; }
     public BamFlagStats bamFlagStats() { return mBamFlagStats; }
+    public List<ExonDepth> exonDepths() { return mExonDepths; }
 
     public List<String> missingInputPaths() { return mMissingInputPaths; }
 
@@ -100,6 +107,22 @@ public class BamMetricsData
         try
         {
             return BamFlagStats.read(filePath);
+        }
+        catch(IOException e)
+        {
+            mMissingInputPaths.add(filePath);
+            return null;
+        }
+    }
+
+    private List<ExonDepth> loadExonDepths()
+    {
+        String baseDir = mConfig.getBamMetricsDir(mSampleId, mSampleType);
+        String filePath = GeneDepthFile.generateExonCoverageFilename(baseDir, mSampleId);
+
+        try
+        {
+            return GeneDepthFile.readExonCoverage(filePath);
         }
         catch(IOException e)
         {

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeatu
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.DUAL_STRAND_READS;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.DUPLICATE_READS;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.LOW_BASE_QUAL;
+import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.LOW_COVERAGE_EXONS;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.MAPPED_PROPORTION;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.MEAN_COVERAGE;
@@ -120,6 +121,8 @@ public final class ThresholdRegistry
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_60.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_100.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
+
+        setCommonThreshold(SUMMARY_TABLE, LOW_COVERAGE_EXONS.name(), WARN, GREATER_THAN, 0.1);
 
         setThreshold(TUMOR, EXON_VARIANT_LOD, LOD_VAF, WARN, GREATER_THAN, chooseThreshold(0.1, 0.05, targetedMode));
         setThreshold(TUMOR, EXON_VARIANT_LOD, MEDIAN_DEPTH, WARN, LESS_THAN, chooseThreshold(30, 100, targetedMode));

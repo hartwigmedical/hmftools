@@ -96,4 +96,13 @@ public record ExonCoverageQc(
 
         return coverageQcPerExon;
     }
+
+    public static double calcLowCoverageExonProportion(List<ExonCoverageQc> coverageQcPerExon)
+    {
+        long warnCount = coverageQcPerExon.stream().filter(x -> x.variantDetectabilityStatus() == VariantDetectabilityStatus.WARN).count();
+        long passCount = coverageQcPerExon.stream().filter(x -> x.variantDetectabilityStatus() == VariantDetectabilityStatus.PASS).count();
+
+        long nonExcludedCount = warnCount + passCount;
+        return nonExcludedCount > 0 ? (double) warnCount / nonExcludedCount : 0;
+    }
 }

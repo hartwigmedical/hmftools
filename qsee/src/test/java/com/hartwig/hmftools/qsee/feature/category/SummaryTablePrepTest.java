@@ -91,11 +91,12 @@ public class SummaryTablePrepTest
                 createTestBamMetricSummary(),
                 createTestBamMetricCoverage(),
                 createTestBamFlagStats(),
+                List.of(),
                 List.of()
         );
 
         ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
-        List<Feature> features = SummaryTableBamMetricsPrep.createFeatures(bamMetricsData, SampleType.TUMOR, qcThresholds);
+        List<Feature> features = SummaryTableBamMetricsPrep.createFeatures(bamMetricsData, List.of(), SampleType.TUMOR, qcThresholds);
 
         List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())
                 .filter(f -> f.sourceTool() == SourceTool.BAM_METRICS)

@@ -245,6 +245,8 @@ Exons are marked in `VariantDetectabilityStatus` with:
 - `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
   sequences)
 
+The proportion of `WARN` exons (excluding `EXCLUDED` exons) is shown in the summary table as "Low coverage exons".
+
 The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon). Excluded exons
 are also left out of the [missed variant likelihood](#missed-variant-likelihood) calculation. This file can be generated from a cohort
 (see [Generating the exon exclusions file](#generating-the-exon-exclusions-file)):

@@ -31,6 +31,7 @@ public enum SummaryTableFeature
     LOW_MAP_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low map qual. reads", PERCENT),
     DUPLICATE_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Duplicate reads", PERCENT),
     DUAL_STRAND_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Dual-strand reads", PERCENT),
+    LOW_COVERAGE_EXONS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low coverage exons", PERCENT),
 
     PURITY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Purity", PERCENT),
     PLOIDY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Ploidy", NUMBER),
