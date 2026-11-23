@@ -35,7 +35,7 @@ public record PipelineToolDirectories(
         String tumorFlagstatDir,
         String tumorMetricsDir,
         String vChordDir,
-        String  virusDir,
+        String virusDir,
         String qseeDir)
 {
     public static final PipelineOutputStructure DEFAULT_PIPELINE_OUTPUT = OA_V3_1;
