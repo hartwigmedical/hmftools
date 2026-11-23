@@ -37,7 +37,6 @@ Qsee accepts the below pipeline files as input:
   - `.bam_metric.coverage.tsv`: tumor (mandatory), normal
   - `.bam_metric.flag_counts.tsv`: tumor (mandatory), normal
   - `.bam_metric.frag_length.tsv`: tumor, normal
-  - `.bam_metric.gene_coverage.tsv`: tumor, normal
   - `.bam_metric.exon_coverage.tsv`: tumor, normal
 - [**COBALT**](https://github.com/hartwigmedical/hmftools/tree/master/cobalt)
   - `.cobalt.gc.median.tsv`: tumor, normal
@@ -206,7 +205,7 @@ A read group with duplicate reads is collapsed into a consensus read with one of
 
 ## Variant detection metrics
 
-Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per gene or exon depth distributions 
+Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per exon depth distributions 
 (number of bases per depth range) from [BamTools](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#gene-panel-coverage). 
 A variant is reliably detected if it is supported by >=3 alt reads.
 
@@ -229,6 +228,9 @@ Then, the final MVLH is the mean across depth ranges, weighted by base count:
 mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
 ```
 
+Gene depth distributions are the sum of the exon depth distributions, excluding exons in the
+[exon exclusions file](#limit-of-detection-of-variants-per-exon). Genes with all exons excluded have no MVLH.
+
 ### Limit of detection of variants per exon
 
 Qsee computes the minimum sample VAF at which a variant is reliably detected >=95% of the time given the exon's depth distribution.
@@ -243,8 +245,9 @@ Exons are marked in `VariantDetectabilityStatus` with:
 - `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
   sequences)
 
-The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon). This file can be
-generated from a cohort (see [Generating the exon exclusions file](#generating-the-exon-exclusions-file)):
+The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon). Excluded exons
+are also left out of the [missed variant likelihood](#missed-variant-likelihood) calculation. This file can be generated from a cohort
+(see [Generating the exon exclusions file](#generating-the-exon-exclusions-file)):
 
 ```
 GeneName  ExonRank
