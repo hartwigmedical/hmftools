@@ -10,7 +10,7 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class LimitOfDetectionCalcs
 {
-    private static final int MIN_ALT_READS = 3;
+    public static final int MIN_ALT_READS = 3;
 
     private static final int LOD_VAF_BISECTION_ITERATIONS = 20; // VAF precision 1 / 2^20 = ~1e-6
     private static final double LOD_TARGET_MISSED_VARIANT_LIKELIHOOD = 0.05;
@@ -27,7 +27,7 @@ public class LimitOfDetectionCalcs
         return purity * (1.0 / alleleCount);
     }
 
-    public static double calcMissedVariantLikelihood(Map<DepthRange,Integer> depthCounts, double theoreticalVaf)
+    public static double calcMissedVariantLikelihood(Map<DepthRange,Integer> depthCounts, double theoreticalVaf, int minAltReads)
     {
         // 'Likelihood' is a misnomer (should be 'probability'), but will leave as is because renaming is non-trivial
 
@@ -49,7 +49,7 @@ public class LimitOfDetectionCalcs
             if(depthRange.midpoint() > 0 && theoreticalVaf > 0)
             {
                 BinomialDistribution distribution = new BinomialDistribution(depthRange.midpoint(), theoreticalVaf);
-                mvlhAtDepth = distribution.cumulativeProbability(MIN_ALT_READS - 1);
+                mvlhAtDepth = distribution.cumulativeProbability(minAltReads - 1);
             }
 
             mvlhWeightedMean += mvlhAtDepth * weight;
@@ -63,7 +63,7 @@ public class LimitOfDetectionCalcs
         // Inverse of the missed variant likelihood calculation: finds the VAF that gives the target missed variant likelihood.
         // Missed variant likelihood (y) slopes monotonically downward as VAF (x) increases, so bisection can quickly find 'x' given 'y'.
 
-        double minAchievableMvlh = calcMissedVariantLikelihood(depthCounts, 1);
+        double minAchievableMvlh = calcMissedVariantLikelihood(depthCounts, 1, MIN_ALT_READS);
         if(minAchievableMvlh > LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
             return 1.0;
 
@@ -73,7 +73,7 @@ public class LimitOfDetectionCalcs
 
         for(int iteration = 0; iteration < LOD_VAF_BISECTION_ITERATIONS; ++iteration)
         {
-            double currentMvlh = calcMissedVariantLikelihood(depthCounts, midVaf);
+            double currentMvlh = calcMissedVariantLikelihood(depthCounts, midVaf, MIN_ALT_READS);
 
             if(currentMvlh <= LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
                 upperVaf = midVaf;

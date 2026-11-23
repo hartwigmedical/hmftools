@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.qsee.feature.category;
 
+import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.MIN_ALT_READS;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,7 +88,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
             HumanChromosome geneChromosome = HumanChromosome.fromString(geneDepth.Chromosome);
             double theoreticalVaf = LimitOfDetectionCalcs.calcTheoreticalVafMutationOnOneAllele(purity, geneChromosome, gender);
 
-            double missedVariantLikelihood = LimitOfDetectionCalcs.calcMissedVariantLikelihood(geneDepth.DepthCounts, theoreticalVaf);
+            double missedVariantLikelihood = LimitOfDetectionCalcs.calcMissedVariantLikelihood(geneDepth.DepthCounts, theoreticalVaf, MIN_ALT_READS);
 
             Feature feature = new Feature(key, missedVariantLikelihood);
             features.add(feature);
