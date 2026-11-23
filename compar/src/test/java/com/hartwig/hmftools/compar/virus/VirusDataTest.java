@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreFor
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.compar.virus.VirusComparer.Fields;
 
 import org.jetbrains.annotations.Nullable;
@@ -104,6 +106,25 @@ public class VirusDataTest extends ComparableItemTest<VirusData, VirusComparer, 
                 virusInterpreterData("human gammaherpesvirus 4", VirusType.EBV));
 
         assertEquals(List.of("Human papillomavirus"), VirusComparer.duplicateKeys(items));
+    }
+
+    @Test
+    public void testCompareItemsDuplicateKeys()
+    {
+        // the first VirusInterpreter row in the virus group pairs with Viridian's row and the second shows as old only
+        VirusData hpv16 = virusInterpreterData("Human papillomavirus 16", VirusType.HPV);
+        VirusData hpv18 = virusInterpreterData("human papillomavirus 18", VirusType.HPV);
+        VirusData viridianData = builder.create();
+
+        List<Mismatch> mismatches = new ArrayList<>();
+        comparer.compareItems(
+                mismatches, MatchLevel.DETAILED, false, false, new ArrayList<>(List.of(hpv16, hpv18)),
+                new ArrayList<>(List.of(viridianData)));
+
+        List<Mismatch> expected = List.of(
+                new Mismatch(hpv16, viridianData, MismatchType.VALUE, Collections.emptyList()),
+                new Mismatch(hpv18, null, MismatchType.OLD_ONLY, Collections.emptyList()));
+        assertEquals(expected, mismatches);
     }
 
     @Test

@@ -127,7 +127,6 @@ public class VirusComparer extends ItemComparer
         if(!duplicateKeys.isEmpty())
         {
             CMP_LOGGER.warn("sample({}) has more than one Virus interpreter row per virus group({})", sampleId, duplicateKeys);
-            return null;
         }
 
         return items;
