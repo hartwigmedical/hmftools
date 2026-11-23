@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave.impact;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
@@ -54,6 +55,25 @@ public final class SpliceClassifier
         if(!atTransEnd)
         {
             if(variant.altPositionsOverlap(exonEndSpliceRegionStart, exonEndSpliceRegionEnd))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isWithinSpecialSpliceRegion(
+            final VariantData variant, final TranscriptData transData, final ExonData exon, final List<SpecificSpliceRegion> spliceRegions)
+    {
+        for(SpecificSpliceRegion specificRegion : spliceRegions)
+        {
+            if(!specificRegion.TranscriptName.equals(transData.TransName) || specificRegion.ExonRank != exon.Rank)
+                continue;
+
+            int exonBoundary = specificRegion.UseStart ? exon.Start : exon.End;
+            int spliceRangeStart = exonBoundary + specificRegion.BaseStart;
+            int spliceRangeEnd = exonBoundary + specificRegion.BaseEnd;
+
+            if(positionsOverlap(variant.Position, variant.EndPosition, spliceRangeStart, spliceRangeEnd))
                 return true;
         }
 

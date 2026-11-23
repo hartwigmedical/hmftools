@@ -38,10 +38,13 @@ public class ImpactClassifier
     private final RefGenomeInterface mRefGenome;
     private final PhasedVariantClassifier mPhasedVariants;
 
+    private final List<SpecificSpliceRegion> mSpecificSpliceRegions;
+
     public ImpactClassifier(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
         mPhasedVariants = new PhasedVariantClassifier();
+        mSpecificSpliceRegions = SpecificSpliceRegion.load(null);
     }
 
     public PhasedVariantClassifier phasedVariants() { return mPhasedVariants; }
@@ -86,6 +89,11 @@ public class ImpactClassifier
                 inSpliceRegion = true;
                 SpliceClassifier.classifyVariant(variant, transImpact, nextExon, mRefGenome);
             }
+
+            inSpliceRegion |= SpliceClassifier.isWithinSpecialSpliceRegion(variant, transData, exon, mSpecificSpliceRegions);
+
+            if(nextExon != null && !inSpliceRegion)
+                inSpliceRegion = SpliceClassifier.isWithinSpecialSpliceRegion(variant, transData, nextExon, mSpecificSpliceRegions);
 
             if(variant.altPositionsOverlap(exon.Start, exon.End) || isInsertIntoExonStart(variant, exon, transData.posStrand()))
             {
