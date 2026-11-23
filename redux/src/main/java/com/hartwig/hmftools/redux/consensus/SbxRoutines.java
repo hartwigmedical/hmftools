@@ -377,9 +377,9 @@ public final class SbxRoutines
 
             if(oldReadBaseLength > newReadBaseLength)
             {
+                int softClipReduction = oldReadBaseLength - newReadBaseLength;
                 List<SupplementaryReadData> newSuppDataList = Lists.newArrayList(suppDataList);
-                SupplementaryReadData newSuppData = correctSupplementaryData(
-                        suppDataList.get(0), oldReadBaseLength - newReadBaseLength);
+                SupplementaryReadData newSuppData = correctSupplementaryData(record, suppDataList.get(0), softClipReduction);
                 newSuppDataList.set(0, newSuppData);
 
                 String newSaTag = newSuppDataList.stream().map(x -> x.asSamTag()).collect(Collectors.joining(ALIGNMENTS_DELIM));
@@ -398,24 +398,29 @@ public final class SbxRoutines
         }
     }
 
-    private static SupplementaryReadData correctSupplementaryData(final SupplementaryReadData suppData, int softClipReduction)
+    private static SupplementaryReadData correctSupplementaryData(
+            final SAMRecord record, final SupplementaryReadData suppData, int softClipReduction)
     {
+        // reduce the longest soft-clip length in the supplementary cigar
         List<CigarElement> cigarElements = cigarElementsFromStr(suppData.Cigar);
         int lastIndex = cigarElements.size() - 1;
 
         int leftSoftClipLength = cigarElements.get(0).getOperator() == S ? cigarElements.get(0).getLength() : 0;
         int rightSoftClipLength = cigarElements.get(lastIndex).getOperator() == S ? cigarElements.get(lastIndex).getLength() : 0;
 
-        if(leftSoftClipLength > rightSoftClipLength)
+        // in some rare circumstances, indel-stripping can cause a desired reduction
+        int softClipIndex = leftSoftClipLength > rightSoftClipLength ? 0 : lastIndex;
+        CigarElement softClip = cigarElements.get(softClipIndex);
+
+        int newSoftClipLength = softClip.getLength() - softClipReduction;
+
+        if(newSoftClipLength <= 0)
         {
-            CigarElement softClip = cigarElements.get(0);
-            cigarElements.set(0, new CigarElement(softClip.getLength() - softClipReduction, S));
+            RD_LOGGER.warn("read({}) supp-data({}) invalid soft-clip reduction({})", readToString(record), suppData, softClipReduction);
+            newSoftClipLength = 1;
         }
-        else if(rightSoftClipLength > leftSoftClipLength)
-        {
-            CigarElement softClip = cigarElements.get(lastIndex);
-            cigarElements.set(lastIndex, new CigarElement(softClip.getLength() - softClipReduction, S));
-        }
+
+        cigarElements.set(softClipIndex, new CigarElement(newSoftClipLength, S));
 
         return new SupplementaryReadData(
                 suppData.Chromosome, suppData.Position, suppData.Strand, cigarElementsToStr(cigarElements), suppData.MapQuality, suppData.NM);
@@ -617,7 +622,6 @@ public final class SbxRoutines
         List<Integer> duplexMismatchIndices = null;
         int readLength = record.getBaseQualities().length;
         int lastReadIndex = readLength - 1;
-        String chromosome = record.getReferenceName();
         byte[] newBaseQuals = record.getBaseQualities();
 
         ConsensusType consensusType = extractConsensusType(record);

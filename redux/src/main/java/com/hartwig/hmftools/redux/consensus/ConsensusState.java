@@ -2,7 +2,9 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.UNSET;
@@ -238,4 +240,10 @@ public class ConsensusState
     }
 
     public RefGenome refGenome() { return mRefGenome; }
+
+    public String toString()
+    {
+        return format("id(%s) positions(%s:%d - %d) unclipped(%d - %d) cigar(%s)",
+                ReadId, Chromosome, AlignmentStart, AlignmentEnd, UnclippedPosStart, UnclippedPosEnd, cigarElementsToStr(CigarElements));
+    }
 }

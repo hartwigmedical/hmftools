@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_MISMATCH_QUAL;
@@ -30,6 +31,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.redux.ReduxConfig;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -180,6 +182,10 @@ public class SbxIndelConsensus
         // fail building consensus if the alignment bounds are now outside the contig
         if(consensusAlignmentStart < 1)
         {
+            RD_LOGGER.warn("consensus read({}) alignment({}:{}-{}) unclipped({}-{}) cigar({}) outside contig bounds",
+                    consensusState.ReadId, consensusState.Chromosome, consensusAlignmentStart, consensusAlignmentEnd,
+                    consensusUnclippedStart, consensusUnclippedEnd, cigarElementsToStr(cigarElements));
+
             consensusState.setOutcome(INDEL_FAIL);
             return;
         }
@@ -188,6 +194,10 @@ public class SbxIndelConsensus
             int maxContigPosition = consensusState.refGenome().getChromosomeLength(consensusState.Chromosome);
             if(consensusAlignmentEnd > maxContigPosition)
             {
+                RD_LOGGER.warn("consensus read({}) alignment({}:{}-{}) unclipped({}-{}) cigar({}) outside contig bounds",
+                        consensusState.ReadId, consensusState.Chromosome, consensusAlignmentStart, consensusAlignmentEnd,
+                        consensusUnclippedStart, consensusUnclippedEnd, cigarElementsToStr(cigarElements));
+
                 consensusState.setOutcome(INDEL_FAIL);
                 return;
             }
@@ -224,6 +234,8 @@ public class SbxIndelConsensus
         boolean inAlignedBases = false; // to prevent unvalid changes back from aligned to initial S
         boolean inFinalSoftClip = false; // to prevent invalid changes from the final S back to aligned
         int refPosition = initialUnclippedPosition;
+
+        boolean warningLogged = false;
 
         while(true)
         {
@@ -268,7 +280,7 @@ public class SbxIndelConsensus
                 // check for element type differences
 
                 // first skip past any insert if the selected element is aligned
-                if(nextOperator.consumesReferenceBases() && read.elementType() == I)
+                if(consumesRefOrUnclippedBases(nextOperator) && read.elementType() == I)
                     read.skipInsertElement();
 
                 boolean moveNext = true;
@@ -312,6 +324,31 @@ public class SbxIndelConsensus
 
             if(consumesRefOrUnclippedBases(nextOperator))
                 refPosition += isForwardConsensus ? 1 : -1;
+
+            // debug
+            if(ReduxConfig.RunChecks && !warningLogged)
+            {
+                for(ReadParseState read : activeReadStates)
+                {
+                    if(read.exhausted() || read.beforeUnclippedPosition(refPosition))
+                        continue;
+
+                    if(read.elementType() != I && read.refPosition() != refPosition)
+                    {
+                        warningLogged = true;
+
+                        RD_LOGGER.warn("read({}) refPostion mismatch(read={} state={}) direction({})",
+                                read.Read.getReadName(), read.refPosition(), refPosition, isForwardConsensus ? "fwd" : "rev");
+
+                        for(ReadParseState readLog : activeReadStates)
+                        {
+                            RD_LOGGER.warn("read({}: {}:{}-{}) cigar({}) state({})",
+                                    readLog.Read.getReadName(), readLog.Read.getReferenceName(),
+                                    readLog.Read.getAlignmentStart(), readLog.Read.getAlignmentEnd(), readLog.Read.getCigar(), readLog);
+                        }
+                    }
+                }
+            }
         }
 
         // add the last
