@@ -11,7 +11,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
-import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.SampleType;
@@ -23,9 +22,7 @@ public class ExonCoverageQcFileBuilder
 {
     private final QseeConfig mConfig;
 
-    // Assuming diploid genome
-    private static final double TUMOR_VAF_CLONAL_HOM_VARIANT_DETECTABLE = 1;
-    private static final double TUMOR_VAF_CLONAL_HET_VARIANT_DETECTABLE = 0.5;
+    private static final double LOD_VAF_WARN_THRESHOLD = 0.05;
 
     public ExonCoverageQcFileBuilder(QseeConfig config)
     {
@@ -39,30 +36,16 @@ public class ExonCoverageQcFileBuilder
         return GeneDepthFile.readExonCoverage(filePath);
     }
 
-    private double loadTumorPurity(String sampleId, SampleType sampleType) throws IOException
+    private static VariantDetectabilityStatus determineVariantDetectabilityStatus(double lodVaf)
     {
-        if(sampleType != SampleType.TUMOR)
-            return LimitOfDetectionCalcs.REF_SAMPLE_PURITY;
-
-        String baseDir = mConfig.getPurpleDir(sampleId);
-        String purityFile = PurplePurity.generateFilename(baseDir, sampleId);
-        return PurplePurity.read(purityFile).Purity;
-    }
-
-    private static VariantDetectabilityStatus determineVariantDetectabilityStatus(double tumorVafLod)
-    {
-        if(tumorVafLod >= TUMOR_VAF_CLONAL_HOM_VARIANT_DETECTABLE)
-            return VariantDetectabilityStatus.FAIL;
-
-        if(tumorVafLod > TUMOR_VAF_CLONAL_HET_VARIANT_DETECTABLE)
-            return VariantDetectabilityStatus.WARN_HET_UNRELIABLE;
+        if(lodVaf > LOD_VAF_WARN_THRESHOLD)
+            return VariantDetectabilityStatus.WARN;
 
         return VariantDetectabilityStatus.PASS;
     }
 
     @VisibleForTesting
-    static List<ExonCoverageQc> calcCoverageQcPerExon(
-            String sampleId, SampleType sampleType, List<ExonDepth> exonDepths, List<String> reportableGenes, double tumorPurity)
+    static List<ExonCoverageQc> calcCoverageQcPerExon(String sampleId, SampleType sampleType, List<ExonDepth> exonDepths, List<String> reportableGenes)
     {
         List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
@@ -71,15 +54,13 @@ public class ExonCoverageQcFileBuilder
             if(!reportableGenes.contains(exonDepth.Gene))
                 continue;
 
-            double sampleVafLod = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
-
-            double tumorVafLod = sampleVafLod / tumorPurity;
-            VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(tumorVafLod);
+            double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
+            VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(lodVaf);
 
             ExonCoverageQc exonCoverageQc = new ExonCoverageQc(
                     sampleId, sampleType,
                     exonDepth.Gene, exonDepth.ExonRank, exonDepth.MedianDepth,
-                    sampleVafLod, tumorVafLod, variantDetectabilityStatus,
+                    lodVaf, variantDetectabilityStatus,
                     exonDepth.DepthCounts
             );
 
@@ -87,15 +68,6 @@ public class ExonCoverageQcFileBuilder
         }
 
         return coverageQcPerExon;
-    }
-
-    private List<ExonCoverageQc> calcSampleCoverageQcPerExon(String sampleId, SampleType sampleType) throws IOException
-    {
-        List<ExonDepth> exonDepths = loadExonCoverage(sampleId, sampleType);
-        List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(mConfig.DriverGenes, sampleType);
-        double tumorPurity = loadTumorPurity(sampleId, sampleType);
-
-        return calcCoverageQcPerExon(sampleId, sampleType, exonDepths, reportableGenes, tumorPurity);
     }
 
     public void run()
@@ -108,7 +80,10 @@ public class ExonCoverageQcFileBuilder
             {
                 try
                 {
-                    coverageQcPerExon.addAll(calcSampleCoverageQcPerExon(sampleId, sampleType));
+                    List<ExonDepth> exonDepths = loadExonCoverage(sampleId, sampleType);
+                    List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(mConfig.DriverGenes, sampleType);
+                    List<ExonCoverageQc> coverageQcPerExonForSample = calcCoverageQcPerExon(sampleId, sampleType, exonDepths, reportableGenes);
+                    coverageQcPerExon.addAll(coverageQcPerExonForSample);
                 }
                 catch(IOException e)
                 {

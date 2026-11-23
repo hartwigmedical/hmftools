@@ -11,7 +11,7 @@ import org.junit.Test;
 public class LimitOfDetectionCalcsTest
 {
     @Test
-    public void canCalcSampleVafLod()
+    public void canCalcLodVaf()
     {
         double actualVaf;
         double expectedVaf;

@@ -21,8 +21,7 @@ public class ExonCoverageQcFile
     private static final String COL_GENE_NAME = "GeneName";
     private static final String COL_EXON_RANK = "ExonRank";
     private static final String COL_MEDIAN_DEPTH = "MedianDepth";
-    private static final String COL_SAMPLE_VAF_LOD = "SampleVafLod";
-    private static final String COL_TUMOR_VAF_LOD = "TumorVafLod";
+    private static final String COL_LOD_VAF = "LodVaf";
     private static final String COL_VARIANT_DETECTABILITY_STATUS = "VariantDetectabilityStatus";
 
     public static String generateFilename(QseeConfig config)
@@ -49,8 +48,7 @@ public class ExonCoverageQcFile
                 COL_GENE_NAME,
                 COL_EXON_RANK,
                 COL_MEDIAN_DEPTH,
-                COL_SAMPLE_VAF_LOD,
-                COL_TUMOR_VAF_LOD,
+                COL_LOD_VAF,
                 COL_VARIANT_DETECTABILITY_STATUS
         ));
 
@@ -62,8 +60,7 @@ public class ExonCoverageQcFile
             row.set(COL_GENE_NAME, exonCoverageQc.geneName());
             row.set(COL_EXON_RANK, exonCoverageQc.exonRank());
             row.set(COL_MEDIAN_DEPTH, exonCoverageQc.medianDepth(), DECIMAL_FORMAT);
-            row.set(COL_SAMPLE_VAF_LOD, exonCoverageQc.sampleVafLod(), DECIMAL_FORMAT);
-            row.set(COL_TUMOR_VAF_LOD, exonCoverageQc.tumorVafLod(), DECIMAL_FORMAT);
+            row.set(COL_LOD_VAF, exonCoverageQc.lodVaf(), DECIMAL_FORMAT);
 
             row.set(COL_VARIANT_DETECTABILITY_STATUS, exonCoverageQc.variantDetectabilityStatus().name());
 

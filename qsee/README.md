@@ -230,17 +230,14 @@ mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
 
 ### Limit of detection of variants per exon
 
-Qsee computes the minimum *tumor VAF* (i.e. tumor purity normalised sample VAF) at which a variant is reliably detected >=95% of the time
-given the exon's depth distribution.
+Qsee computes the minimum sample VAF at which a variant is reliably detected >=95% of the time given the exon's depth distribution.
 
-This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%, then divide by tumor purity to get
-`theoreticalTumorVaf`. The resulting value is shown in the `TumorVafLod` column, with the `SampleVafLod` column showing the value
-before purity normalisation.
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%. The resulting value is shown in the
+`LodVaf` column.
 
-Assuming a diploid genome, exons are marked in `VariantDetectabilityStatus` with:
-- `PASS` when `TumorVafLod` <= 0.5 (clonal homozygous and heterozygous variants can be reliably detected)
-- `WARN_HET_UNRELIABLE` when `TumorVafLod` < 1.0 (only clonal homozygous variants can be reliably detected)
-- `FAIL` when `TumorVafLod` >= 1.0 (clonal variants cannot be reliably detected or no coverage due to homozygous deletion)
+Exons are marked in `VariantDetectabilityStatus` with:
+- `PASS` when `LodVaf` <= 0.05
+- `WARN` when `LodVaf` > 0.05
 
 ## Advanced usage
 

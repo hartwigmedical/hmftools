@@ -27,40 +27,41 @@ public class ExonCoverageQcFileBuilderTest
             new DepthRange(100, 100), 90
     );
 
+    private static final Map<DepthRange,Integer> HIGH_DEPTH_COUNTS = Map.of(
+            new DepthRange(500, 500), 100
+    );
+
     private static final List<ExonDepth> EXON_DEPTHS = List.of(
             new ExonDepth(REPORTABLE_GENE, "1", 100, 199, 1, 100, 92, MIXED_DEPTH_COUNTS),
             new ExonDepth(REPORTABLE_GENE, "1", 300, 399, 2, 100, 90.2, LOW_DEPTH_COUNTS),
+            new ExonDepth(REPORTABLE_GENE, "1", 500, 599, 3, 100, 500, HIGH_DEPTH_COUNTS),
             new ExonDepth(NON_REPORTABLE_GENE, "1", 500, 599, 1, 100, 92, MIXED_DEPTH_COUNTS)
     );
 
     @Test
     public void canCalcCoverageQcPerExon()
     {
-        // purity, exon rank, expected tumor VAF LoD, expected detectable clonal variants
+        // exon rank, expected LoD VAF, expected status
         Object[][] expectedRows = {
-                { 0.5, 1, 0.263, VariantDetectabilityStatus.PASS },
-                { 0.5, 2, 2.0, VariantDetectabilityStatus.FAIL }, // Depth too low
-                { 0.2, 1, 0.658, VariantDetectabilityStatus.WARN_HET_UNRELIABLE },
-                { 0.2, 2, 5.0, VariantDetectabilityStatus.FAIL },
-                { 0.1, 1, 1.316, VariantDetectabilityStatus.FAIL }, // Purity adjusted VAF > 1
+                { 1, 0.132, VariantDetectabilityStatus.WARN },
+                { 2, 1.0, VariantDetectabilityStatus.WARN }, // Depth too low
+                { 3, 0.0125, VariantDetectabilityStatus.PASS },
         };
+
+        List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQcFileBuilder.calcCoverageQcPerExon(SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, List.of(REPORTABLE_GENE));
+
+        assertEquals(3, coverageQcPerExon.size()); // Non-reportable gene excluded
 
         for(Object[] expectedRow : expectedRows)
         {
-            double tumorPurity = (double) expectedRow[0];
-            int exonRank = (int) expectedRow[1];
-
-            List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQcFileBuilder.calcCoverageQcPerExon(
-                    SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, List.of(REPORTABLE_GENE), tumorPurity);
-
-            assertEquals(2, coverageQcPerExon.size()); // Non-reportable gene excluded
+            int exonRank = (int) expectedRow[0];
 
             ExonCoverageQc exonCoverageQc = coverageQcPerExon.stream().filter(x -> x.exonRank() == exonRank).findFirst().orElseThrow();
 
             assertEquals(REPORTABLE_GENE, exonCoverageQc.geneName());
             assertEquals(100, exonCoverageQc.medianDepth(), 0);
-            assertEquals((double) expectedRow[2], exonCoverageQc.tumorVafLod(), 1e-3);
-            assertEquals(expectedRow[3], exonCoverageQc.variantDetectabilityStatus());
+            assertEquals((double) expectedRow[1], exonCoverageQc.lodVaf(), 1e-3);
+            assertEquals(expectedRow[2], exonCoverageQc.variantDetectabilityStatus());
         }
     }
 }

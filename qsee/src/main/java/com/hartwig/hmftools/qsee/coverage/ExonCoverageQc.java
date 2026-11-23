@@ -11,8 +11,7 @@ public record ExonCoverageQc(
         String geneName,
         int exonRank,
         double medianDepth,
-        double sampleVafLod,
-        double tumorVafLod,
+        double lodVaf,
         VariantDetectabilityStatus variantDetectabilityStatus,
         Map<DepthRange,Integer> depthCounts
 ) {}
