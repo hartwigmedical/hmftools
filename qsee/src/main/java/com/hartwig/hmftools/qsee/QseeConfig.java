@@ -34,6 +34,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG_DESC;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+import static com.hartwig.hmftools.qsee.coverage.ExonExclusions.EXON_EXCLUSIONS_FILE_CFG;
+import static com.hartwig.hmftools.qsee.coverage.ExonExclusions.EXON_EXCLUSIONS_FILE_CFG_DESC;
 import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG_DESC;
 
@@ -50,6 +52,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.coverage.ExonExclusions;
 import com.hartwig.hmftools.qsee.feature.category.PrepCategory;
 import com.hartwig.hmftools.qsee.status.ThresholdOverridesFile;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
@@ -74,6 +77,7 @@ public class QseeConfig
     public final String CohortPercentilesFile;
     public final String ThresholdsFile;
     public final ThresholdRegistry QcThresholds;
+    public final ExonExclusions ExcludedExons;
 
     public final SequencingType SequencingTech;
     public final List<PrepCategory> Categories;
@@ -132,6 +136,10 @@ public class QseeConfig
                 ? ThresholdRegistry.createDefault(TargetedMode)
                 : ThresholdOverridesFile.read(ThresholdsFile, TargetedMode);
 
+        ExcludedExons = configBuilder.hasValue(EXON_EXCLUSIONS_FILE_CFG)
+                ? ExonExclusions.read(configBuilder.getValue(EXON_EXCLUSIONS_FILE_CFG))
+                : ExonExclusions.empty();
+
         SequencingTech = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
@@ -166,6 +174,7 @@ public class QseeConfig
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(THRESHOLD_OVERRIDES_FILE_CFG, false, THRESHOLD_OVERRIDES_FILE_CFG_DESC);
+        configBuilder.addPath(EXON_EXCLUSIONS_FILE_CFG, false, EXON_EXCLUSIONS_FILE_CFG_DESC);
 
         configBuilder.addConfigItem(SEQUENCING_TYPE_CFG, false, SequencingType.ILLUMINA.toString());
         configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);

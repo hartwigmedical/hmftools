@@ -35,8 +35,15 @@ public class ExonCoverageQcFileBuilder
         return GeneDepthFile.readExonCoverage(filePath);
     }
 
-    private static VariantDetectabilityStatus determineVariantDetectabilityStatus(double lodVaf)
-    {
+    private static VariantDetectabilityStatus determineVariantDetectabilityStatus(
+            double lodVaf,
+            String geneName,
+            int exonRank,
+            ExonExclusions exonExclusions
+    ){
+        if(exonExclusions.isExcluded(geneName, exonRank))
+            return VariantDetectabilityStatus.EXCLUDED;
+
         if(lodVaf > LOD_VAF_WARN_THRESHOLD)
             return VariantDetectabilityStatus.WARN;
 
@@ -44,8 +51,13 @@ public class ExonCoverageQcFileBuilder
     }
 
     @VisibleForTesting
-    static List<ExonCoverageQc> calcCoverageQcPerExon(String sampleId, SampleType sampleType, List<ExonDepth> exonDepths, List<String> reportableGenes)
-    {
+    static List<ExonCoverageQc> calcCoverageQcPerExon(
+            String sampleId,
+            SampleType sampleType,
+            List<ExonDepth> exonDepths,
+            ExonExclusions exonExclusions,
+            List<String> reportableGenes
+    ){
         List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
         for(ExonDepth exonDepth : exonDepths)
@@ -55,7 +67,10 @@ public class ExonCoverageQcFileBuilder
 
             double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
 
-            VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(lodVaf);
+            VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(
+                    lodVaf,
+                    exonDepth.Gene, exonDepth.ExonRank, exonExclusions
+            );
 
             ExonCoverageQc exonCoverageQc = new ExonCoverageQc(
                     sampleId, sampleType,
@@ -82,7 +97,15 @@ public class ExonCoverageQcFileBuilder
                 {
                     List<ExonDepth> exonDepths = loadExonCoverage(sampleId, sampleType);
                     List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(mConfig.DriverGenes, sampleType);
-                    List<ExonCoverageQc> coverageQcPerExonForSample = calcCoverageQcPerExon(sampleId, sampleType, exonDepths, reportableGenes);
+
+                    List<ExonCoverageQc> coverageQcPerExonForSample = calcCoverageQcPerExon(
+                            sampleId,
+                            sampleType,
+                            exonDepths,
+                            mConfig.ExcludedExons,
+                            reportableGenes
+                    );
+
                     coverageQcPerExon.addAll(coverageQcPerExonForSample);
                 }
                 catch(IOException e)

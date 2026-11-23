@@ -239,6 +239,17 @@ overly optimistic.
 Exons are marked in `VariantDetectabilityStatus` with:
 - `PASS` when `LodVaf` <= 0.05
 - `WARN` when `LodVaf` > 0.05
+- `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
+  sequences)
+
+The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon):
+
+```
+GeneName  ExonRank
+GENE_A    1
+GENE_A    2
+GENE_B    3
+```
 
 ## Advanced usage
 
@@ -330,6 +341,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 **Resource files**
 - `-driver_gene_panel`: Path to driver gene panel
 - `-cohort_percentiles_file`: Path to cohort percentiles file (see [Generating cohort percentiles](#generating-cohort-percentiles))
+- `-exon_exclusions_file`: Path to exon exclusions file (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
 
 **Other options**
 - `-allow_missing_input`: If provided, Qsee will not fail if input files are missing

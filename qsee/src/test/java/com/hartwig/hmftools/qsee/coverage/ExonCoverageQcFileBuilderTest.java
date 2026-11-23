@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
@@ -35,8 +36,11 @@ public class ExonCoverageQcFileBuilderTest
             new ExonDepth(REPORTABLE_GENE, "1", 100, 199, 1, 100, 92, MIXED_DEPTH_COUNTS),
             new ExonDepth(REPORTABLE_GENE, "1", 300, 399, 2, 100, 90.2, LOW_DEPTH_COUNTS),
             new ExonDepth(REPORTABLE_GENE, "1", 500, 599, 3, 100, 500, HIGH_DEPTH_COUNTS),
+            new ExonDepth(REPORTABLE_GENE, "1", 700, 799, 4, 100, 92, MIXED_DEPTH_COUNTS),
             new ExonDepth(NON_REPORTABLE_GENE, "1", 500, 599, 1, 100, 92, MIXED_DEPTH_COUNTS)
     );
+
+    private static final ExonExclusions EXON_EXCLUSIONS = new ExonExclusions(Map.of(REPORTABLE_GENE, Set.of(4)));
 
     @Test
     public void canCalcCoverageQcPerExon()
@@ -46,11 +50,13 @@ public class ExonCoverageQcFileBuilderTest
                 { 1, 0.132, VariantDetectabilityStatus.WARN },
                 { 2, 1.0, VariantDetectabilityStatus.WARN }, // Depth too low
                 { 3, 0.0125, VariantDetectabilityStatus.PASS },
+                { 4, 0.132, VariantDetectabilityStatus.EXCLUDED }, // Excluded despite high LoD VAF
         };
 
-        List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQcFileBuilder.calcCoverageQcPerExon(SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, List.of(REPORTABLE_GENE));
+        List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQcFileBuilder.calcCoverageQcPerExon(
+                SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, EXON_EXCLUSIONS, List.of(REPORTABLE_GENE));
 
-        assertEquals(3, coverageQcPerExon.size()); // Non-reportable gene excluded
+        assertEquals(4, coverageQcPerExon.size()); // Non-reportable gene excluded
 
         for(Object[] expectedRow : expectedRows)
         {
