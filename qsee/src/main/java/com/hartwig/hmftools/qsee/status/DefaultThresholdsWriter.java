@@ -56,7 +56,7 @@ public class DefaultThresholdsWriter
         String outputFile = generateFilename(outputDir);
 
         boolean overridableOnly = !configBuilder.hasFlag(NO_OVERRIDABLE_ONLY);
-        boolean targetedMode = !configBuilder.hasFlag(TARGETED_MODE);
+        boolean targetedMode = configBuilder.hasFlag(TARGETED_MODE);
 
         QC_LOGGER.info("Writing default thresholds to: {}", outputFile);
         writeDefaults(outputFile, overridableOnly, targetedMode);
