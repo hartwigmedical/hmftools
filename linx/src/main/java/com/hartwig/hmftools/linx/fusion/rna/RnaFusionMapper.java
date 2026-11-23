@@ -62,7 +62,8 @@ public class RnaFusionMapper
 
     public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
 
-    public RnaFusionMapper(final String outputDir, final ConfigBuilder configBuilder, final EnsemblDataCache geneTransCache,
+    public RnaFusionMapper(
+            final String outputDir, final ConfigBuilder configBuilder, final EnsemblDataCache geneTransCache,
             FusionFinder fusionFinder, final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
     {
         mSampleRnaData = Maps.newHashMap();
@@ -77,8 +78,6 @@ public class RnaFusionMapper
         mWriter = new RnaMatchWriter(outputDir);
 
         mFusionConfig = new FusionConfig();
-        mFusionConfig.RequirePhaseMatch = false;
-        mFusionConfig.AllowExonSkipping = false;
     }
 
     public void assessRnaFusions(final String sampleId, Map<String, List<SvBreakend>> chrBreakendMap)

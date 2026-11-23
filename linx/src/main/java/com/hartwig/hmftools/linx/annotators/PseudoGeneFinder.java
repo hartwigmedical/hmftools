@@ -105,8 +105,9 @@ public class PseudoGeneFinder
                         if(matchedPairs.isEmpty())
                             continue;
 
-                        VisGeneData geneData = new VisGeneData(cluster.id(), gene.geneId(), gene.geneName(),
-                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), PSEUDOGENE);
+                        VisGeneData geneData = new VisGeneData(
+                                cluster.id(), gene.geneId(), gene.geneName(),
+                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), PSEUDOGENE, null);
 
                         int selectedTransId = maxTrans.TransId;
 

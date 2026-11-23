@@ -83,7 +83,6 @@ public class FusionRulesTest
             - up coding to down not-coding
             - up coding exonic to not down coding exonic
             - up non-coding to down coding
-            - unmatched phasing - exact or not
          */
 
         // non-coding combos
@@ -91,7 +90,7 @@ public class FusionRulesTest
         Integer codingEnd = null;
 
         BreakendTransData trans1 = createTranscript(
-                gene1, transId1, false, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, false, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
         int transId2 = 2;
@@ -104,9 +103,6 @@ public class FusionRulesTest
                 2, 3, PHASE_NONE, 10, getCodingBases(codingStart, codingEnd));
 
         FusionConfig params = new FusionConfig();
-        params.AllowExonSkipping = false;
-        params.RequirePhaseMatch = true;
-        params.RequireUpstreamBiotypes = false;
 
         // up non-coding
         assertTrue(trans1.nonCoding());
@@ -156,7 +152,7 @@ public class FusionRulesTest
         // down single exon
         gene1.setPositionalData(CHR_1, 40, ORIENT_FWD);
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
         trans2 = createTranscript(
@@ -180,7 +176,7 @@ public class FusionRulesTest
 
         // up coding exonic to not down coding exonic
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 2, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
         trans2 = createTranscript(
@@ -191,26 +187,12 @@ public class FusionRulesTest
         assertTrue(trans2.isIntronic());
         assertNull(checkFusionLogic(trans1, trans2, params));
 
-        // unmatched phasing intronic
-        gene1.setPositionalData(CHR_1, 110, ORIENT_FWD);
-        trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
-                2, 3, PHASE_NONE, 10, getCodingBases(codingStart, codingEnd));
-
-        trans2 = createTranscript(
-                gene2, transId2,  true, 50, 250, codingStart, codingEnd, "",
-                2, 3, PHASE_0, 10, getCodingBases(codingStart, codingEnd));
-
-        assertTrue(trans1.isCoding());
-        assertTrue(trans2.isCoding());
-        assertTrue(trans1.isIntronic());
-        assertTrue(trans2.isIntronic());
-        assertNull(checkFusionLogic(trans1, trans2, params));
+        // NOTE: unmatched phasing intronic - requiring a phase match no longer supported
 
         // pre-coding to pre-coding same gene
         gene1.setPositionalData(CHR_1, 40, ORIENT_FWD);
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 450, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 450, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 1, 2, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
         trans2 = createTranscript(
@@ -228,7 +210,7 @@ public class FusionRulesTest
         // unmatched phasing exon to exon
         gene1.setPositionalData(CHR_1, 110, ORIENT_FWD);
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 2, PHASE_1, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
 
         gene2.setPositionalData(CHR_1, 190, ORIENT_FWD);
@@ -238,26 +220,32 @@ public class FusionRulesTest
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isExonic());
-        assertNull(checkFusionLogic(trans1, trans2, params));
+        GeneFusion fusion = checkFusionLogic(trans1, trans2, params);
+        assertNotNull(fusion);
+        assertFalse(fusion.phaseMatched());
 
         // also invalid exonic fusion
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 2, PHASE_2, 11, getCodingBases(codingStart, codingEnd));
 
-        assertNull(checkFusionLogic(trans1, trans2, params));
+        fusion = checkFusionLogic(trans1, trans2, params);
+        assertNotNull(fusion);
+        assertFalse(fusion.phaseMatched());
 
         // valid exonic fusion
         trans2 = createTranscript(
                 gene2, transId2, true, 50, 250, codingStart, codingEnd, "",
                 2, 2, PHASE_0, 12, getCodingBases(codingStart, codingEnd));
 
-        assertNotNull(checkFusionLogic(trans1, trans2, params));
+        fusion = checkFusionLogic(trans1, trans2, params);
+        assertNotNull(fusion);
+        assertTrue(fusion.phaseMatched());
 
         // exon to exon but both pre-coding
         gene1.setPositionalData(CHR_1, 90, ORIENT_FWD);
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 2, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
         gene2.setPositionalData(CHR_1, 210, ORIENT_FWD);
@@ -273,7 +261,7 @@ public class FusionRulesTest
 
         // valid intronic fusion
         trans1 = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 10, getCodingBases(codingStart, codingEnd));
 
         trans2 = createTranscript(
@@ -283,9 +271,6 @@ public class FusionRulesTest
         assertNotNull(checkFusionLogic(trans1, trans2, params));
 
         FusionConfig config = new FusionConfig();
-        config.AllowExonSkipping = false;
-        config.RequirePhaseMatch = true;
-        config.RequireUpstreamBiotypes = false;
 
         KnownFusionCache knownFusionCache = new KnownFusionCache();
         knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, gene1.geneName(), gene2.geneName(), "", ""));
@@ -321,7 +306,7 @@ public class FusionRulesTest
         Integer codingEnd = 200;
 
         BreakendTransData transUp = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 10, getCodingBases(codingStart, codingEnd));
 
         int transId2 = 2;
@@ -331,9 +316,6 @@ public class FusionRulesTest
                 2, 3, PHASE_0, 10, getCodingBases(codingStart, codingEnd));
 
         FusionConfig params = new FusionConfig();
-        params.AllowExonSkipping = true;
-        params.RequirePhaseMatch = false;
-        params.RequireUpstreamBiotypes = false;
 
         // up non-coding
         assertTrue(transUp.isCoding());
@@ -367,7 +349,7 @@ public class FusionRulesTest
         // check 5' gene fusing from the 3'UTR region
         gene1.setPositionalData(CHR_1, 210, ORIENT_FWD);
         transUp = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 6, 7, PHASE_NONE, 100, 100);
 
         assertTrue(transUp.postCoding());
@@ -387,14 +369,12 @@ public class FusionRulesTest
 
         // check a fusion requiring skipping on both transcripts
         transUp = createTranscript(
-                gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
+                gene1, transId1, true, 50, 250, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 10, getCodingBases(codingStart, codingEnd));;
 
         transDown = createTranscript(
                 gene2, transId2, true, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_0, 10, getCodingBases(codingStart, codingEnd));;
-
-        params.AllowExonSkipping = true;
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
@@ -452,7 +432,7 @@ public class FusionRulesTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10650, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, 10650, ORIENT_REV);
 
-        tester.FusionAnalyser.getFusionFinder().setFusionParams(false, true, false);
+        // tester.FusionAnalyser.getFusionFinder().setFusionParams(false, true, false);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 

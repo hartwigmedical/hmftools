@@ -190,7 +190,8 @@ public class GeneTestUtils
             int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType,
             final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases)
     {
-        return createTranscript(gene, transId, isCanonical, transStart, transEnd, codingStart, codingEnd, bioType,
+        return createTranscript(
+                gene, transId, isCanonical, transStart, transEnd, codingStart, codingEnd, bioType,
                 exonUpstream, exonDownstream, phase, PHASE_NONE, codingBases, totalCodingBases);
     }
 
@@ -200,6 +201,7 @@ public class GeneTestUtils
             final int exonUpstream, final int exonDownstream, int phase, int exonicPhase, int codingBases, int totalCodingBases)
     {
         final String transName = String.format("TRANS%03d", transId);
+
         TranscriptData transData = new TranscriptData(
                 transId, transName, gene.geneId(), isCanonical, gene.strand(), transStart, transEnd, codingStart, codingEnd, bioType, null);
 
