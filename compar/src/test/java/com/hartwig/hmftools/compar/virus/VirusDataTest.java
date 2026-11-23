@@ -35,7 +35,7 @@ public class VirusDataTest extends ComparableItemTest<VirusData, VirusComparer, 
         builder = TestVirusDataBuilder.BUILDER;
 
         fieldToAlternateValueInitializer = Map.of(
-                Fields.Name.toString(), b -> b.virusName = "Human papillomavirus type 18",
+                Fields.VirusName.toString(), b -> b.virusName = "Human papillomavirus type 18",
                 Fields.Interpretation.toString(), b -> b.reportingType = VirusType.EBV,
                 Fields.Integrations.toString(), b -> b.integrations = 40,
                 Fields.MeanCoverage.toString(), b -> b.meanDepth = 2,
@@ -57,7 +57,7 @@ public class VirusDataTest extends ComparableItemTest<VirusData, VirusComparer, 
 
         assertTrue(virusInterpreterData.matches(viridianData));
         Mismatch mismatch = virusInterpreterData.findMismatch(comparer, viridianData, MatchLevel.DETAILED, false);
-        assertDifferencesAreForFields(Set.of(Fields.Name.toString()), mismatch.DiffValues);
+        assertDifferencesAreForFields(Set.of(Fields.VirusName.toString()), mismatch.DiffValues);
     }
 
     @Test

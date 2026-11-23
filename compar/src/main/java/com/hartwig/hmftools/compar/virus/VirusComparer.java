@@ -27,7 +27,7 @@ public class VirusComparer extends ItemComparer
 {
     protected enum Fields
     {
-        Name,
+        VirusName,
         Reported,
         Interpretation,
         Integrations,
@@ -41,7 +41,7 @@ public class VirusComparer extends ItemComparer
     {
         super(config);
 
-        mFields.add(new FieldInfo(Fields.Name.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Name.toString()), null));
+        mFields.add(new FieldInfo(Fields.VirusName.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.VirusName.toString()), null));
 
         mFields.add(new FieldInfo(
                 Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));

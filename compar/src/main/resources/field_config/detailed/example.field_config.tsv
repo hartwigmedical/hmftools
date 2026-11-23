@@ -109,7 +109,7 @@ PEACH	AlleleCount	true	none	none
 PEACH	Function	true	none	none
 PEACH	Drugs	true	none	none
 PEACH	PrescriptionUrls	true	none	none
-VIRUS	Name	true	none	none
+VIRUS	VirusName	true	none	none
 VIRUS	Reported	true	none	none
 VIRUS	Interpretation	true	none	none
 VIRUS	Integrations	true	none	none

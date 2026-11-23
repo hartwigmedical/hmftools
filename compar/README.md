@@ -580,11 +580,11 @@ Data key: SampleId, Gene, HaplotypeName
 | PrescriptionUrls | Exact                   |
 
 ### Virus
-Data key: SampleId, VirusGroup
+Data key: SampleId, virus group
 
 | Field              | Match Type & Thresholds |
 |--------------------|-------------------------|
-| Name               | Exact                   |
+| VirusName          | Exact                   |
 | Reported           | Exact                   |
 | Interpretation     | Exact                   |
 | Integrations       | Exact                   |
