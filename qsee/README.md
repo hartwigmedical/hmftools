@@ -232,8 +232,9 @@ mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
 
 Qsee computes the minimum sample VAF at which a variant is reliably detected >=95% of the time given the exon's depth distribution.
 
-This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%. The resulting value is shown in the
-`LodVaf` column.
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%. The result (`LodVaf`) is floored at 0.01,
+since at high depth, random sequencing errors alone can produce 3 alt reads, meaning that a `LodVaf` of e.g. ~0.006 at 1000x is
+overly optimistic.
 
 Exons are marked in `VariantDetectabilityStatus` with:
 - `PASS` when `LodVaf` <= 0.05

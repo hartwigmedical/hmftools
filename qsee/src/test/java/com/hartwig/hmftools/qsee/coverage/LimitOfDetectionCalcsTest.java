@@ -34,5 +34,14 @@ public class LimitOfDetectionCalcsTest
         actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(lowDepthCounts);
         expectedVaf = 1.0;
         assertEquals(expectedVaf, actualVaf, 0);
+
+        // Depth high enough to give LoD VAF below lower bound
+        Map<DepthRange,Integer> highDepthCounts = Map.of(
+                new DepthRange(1000, 1000), 100
+        );
+
+        actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(highDepthCounts);
+        expectedVaf = LimitOfDetectionCalcs.LOD_VAF_LOWER_BOUND;
+        assertEquals(expectedVaf, actualVaf, 0);
     }
 }

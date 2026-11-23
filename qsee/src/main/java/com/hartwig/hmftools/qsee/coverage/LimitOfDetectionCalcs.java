@@ -11,6 +11,11 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 public class LimitOfDetectionCalcs
 {
     public static final int MIN_ALT_READS = 3;
+    public static final double LOD_VAF_WARN_THRESHOLD = 0.05;
+
+    // At high depth, random sequencing errors alone can produce 3 alt reads, meaning that an LoD VAF of e.g. ~0.006 at 1000x is
+    // overly optimistic
+    public static final double LOD_VAF_LOWER_BOUND = 0.01;
 
     private static final int LOD_VAF_BISECTION_ITERATIONS = 20; // VAF precision 1 / 2^20 = ~1e-6
     private static final double LOD_TARGET_MISSED_VARIANT_LIKELIHOOD = 0.05;
@@ -83,6 +88,9 @@ public class LimitOfDetectionCalcs
             midVaf = (lowerVaf + upperVaf) / 2;
         }
 
-        return midVaf;
+        double lodVaf = midVaf;
+        double lodVafFloored = Math.max(lodVaf, LOD_VAF_LOWER_BOUND);
+
+        return lodVafFloored;
     }
 }

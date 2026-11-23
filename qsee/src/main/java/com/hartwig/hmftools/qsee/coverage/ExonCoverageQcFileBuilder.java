@@ -2,6 +2,7 @@ package com.hartwig.hmftools.qsee.coverage;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.LOD_VAF_WARN_THRESHOLD;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,8 +22,6 @@ import org.apache.logging.log4j.Level;
 public class ExonCoverageQcFileBuilder
 {
     private final QseeConfig mConfig;
-
-    private static final double LOD_VAF_WARN_THRESHOLD = 0.05;
 
     public ExonCoverageQcFileBuilder(QseeConfig config)
     {
@@ -55,6 +54,7 @@ public class ExonCoverageQcFileBuilder
                 continue;
 
             double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
+
             VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(lodVaf);
 
             ExonCoverageQc exonCoverageQc = new ExonCoverageQc(
