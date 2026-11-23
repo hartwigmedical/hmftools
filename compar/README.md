@@ -580,14 +580,18 @@ Data key: SampleId, Gene, HaplotypeName
 | PrescriptionUrls | Exact                   |
 
 ### Virus
-Data key: SampleId, Name
+Data key: SampleId, VirusGroup
 
-| Field            | Match Type & Thresholds |
-|------------------|-------------------------|
-| Reported         | Exact                   |
-| Integrations     | Threshold [20%]         |
-| MeanCoverage     | Threshold [15%]         |
-| DriverLikelihood | Exact                   |
+| Field              | Match Type & Thresholds |
+|--------------------|-------------------------|
+| Name               | Exact                   |
+| Reported           | Exact                   |
+| Interpretation     | Exact                   |
+| Integrations       | Exact                   |
+| MeanCoverage       | Threshold [10%]         |
+| PercentageCovered  | Threshold [10%]         |
+| CopiesPerTumorCell | Threshold [10%]         |
+| ClonalityStatus    | Exact                   |
 
 ### Flagstat
 For both tumor and germline sample

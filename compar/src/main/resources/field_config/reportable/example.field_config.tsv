@@ -106,10 +106,14 @@ PEACH	AlleleCount	true	none	none
 PEACH	Function	true	none	none
 PEACH	Drugs	true	none	none
 PEACH	PrescriptionUrls	true	none	none
+VIRUS	Name	true	none	none
 VIRUS	Reported	true	none	none
-VIRUS	Integrations	true	none	20.0%
-VIRUS	MeanCoverage	true	none	15.0%
-VIRUS	DriverLikelihood	true	none	none
+VIRUS	Interpretation	true	none	none
+VIRUS	Integrations	true	none	none
+VIRUS	MeanCoverage	true	none	10.0%
+VIRUS	PercentageCovered	true	none	10.0%
+VIRUS	CopiesPerTumorCell	true	none	10.0%
+VIRUS	ClonalityStatus	true	none	none
 TUMOR_FLAGSTAT	MappedProportion	true	0.01	none
 GERMLINE_FLAGSTAT	MappedProportion	true	0.01	none
 TUMOR_BAM_METRICS	DuplicatePercentage	true	0.05	none
