@@ -85,7 +85,7 @@ public class ExonCoverageQcFileBuilder
         return coverageQcPerExon;
     }
 
-    public void run()
+    public List<ExonCoverageQc> run()
     {
         List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
@@ -124,6 +124,8 @@ public class ExonCoverageQcFileBuilder
 
         String exonCoverageQcFile = ExonCoverageQcFile.generateFilename(mConfig);
         ExonCoverageQcFile.write(exonCoverageQcFile, coverageQcPerExon, mConfig.WriteLodDetails);
+
+        return coverageQcPerExon;
     }
 
     public static void main(String[] args)

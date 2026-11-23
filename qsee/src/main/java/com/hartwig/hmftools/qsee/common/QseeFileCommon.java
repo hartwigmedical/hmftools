@@ -31,10 +31,14 @@ public class QseeFileCommon
         return new DecimalFormat("0.########", symbols);
     }
 
-    public static String generateFilename(String basePath, String sampleId, String fileId, @Nullable String outputId, String fileExtension)
+    public static String generateFilename(
+            String basePath, @Nullable String sampleId, String fileId, @Nullable String outputId, String fileExtension)
     {
         StringJoiner filename = new StringJoiner(".");
-        filename.add(sampleId);
+
+        if(sampleId != null)
+            filename.add(sampleId);
+
         filename.add(QSEE_FILE_ID);
         filename.add(fileId);
 
@@ -48,16 +52,6 @@ public class QseeFileCommon
 
     public static String generateCohortFilename(String basePath, String fileId, @Nullable String outputId, String fileExtension)
     {
-        StringJoiner filename = new StringJoiner(".");
-        filename.add(QSEE_FILE_ID);
-        filename.add("cohort");
-        filename.add(fileId);
-
-        if(outputId != null)
-            filename.add(outputId);
-
-        filename.add(fileExtension);
-
-        return checkAddDirSeparator(basePath) + filename;
+        return generateFilename(basePath, null, "cohort." + fileId, outputId, fileExtension);
     }
 }

@@ -19,6 +19,7 @@ Metrics not meeting warn/fail QC thresholds are flagged.
   * [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon)
 * [Advanced usage](#advanced-usage)
   * [Generating cohort percentiles](#generating-cohort-percentiles)
+  * [Generating the exon exclusions file](#generating-the-exon-exclusions-file)
   * [Input files in separate directories](#input-files-in-separate-directories)
   * [Threshold overrides](#threshold-overrides)
 * [All arguments](#all-arguments)
@@ -242,7 +243,8 @@ Exons are marked in `VariantDetectabilityStatus` with:
 - `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
   sequences)
 
-The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon):
+The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon). This file can be
+generated from a cohort (see [Generating the exon exclusions file](#generating-the-exon-exclusions-file)):
 
 ```
 GeneName  ExonRank
@@ -274,9 +276,28 @@ Other optional arguments:
 - `-allow_missing_input`: If provided, Qsee will not fail if input files are missing This is useful if e.g. only some BamMetrics files are
   available due to running an older pipeline version
 
+### Generating the exon exclusions file
+
+The [exon exclusions file](#limit-of-detection-of-variants-per-exon) can be generated from a cohort by running:
+
+```
+java -cp qsee.jar com.hartwig.hmftools.qsee.coverage.ExonExclusionsFileBuilder \
+-sample_id_file sample_ids.txt \
+-sample_data_dir inputs/ \
+-driver_gene_panel DriverGenePanel.38.tsv \
+-output_dir output/
+```
+
+where `sample_data_dir` contains the `*.bam_metric.exon_coverage.tsv` files for multiple tumor samples.
+
+This writes:
+- `qsee.exon_exclusions.tsv`: The exon exclusions file. Contains exons where `LodVaf` > 0.05 (i.e. `WARN`) in >=0.95 of tumor samples (or configure with `-min_high_lod_vaf_sample_fraction`).
+- `multisample.qsee.exon_coverage_qc.tsv.gz`: Per sample `LodVaf` values used to derive the exclusions.
+
 ### Input files in separate directories
 
-For [Multi-sample mode](#multi-sample-mode) or [Generating cohort percentiles](#generating-cohort-percentiles), 
+For [Multi-sample mode](#multi-sample-mode), [Generating cohort percentiles](#generating-cohort-percentiles) or 
+[Generating the exon exclusions file](#generating-the-exon-exclusions-file), 
 if input files are located in different tool directories, tool dir args can be used to provide those paths:
 
 ```
@@ -350,5 +371,6 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 - `-skip_categories`: A comma separated list of categories to skip prep for. Valid options: BASE_QUAL_RECALIBRATION, COVERAGE_DISTRIBUTION, DISCORDANT_FRAG_FREQ, DUPLICATE_FREQ, FRAG_LENGTH_DISTRIBUTION, GC_BIAS, MISSED_GENE_VARIANT, MS_INDEL_ERROR
 - `-skip_plot`: Write the output files (vis data, QC status) only, without plotting
 - `-write_cohort_features`: If provided, write the raw feature values when calculating cohort percentiles. 
+- `-min_high_lod_vaf_sample_fraction`: Min fraction of tumor samples with `LodVaf` > 0.05 for an exon to be excluded when generating the exon exclusions file (default: 0.95)
 - `-threads`: Number of threads to use for parallel processing (one sample per thread)
 - `-log_level`: Log level (default: `INFO`). See [log4j docs](https://logging.apache.org/log4j/2.x/manual/customloglevels.html) for valid values

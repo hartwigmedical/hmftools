@@ -2,12 +2,19 @@ package com.hartwig.hmftools.qsee.coverage;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
+import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
+
+import org.jetbrains.annotations.Nullable;
 
 public class ExonExclusions
 {
@@ -58,5 +65,27 @@ public class ExonExclusions
         }
 
         return exonExclusions;
+    }
+
+    public static String generateFilename(String outputDir, @Nullable String outputId)
+    {
+        return QseeFileCommon.generateFilename(outputDir, null, "exon_exclusions", outputId, "tsv");
+    }
+
+    public void write(String filename)
+    {
+        QC_LOGGER.info("Writing exon exclusions to: {}", filename);
+
+        List<Map.Entry<String,Integer>> excludedExons = new ArrayList<>();
+        for(String geneName : new TreeSet<>(mExonExclusions.keySet()))
+        {
+            for(int exonRank : new TreeSet<>(mExonExclusions.get(geneName)))
+                excludedExons.add(Map.entry(geneName, exonRank));
+        }
+
+        DelimFileWriter.write(filename, List.of(COL_GENE_NAME, COL_EXON_RANK), excludedExons, (excludedExon, row) -> {
+            row.set(COL_GENE_NAME, excludedExon.getKey());
+            row.set(COL_EXON_RANK, excludedExon.getValue());
+        });
     }
 }
