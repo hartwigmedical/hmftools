@@ -39,10 +39,6 @@ public class SpliceJunctions
         {
             return Tier.ANNOTATED;
         }
-        if(mRefGenome == null)
-        {
-            return Tier.NONE;
-        }
         byte[] donor = refWindow(mRefGenome, candidateIntron.Chromosome, candidateIntron.start(), candidateIntron.start() + 1);
         byte[] acceptor = refWindow(mRefGenome, candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
         return motifTier(donor, acceptor);
@@ -51,7 +47,7 @@ public class SpliceJunctions
     public int strand(final ChrBaseRegion intron)
     {
         int annotatedStrand = mEnsemblAnnotationIndex.junctionStrand(intron);
-        if(annotatedStrand != 0 || mRefGenome == null)
+        if(annotatedStrand != 0)
         {
             return annotatedStrand;
         }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.pairedUnmappedRecord;
@@ -66,12 +67,12 @@ public class LiftBackGroupProcessorTest
 
     private static List<SAMRecord> process(final List<SAMRecord> group)
     {
-        return process(group, null, null, null, null);
+        return process(group, null, null, EMPTY_REF_GENOME, null);
     }
 
     private static List<SAMRecord> process(final List<SAMRecord> group, final SupplementaryMerger supplementaryMerger)
     {
-        return process(group, supplementaryMerger, null, null, null);
+        return process(group, supplementaryMerger, null, EMPTY_REF_GENOME, null);
     }
 
     private static ExcludedRegions excludedRegion(final String chromosome, final int start, final int end)
@@ -85,7 +86,8 @@ public class LiftBackGroupProcessorTest
     // a non-null merger activates the AS-unmap gate, but with no annotated junctions it cannot improve any primary
     private static SupplementaryMerger noopSupplementary()
     {
-        return new SupplementaryMerger(Collections.emptySet(), supplementaryConfig());
+        return new SupplementaryMerger(
+                EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig());
     }
 
     @Test
@@ -94,7 +96,7 @@ public class LiftBackGroupProcessorTest
         // the tx primary lifts to chr1:100, inside the excluded region; REDUX-style unmapping keeps the record but clears the cigar
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
 
-        List<SAMRecord> emitted = process(List.of(primary), null, null, null, excludedRegion(CHR_1, 50, 300));
+        List<SAMRecord> emitted = process(List.of(primary), null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
@@ -104,7 +106,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testStatsCountInputsAndUnmapReasonsAcrossGroups()
     {
-        LiftBackGroupProcessor processor = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor processor = processor(null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
 
         // both mates lift to chr1:100, inside the excluded region
         processor.processNameGroup(
@@ -128,8 +130,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testStatsSumAcrossWorkers()
     {
-        LiftBackGroupProcessor first = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
-        LiftBackGroupProcessor second = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor first = processor(null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor second = processor(null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
         first.processNameGroup(
                 List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record ->
                 {
@@ -174,7 +176,7 @@ public class LiftBackGroupProcessorTest
     {
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");   // chr1:100
 
-        List<SAMRecord> emitted = process(List.of(primary), null, null, null, excludedRegion(CHR_1, 5000, 6000));
+        List<SAMRecord> emitted = process(List.of(primary), null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 5000, 6000));
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());
@@ -589,8 +591,9 @@ public class LiftBackGroupProcessorTest
         middle.setReadBases(bases("A".repeat(151)));
         last.setReadBases(bases("A".repeat(151)));
         SupplementaryMerger merger = new SupplementaryMerger(
-                Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999)),
-                supplementaryConfig());
+                EnsemblAnnotationIndex.fromJunctions(
+                        Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999))),
+                EMPTY_REF_GENOME, supplementaryConfig());
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 4000, 'A').asRefGenome();
 
         List<SAMRecord> emitted = process(List.of(primary, middle, last), merger, null, ref, null);
@@ -608,7 +611,8 @@ public class LiftBackGroupProcessorTest
         primary.setReadBases(bases("A".repeat(151)));
         supplementary.setReadBases(bases("A".repeat(151)));
 
-        List<SAMRecord> emitted = process(List.of(primary, supplementary), contigSupplementary());
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 1000, 'A').asRefGenome();
+        List<SAMRecord> emitted = process(List.of(primary, supplementary), contigSupplementary(), null, ref, null);
 
         assertEquals(1, emitted.size());
         assertEquals("50M100N101M", emitted.get(0).getCigarString());
@@ -626,8 +630,11 @@ public class LiftBackGroupProcessorTest
         primary.setReadBases(bases("A".repeat(100)));
         supplementary.setReadBases(primary.getReadBases());
 
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 2000, 'A').asRefGenome();
         LiftBackGroupProcessor processor = processor(
-                new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, null, null);
+                new SupplementaryMerger(
+                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
+                null, ref, null);
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(List.of(primary, supplementary), emitted::add);
 
@@ -656,7 +663,9 @@ public class LiftBackGroupProcessorTest
                 .asRefGenome();
         List<SAMRecord> emitted = process(
                 List.of(primary, supplementary),
-                new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, ref, null);
+                new SupplementaryMerger(
+                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
+                null, ref, null);
 
         assertEquals(2, emitted.size());
         SAMRecord emittedSupplementary = emitted.stream()
@@ -680,7 +689,9 @@ public class LiftBackGroupProcessorTest
                 CHR_1, 1200, "50S50M", CHR_1 + ",1000,+,100M,60,0;");
 
         LiftBackGroupProcessor processor = processor(
-                new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, null, null);
+                new SupplementaryMerger(
+                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
+                null, EMPTY_REF_GENOME, null);
         processor.processNameGroup(
                 List.of(primary, supplementary), record ->
                 {
@@ -778,7 +789,7 @@ public class LiftBackGroupProcessorTest
     private static SupplementaryMerger contigSupplementary()
     {
         return new SupplementaryMerger(
-                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, supplementaryConfig());
+                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), EMPTY_REF_GENOME, supplementaryConfig());
     }
 
     @Test

@@ -30,14 +30,9 @@ public class OverhangGate
         mRefGenome = refGenome;
     }
 
-    public boolean enabled()
-    {
-        return mRefGenome != null;
-    }
-
     public void gatePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
     {
-        if(!enabled() || alignments.isEmpty())
+        if(alignments.isEmpty())
         {
             return;
         }
@@ -74,7 +69,7 @@ public class OverhangGate
 
     public Outcome gate(final LiftedAlignment alignment, final byte[] readBases)
     {
-        if(mRefGenome == null || readBases == null || readBases.length == 0)
+        if(readBases == null || readBases.length == 0)
         {
             return new Outcome(alignment, false);
         }

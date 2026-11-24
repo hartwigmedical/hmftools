@@ -268,11 +268,6 @@ public final class BamRecordEmitter
     private void refreshNmDropMd(final SAMRecord record)
     {
         record.setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, null);
-        if(mRefGenome == null)
-        {
-            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, null);
-            return;
-        }
         int editDistance = computeEditDistance(record);
         record.setAttribute(NUM_MUTATONS_ATTRIBUTE, editDistance >= 0 ? Integer.valueOf(editDistance) : null);
     }

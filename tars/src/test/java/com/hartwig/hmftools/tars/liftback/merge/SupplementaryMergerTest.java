@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.tars.liftback.merge;
 
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 
 import static org.junit.Assert.assertEquals;
@@ -57,7 +58,8 @@ public class SupplementaryMergerTest
 
     private SupplementaryMerger defaultMerger(final Set<ChrBaseRegion> annotated)
     {
-        return new SupplementaryMerger(annotated, TarsTestFixtures.supplementaryConfig());
+        return new SupplementaryMerger(
+                EnsemblAnnotationIndex.fromJunctions(annotated), EMPTY_REF_GENOME, TarsTestFixtures.supplementaryConfig());
     }
 
     private static void assertRejected(
@@ -100,7 +102,7 @@ public class SupplementaryMergerTest
                         "g", "gn", "tn", CHR1, -1,
                         List.of(new BaseRegion(100, 199), new BaseRegion(300, 399)))));
         SupplementaryMerger annotatedMerger = new SupplementaryMerger(
-                annotation, null, TarsTestFixtures.supplementaryConfig());
+                annotation, EMPTY_REF_GENOME, TarsTestFixtures.supplementaryConfig());
 
         assertEquals(-1, annotatedMerger.spliceStrand(CHR1, 150, "50M100N50M"));
     }
@@ -281,7 +283,8 @@ public class SupplementaryMergerTest
                 CHR1, true, READ_LEN, 1000, "94M57S",
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
-        Result result = new SupplementaryMerger(Collections.emptySet(), strict).merge(cand);
+        Result result = new SupplementaryMerger(
+                EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, strict).merge(cand);
 
         assertFalse(result.merged());
         assertEquals(RejectReason.NOVEL_JUNCTION, result.rejectReason());
@@ -295,7 +298,8 @@ public class SupplementaryMergerTest
                 CHR1, true, READ_LEN, 1000, "94M57S",
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
-        Result result = new SupplementaryMerger(Collections.emptySet(), perm).merge(cand);
+        Result result = new SupplementaryMerger(
+                EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, perm).merge(cand);
 
         assertTrue(result.merged());
         assertEquals("94M106N57M", result.mergedCigar());
@@ -506,7 +510,7 @@ public class SupplementaryMergerTest
                 new ChrBaseRegion(CHR1, 3030, 3999),
                 new ChrBaseRegion(CHR1, 4030, 4999));
 
-        Result result = new SupplementaryMerger(set, cappedConfig).merge(cand);
+        Result result = new SupplementaryMerger(EnsemblAnnotationIndex.fromJunctions(set), EMPTY_REF_GENOME, cappedConfig).merge(cand);
 
         assertTrue(result.merged());
         assertEquals(2, result.chainDepth());
@@ -626,7 +630,8 @@ public class SupplementaryMergerTest
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 
-        Result result = new SupplementaryMerger(Collections.emptySet(), strict).merge(cand);
+        Result result = new SupplementaryMerger(
+                EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, strict).merge(cand);
 
         assertFalse(result.merged());
         assertEquals(RejectReason.NOVEL_JUNCTION, result.rejectReason());

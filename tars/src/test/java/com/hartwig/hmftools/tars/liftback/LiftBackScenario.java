@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryConfig;
@@ -109,7 +110,7 @@ public final class LiftBackScenario
 
     public Result run()
     {
-        RefGenomeInterface ref = mGenome != null ? mGenome.asRefGenome() : null;
+        RefGenomeInterface ref = mGenome != null ? mGenome.asRefGenome() : EMPTY_REF_GENOME;
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions(mAnnotatedIntrons);
 
         AlignmentSelector selector = mEnsemblAnnotationIndex != null

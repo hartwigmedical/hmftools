@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.tars.liftback.merge;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 
 import static org.junit.Assert.assertEquals;
@@ -59,14 +60,14 @@ public class SpliceJunctionsTest
     @Test
     public void testSpliceStrandComesFromTheAnnotatedTranscriptStrand()
     {
-        SpliceJunctions spliceJunctions = new SpliceJunctions(reverseStrandTranscript(), null);
+        SpliceJunctions spliceJunctions = new SpliceJunctions(reverseStrandTranscript(), EMPTY_REF_GENOME);
 
         assertEquals(-1, spliceJunctions.spliceStrand(CHR_1, 150, "50M100N50M"));
 
         // no N gap, so no junction to take a strand from
         assertEquals(0, spliceJunctions.spliceStrand(CHR_1, 150, "100M"));
 
-        // an N gap that is not an annotated junction, with no ref genome to fall back on
+        // an N gap that is not an annotated junction, with no ref bases to fall back on
         assertEquals(0, spliceJunctions.spliceStrand(CHR_1, 150, "50M150N50M"));
     }
 

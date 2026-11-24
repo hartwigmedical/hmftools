@@ -24,14 +24,9 @@ public class GenomicAlignmentScorer
         mRefGenome = refGenome;
     }
 
-    public boolean enabled()
-    {
-        return mRefGenome != null;
-    }
-
     public void scorePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
     {
-        if(!enabled() || alignments.size() < 2)
+        if(alignments.size() < 2)
         {
             return;
         }
@@ -57,7 +52,7 @@ public class GenomicAlignmentScorer
 
     public int scoreRecord(final LiftedAlignment alignment, final SAMRecord record)
     {
-        if(!enabled() || alignment.Dropped)
+        if(alignment.Dropped)
         {
             return Integer.MIN_VALUE;
         }

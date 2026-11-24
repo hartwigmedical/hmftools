@@ -20,7 +20,7 @@ public final class BwaScoring
     public static byte[] refWindow(
             final RefGenomeInterface refGenome, final String chromosome, final int posStart, final int posEnd)
     {
-        if(refGenome == null || posStart < 1 || posEnd < posStart || posEnd > refGenome.getChromosomeLength(chromosome))
+        if(posStart < 1 || posEnd < posStart || posEnd > refGenome.getChromosomeLength(chromosome))
         {
             return null;
         }
@@ -69,11 +69,6 @@ public final class BwaScoring
             final RefGenomeInterface refGenome, final String chromosome, final int alignmentStart, final String cigarStr,
             final byte[] readBases)
     {
-        if(refGenome == null)
-        {
-            return Integer.MIN_VALUE;
-        }
-
         Cigar cigar = CigarUtils.cigarFromStr(cigarStr);
         int totalScore = 0;
         int queryPos = 0;

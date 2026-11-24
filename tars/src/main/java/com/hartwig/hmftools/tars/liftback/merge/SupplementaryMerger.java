@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -74,13 +73,6 @@ public class SupplementaryMerger
 
     private final SpliceJunctions mSpliceJunctions;
     private final SupplementaryConfig mConfig;
-
-    public SupplementaryMerger(final Set<ChrBaseRegion> annotatedJunctions, final SupplementaryConfig config)
-    {
-        this(
-                EnsemblAnnotationIndex.fromJunctions(annotatedJunctions != null ? annotatedJunctions : new HashSet<>()),
-                null, config);
-    }
 
     public SupplementaryMerger(
             final EnsemblAnnotationIndex annotationIndex, final RefGenomeInterface refGenome,

@@ -56,6 +56,5 @@ public class BwaScoringTest
         assertEquals(3, BwaScoring.genomicScore(genome.asRefGenome(), CHR_1, 1, "5M2D5M", bases("AAAAAAAAAA")));
         assertEquals(10, BwaScoring.genomicScore(genome.asRefGenome(), CHR_1, 1, "5M100N5M", bases("AAAAAAAAAA")));
         assertEquals(7, BwaScoring.genomicScore(genome.asRefGenome(), CHR_1, 1, "3S7M", bases("AAAAAAAAAA")));
-        assertEquals(Integer.MIN_VALUE, BwaScoring.genomicScore(null, CHR_1, 1, "10M", bases("AAAAAAAAAA")));
     }
 }

@@ -38,6 +38,7 @@ public final class TarsTestFixtures
     public static final String GENE_NAME = "TESTG";
     public static final String TRANS_NAME = "ENST_TEST";
     public static final String TX_CONTIG = "ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME;
+    public static final MockRefGenome EMPTY_REF_GENOME = new MockRefGenome(true);
 
     private TarsTestFixtures() { }
 
