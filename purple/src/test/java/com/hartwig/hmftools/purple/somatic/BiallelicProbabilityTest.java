@@ -20,7 +20,7 @@ public class BiallelicProbabilityTest extends TestCase
 
         double probability = calculateProbability(samplePurity, alleleReadCount, depth, segmentCN, variantCN, minorAlleleCN);
 
-        assertEquals(0.7136, probability, 0.001);
+        assertEquals(0.7333, probability, 0.001);
 
         // test 1 - extreme subclonality - relative calc uses fallback value giving zero biallelic prob
         samplePurity = 0.32;

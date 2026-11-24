@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -72,7 +73,7 @@ public class BiallelicModel
             double dampeningFactor = (BIALLELIC_DAMPENING_AD_LIMIT + factor) / conservativeAd;
 
             conservativeAd = round(conservativeAd * dampeningFactor);
-            readCountAtThreshold = round(readCountAtThreshold * dampeningFactor);
+            readCountAtThreshold = floor(readCountAtThreshold * dampeningFactor);
         }
 
         PoissonDistribution poissonDist = new PoissonDistribution(conservativeAd);

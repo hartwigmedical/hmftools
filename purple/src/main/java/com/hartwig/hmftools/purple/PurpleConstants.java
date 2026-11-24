@@ -190,7 +190,7 @@ public class PurpleConstants
 
     // biallelic (no wildtype allele remaining) probability
     public static final int BIALLELIC_LOH_GROWTH_RATE = 70;
-    public static final double BIALLELIC_LOH_MIN_PURITY_EXP = 0.2;
+    public static final double BIALLELIC_LOH_MIN_PURITY_EXP = 20;
     public static final double BIALLELIC_AF_UNCERTAINTY_FACTOR = 0.025;
     public static final int BIALLELIC_DAMPENING_AD_LIMIT = 300;
     public static final double BIALLELIC_DAMPENING_AD_EXP = 0.75;
