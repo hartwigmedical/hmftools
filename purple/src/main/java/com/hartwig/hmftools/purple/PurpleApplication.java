@@ -352,9 +352,8 @@ public class PurpleApplication
         }
 
         PurpleQC qcChecks = PurpleSummaryData.createQC(
-                amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
-                cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
-                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES, tincLevel);
+                mConfig.TargetRegionsMode, amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
+                cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth, tincLevel);
 
         PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 

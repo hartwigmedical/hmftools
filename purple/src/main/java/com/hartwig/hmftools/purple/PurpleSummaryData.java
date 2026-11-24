@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
 import static com.hartwig.hmftools.purple.fitting.FittedPurityScoreFactory.polyclonalProportion;
 import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
 
@@ -29,9 +31,9 @@ import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 public final class PurpleSummaryData
 {
     public static PurpleQC createQC(
-            double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
+            boolean isTargetedMode, double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
             final List<PurpleCopyNumber> copyNumbers, final List<GeneCopyNumber> geneCopyNumbers,
-            final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes, double tincLevel)
+            final Set<GermlineAberration> aberrations, int amberMeanDepth, double tincLevel)
     {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
@@ -41,9 +43,12 @@ public final class PurpleSummaryData
 
         int deletedGenes = DeletionDrivers.deletedGenes(geneCopyNumbers);
 
+        int maxDeletedGenes = isTargetedMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES;
+
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
                 PurpleQCStatus.genderPass(amberGender, cobaltGender, aberrations),
-                unsupportedCopyNumberSegments, deletedGenes, bestFit.Fit.purity(), bestFit.Method, contamination, maxDeletedGenes, tincLevel);
+                isTargetedMode ? 0 : unsupportedCopyNumberSegments, // disable the warning check in targeted mode
+                deletedGenes, bestFit.Fit.purity(), bestFit.Method, contamination, maxDeletedGenes, tincLevel);
 
         LohCalcData lohCalcData = LohCalcs.calcLohData(copyNumbers);
 
