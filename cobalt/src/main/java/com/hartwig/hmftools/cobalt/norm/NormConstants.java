@@ -18,9 +18,9 @@ public class NormConstants
     public static final double WGS_PERCENTILE_DAMPEN = 0.2;
 
     // region filtering
-    public static final double FILTER_CHECK_PERCENTILE = 0.2;
     public static final double FILTER_MEDIAN_MAX_RATIO = 3;
-    public static final double FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD = 0.2;
+    public static final double FILTER_CHECK_20TH_PERC_RATIO_THRESHOLD = 0.2;
+    public static final double FILTER_CHECK_10TH_PERC_RATIO_THRESHOLD = 0.1;
     public static final double FILTER_CHECK_PERCENTILE_STD_DEV_THRESHOLD = 0.5;
     public static final int FILTER_COHORT_MIN = 10;
     public static final double FILTER_COHORT_MIN_PERCENT = 0.5;

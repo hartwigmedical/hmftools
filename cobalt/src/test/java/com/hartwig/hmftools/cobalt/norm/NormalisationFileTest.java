@@ -11,7 +11,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_MEDIAN_MAX_RATIO;
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcSampleAdjustedRatios;
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.filterRegion;
@@ -102,7 +101,7 @@ public class NormalisationFileTest
 
         for(int i = 0; i < 10; ++i)
         {
-            enrichmentValues.add(FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD - 0.01);
+            enrichmentValues.add(0.2 - 0.01);
         }
 
         Collections.sort(enrichmentValues);

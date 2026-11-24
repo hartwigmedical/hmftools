@@ -11,8 +11,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MIN;
-import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE;
-import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_10TH_PERC_RATIO_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_20TH_PERC_RATIO_THRESHOLD;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE_STD_DEV_THRESHOLD;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_COHORT_MIN;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_COHORT_MIN_PERCENT;
@@ -274,12 +274,18 @@ public class Normaliser
         if(HumanChromosome.fromString(chromosome).isAllosome())
             return false;
 
-        int targetIndex = (int)floor(FILTER_CHECK_PERCENTILE * sampleEnrichments.size());
-        double percentile20 = sampleEnrichments.get(targetIndex);
+        int percentile20Index = (int)floor(0.2 * sampleEnrichments.size());
+        double percentile20 = sampleEnrichments.get(percentile20Index);
 
-        // 20th percentile ratio < 0.2
-        if(percentile20 >= FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD)
-            return false;
+        // 20th percentile ratio < 0.2, o 10th percentile is < 0.1
+        if(percentile20 >= FILTER_CHECK_20TH_PERC_RATIO_THRESHOLD)
+        {
+            int percentile10Index = (int)floor(0.1 * sampleEnrichments.size());
+            double percentile10 = sampleEnrichments.get(percentile10Index);
+
+            if(percentile10 >= FILTER_CHECK_10TH_PERC_RATIO_THRESHOLD)
+                return false;
+        }
 
         double median = median(sampleEnrichments);
 
