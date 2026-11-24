@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.pave.impact.ImpactClassifier;
 import com.hartwig.hmftools.pave.impact.SpliceImpactType;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 
@@ -462,5 +464,60 @@ public class SpliceContextTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
+    }
+
+    @Test
+    public void testSpecialSpliceRegion()
+    {
+        // see baked in resource 'special_splice_regions' TSV for MET exon splice details
+        TranscriptData transData = new TranscriptData(
+                0, "ENST00000397752", "MET", true, ORIENT_FWD,
+                10, 1500, 10, 1500, "", null);
+
+        int exonStart = 10;
+        int exonLength = 9;
+        for(int i = 0; i < 15; ++i)
+        {
+            int exonEnd = exonStart + exonLength;
+            int exonRank = i + 1;
+            transData.exons().add(new ExonData(0, exonStart, exonEnd, exonRank, 0, 0));
+
+            exonStart += 100;
+        }
+
+        ExonData targetExon = transData.exons().stream().filter(x -> x.Rank == 14).findFirst().orElse(null);
+        int exonBoundary = targetExon.Start;
+
+        int pos = exonBoundary - 20;
+        String ref = "A";
+        String alt = "C";
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        ImpactClassifier impactClassifier = new ImpactClassifier(mRefGenome);
+        VariantTransImpact varImpact = impactClassifier.classifyVariant(var, transData);
+
+        assertTrue(varImpact.inSpliceRegion());
+
+        pos = exonBoundary - 31;
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        varImpact = impactClassifier.classifyVariant(var, transData);
+
+        assertFalse(varImpact.inSpliceRegion());
+
+        pos = exonBoundary - 9;
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        varImpact = impactClassifier.classifyVariant(var, transData);
+
+        assertFalse(varImpact.inSpliceRegion());
+
+        // indel case
+        pos = exonBoundary - 32;
+        var = new VariantData(CHR_1, pos, "AAA", "A");
+
+        varImpact = impactClassifier.classifyVariant(var, transData);
+
+        assertTrue(varImpact.inSpliceRegion());
     }
 }
