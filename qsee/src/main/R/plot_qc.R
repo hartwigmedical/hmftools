@@ -1055,7 +1055,7 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
       
       ## Set legend order
       guides(
-         color = guide_legend(order = 1, override.aes = list(size = BASE_SIZE*0.5)),
+         color = guide_legend(order = 1, ncol = 2, override.aes = list(size = BASE_SIZE*0.5)),
          fill  = guide_legend(order = 2, override.aes = list(size = BASE_SIZE*0.35))
       ) +
       
@@ -1147,14 +1147,13 @@ create_report <- local({
       "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD,
       
       "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL,
-      "I" = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT,
-      "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES,
-      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS,
-      
+      "I" = FEATURE_TYPE$MS_INDEL_ERROR_RATES,
+      "J" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS,
+
       "Z" = PLOT_NAME_LEGEND
    )
 
-   plots <- lapply(plot_order, function(feature_type){
+   free_plot <- function(feature_type){
 
       p <- PLOTS[[feature_type]]
 
@@ -1166,16 +1165,26 @@ create_report <- local({
       }
 
       return(p)
-   })
+   }
+
+   plots <- lapply(plot_order, free_plot)
 
    design <- "
-      AABBCCDD
-      AAEEFFGG
-      AAHHIIII
-      AAJJKKZZ
+      AABBEEDD
+      AACCFFGG
+      AAIIJJHH
+      AA##ZZ##
    "
-   
-   plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
+
+   page_1 <- patchwork::wrap_plots(plots, design = design, heights = c(1, 1, 1, 0.5)) + REPORT_TITLE
+
+   page_2 <- patchwork::wrap_plots(
+      free_plot(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT),
+      PLOTS[[PLOT_NAME_LEGEND]],
+      ncol = 1, heights = c(1, 0.1)
+   ) + REPORT_TITLE
+
+   pages <- list(page_1, page_2)
 
    plot_width <- 17
    plot_height <- 10
@@ -1184,17 +1193,21 @@ create_report <- local({
 
    LOGGER$info("Writing PDF: %s", PLOT_PATH)
    suppressWarnings({
-      ggsave(filename = PLOT_PATH, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
+      grDevices::pdf(file = PLOT_PATH, width = plot_width, height = plot_height, useDingbats = FALSE)
+      for(page in pages) print(page)
+      invisible(grDevices::dev.off())
    })
 
    if(SINGLE_PATIENT_MODE)
    {
       ## PNGs are easier to embed in downstream reports (e.g. on a website)
-      png_path <- sub("pdf$", "png", PLOT_PATH)
-      LOGGER$info("Writing PNG: %s", png_path)
-      suppressWarnings({
-         ggsave(filename = png_path, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
-      })
+      for(page_index in seq_along(pages)){
+         png_path <- sub("pdf$", sprintf("page%s.png", page_index), PLOT_PATH)
+         LOGGER$info("Writing PNG: %s", png_path)
+         suppressWarnings({
+            ggsave(filename = png_path, plot = pages[[page_index]], width = plot_width, height = plot_height, units = "in")
+         })
+      }
    }
 })
 
