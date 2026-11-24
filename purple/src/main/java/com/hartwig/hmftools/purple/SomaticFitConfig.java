@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TMB_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.HIGHLY_DIPLOID_PERCENTAGE_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_MIN_PEAK_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_MIN_PURITY_DEFAULT;
@@ -18,12 +19,16 @@ public class SomaticFitConfig
     public static final String SOMATIC_PENALTY_WEIGHT = "somatic_penalty_weight";
     public static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
 
+    public static final String TMB_HIGH_THRESHOLD = "tmb_high_threshold";
+
     public int MinTotalVariants;
     public int MinPeakVariants;
     public double MinSomaticPurity;
     public double MinSomaticPuritySpread;
     public double SomaticPenaltyWeight;
     public double HighlyDiploidPercentage;
+
+    public double TmbHighThreshold;
 
     public SomaticFitConfig(final ConfigBuilder configBuilder)
     {
@@ -33,6 +38,7 @@ public class SomaticFitConfig
         MinSomaticPuritySpread = configBuilder.getDecimal(SOMATIC_MIN_PURITY_SPREAD);
         SomaticPenaltyWeight = configBuilder.getDecimal(SOMATIC_PENALTY_WEIGHT);
         HighlyDiploidPercentage = configBuilder.getDecimal(HIGHLY_DIPLOID_PERCENTAGE);
+        TmbHighThreshold = configBuilder.getDecimal(TMB_HIGH_THRESHOLD);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -58,5 +64,7 @@ public class SomaticFitConfig
         configBuilder.addDecimal(
                 HIGHLY_DIPLOID_PERCENTAGE, "Proportion of genome that must be diploid before using somatic fit",
                 HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
+
+        configBuilder.addDecimal(TMB_HIGH_THRESHOLD, "TMB level to set status to high", DEFAULT_TMB_THRESHOLD);
     }
 }

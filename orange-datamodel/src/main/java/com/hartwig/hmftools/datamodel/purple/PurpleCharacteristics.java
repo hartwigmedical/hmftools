@@ -14,17 +14,14 @@ public interface PurpleCharacteristics
 
     double microsatelliteIndelsPerMb();
 
-    @NotNull
     PurpleMicrosatelliteStatus microsatelliteStatus();
 
     double tumorMutationalBurdenPerMb();
 
-    @NotNull
     PurpleTumorMutationalStatus tumorMutationalBurdenStatus();
 
     int tumorMutationalLoad();
 
-    @NotNull
     PurpleTumorMutationalStatus tumorMutationalLoadStatus();
 
     int svTumorMutationalBurden();

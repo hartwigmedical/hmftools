@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_ASSUMED_FRACTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleConstants.TML_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
@@ -121,12 +122,18 @@ public class SomaticStream
 
     public TumorMutationalStatus tumorMutationalBurdenPerMbStatus()
     {
-        return mEnabled ? TumorMutationalStatus.fromBurdenPerMb(mTmb) : TumorMutationalStatus.UNKNOWN;
+        if(mEnabled)
+            return mTmb >= mConfig.SomaticFitting.TmbHighThreshold ? TumorMutationalStatus.HIGH : TumorMutationalStatus.LOW;
+        else
+            return TumorMutationalStatus.UNKNOWN;
     }
 
     public TumorMutationalStatus tumorMutationalLoadStatus()
     {
-        return mEnabled ? TumorMutationalStatus.fromLoad(mTml) : TumorMutationalStatus.UNKNOWN;
+        if(mEnabled)
+            return mTml >= TML_THRESHOLD ? TumorMutationalStatus.HIGH : TumorMutationalStatus.LOW;
+        else
+            return TumorMutationalStatus.UNKNOWN;
     }
 
     public List<DriverCatalog> buildDrivers(

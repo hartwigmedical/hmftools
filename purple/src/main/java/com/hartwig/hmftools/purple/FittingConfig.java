@@ -53,6 +53,7 @@ public class FittingConfig
     public static final String PURITY_INCREMENT = "purity_increment";
     public static final String MIN_PLOIDY = "min_ploidy";
     public static final String MAX_PLOIDY = "max_ploidy";
+
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
     private static final String DEVIATION_PENALTY_GC_MIN_ADJUST = "deviation_penalty_gc_min_adjust";

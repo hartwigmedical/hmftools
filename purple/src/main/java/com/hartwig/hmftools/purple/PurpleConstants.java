@@ -206,6 +206,10 @@ public class PurpleConstants
     public static final int CHIMERISM_MIN_BAF_COUNT = 2;
     public static final double CHIMERISM_KDE_BANDWIDTH = 0.01;
 
+    // other thresholds
+    public static final double DEFAULT_TMB_THRESHOLD = 13;
+    public static final int TML_THRESHOLD = 140;
+
     // target-region TML and TMB
     public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
     public static final double DEFAULT_TARGETED_TMB_RATIO = 0.05;
