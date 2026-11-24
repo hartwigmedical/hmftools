@@ -330,7 +330,6 @@ public final class BamRecordEmitter
                 case S:
                     readIndex += length;
                     break;
-                case H:
                 case P:
                     break;
             }

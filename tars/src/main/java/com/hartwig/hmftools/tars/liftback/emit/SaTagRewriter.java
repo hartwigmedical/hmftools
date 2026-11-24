@@ -74,7 +74,7 @@ public final class SaTagRewriter
         Integer nm = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
         return record.getReferenceName() + ',' + record.getAlignmentStart()
                 + ',' + (record.getReadNegativeStrandFlag() ? SUPP_NEG_STRAND : SUPP_POS_STRAND)
-                + ',' + record.getCigarString().replace('H', 'S') + ',' + record.getMappingQuality()
+                + ',' + record.getCigarString() + ',' + record.getMappingQuality()
                 + ',' + (nm != null ? nm : 0) + ';';
     }
 }

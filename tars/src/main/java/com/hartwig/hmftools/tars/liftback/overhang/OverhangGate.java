@@ -115,7 +115,7 @@ public class OverhangGate
 
     private static Overhang findOverhang(final boolean leading, final String cigar, final List<CigarElement> elements)
     {
-        if(elements.size() < 3 || CigarUtils.hasHardClip(elements))
+        if(elements.size() < 3)
         {
             return null;
         }

@@ -35,7 +35,7 @@ public class SaTagRewriterTest
     public void testPrimarySaUsesFinalEmittedSupplementaryFields()
     {
         SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
-        SAMRecord supp = supplementaryRecord(CHR_1, 250, "30M20H", "stale");
+        SAMRecord supp = supplementaryRecord(CHR_1, 250, "30M20S", "stale");
         supp.setReadNegativeStrandFlag(true);
         supp.setMappingQuality(42);
         supp.setAttribute("NM", 3);
@@ -53,7 +53,7 @@ public class SaTagRewriterTest
         primary.setMappingQuality(55);
         primary.setAttribute("NM", 1);
         SAMRecord target = supplementaryRecord(CHR_1, 250, "30M20S", "stale");
-        SAMRecord sibling = supplementaryRecord(CHR_1, 400, "20H30M", "stale");
+        SAMRecord sibling = supplementaryRecord(CHR_1, 400, "20S30M", "stale");
         sibling.setReadNegativeStrandFlag(true);
         sibling.setMappingQuality(41);
         sibling.setAttribute("NM", 4);

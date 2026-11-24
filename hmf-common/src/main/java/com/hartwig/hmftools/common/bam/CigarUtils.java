@@ -182,11 +182,6 @@ public final class CigarUtils
         return (lastElement != null && lastElement.getOperator() == H) ? lastElement.getLength() : 0;
     }
 
-    public static boolean hasHardClip(final List<CigarElement> elements)
-    {
-        return elements.stream().anyMatch(x -> x.getOperator() == H);
-    }
-
     public static int leftClipLength(final Cigar cigar)
     {
         CigarElement firstElement = cigar.getFirstCigarElement();

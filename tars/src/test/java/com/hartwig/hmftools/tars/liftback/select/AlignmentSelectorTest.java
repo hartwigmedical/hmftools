@@ -237,7 +237,7 @@ public class AlignmentSelectorTest
     @Test
     public void testSupplementary()
     {
-        SAMRecord record = newRecord(CHR_1, 1000, "60M40H");
+        SAMRecord record = newRecord(CHR_1, 1000, "60M40S");
         record.setSupplementaryAlignmentFlag(true);
 
         AlignmentSelector selector = new AlignmentSelector(contigMap());

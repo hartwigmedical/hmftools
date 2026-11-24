@@ -105,10 +105,6 @@ public class SupplementaryMerger
         }
 
         List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(placement.primaryCigar());
-        if(CigarUtils.hasHardClip(primaryCigar))
-        {
-            return Result.noMerge(RejectReason.COMPLEX_CIGAR_SHAPE);
-        }
 
         int primaryStart = placement.primaryStart();
         List<RecordAlignment> remaining = new ArrayList<>(placement.supplementaries());
@@ -244,10 +240,6 @@ public class SupplementaryMerger
         }
 
         List<CigarElement> suppCigar = CigarUtils.cigarElementsFromStr(alignment.LiftedCigar);
-        if(CigarUtils.hasHardClip(suppCigar))
-        {
-            return MergeOutcome.reject(RejectReason.COMPLEX_CIGAR_SHAPE);
-        }
 
         // Keep the primary-distal block of a translated M-N-M alignment.
         Side primarySide = Side.of(primaryStart, primaryCigar);

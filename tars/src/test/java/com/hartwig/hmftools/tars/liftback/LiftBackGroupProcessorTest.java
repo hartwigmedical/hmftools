@@ -820,9 +820,9 @@ public class LiftBackGroupProcessorTest
     {
         SAMRecord primary = primaryRecord(CHR_1, 100, "50M100S");
         SAMRecord supp1 = supplementaryRecord(
-                CHR_1, 300, "50H50M50H", CHR_1 + ",100,+,50M100S,60,0;");
+                CHR_1, 300, "50S50M50S", CHR_1 + ",100,+,50M100S,60,0;");
         SAMRecord supp2 = supplementaryRecord(
-                CHR_1, 500, "100H50M", CHR_1 + ",100,+,50M100S,60,0;");
+                CHR_1, 500, "100S50M", CHR_1 + ",100,+,50M100S,60,0;");
         supp2.setReadNegativeStrandFlag(true);
         supp2.setMappingQuality(40);
 

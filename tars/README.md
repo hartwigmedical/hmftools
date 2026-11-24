@@ -258,7 +258,7 @@ Not tars config, but liftback depends on them.
 
 | Setting | Value | What it is |
 |---|---|---|
-| `-Y` | on | bwa-mem2 soft-clips supplementary alignments instead of hard-clipping them; Steps 1 and 2 skip hard-clipped records |
+| `-Y` | on | bwa-mem2 soft-clips supplementary alignments; Steps 1 and 2 require it |
 | `-T` | 19 | bwa-mem2 minimum alignment score to output; set below the default 30 to retain short-anchor supplementaries for Step 2 |
 | `-h` | 75 | bwa-mem2 XA hit cap used by the TARS alignment |
 

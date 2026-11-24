@@ -312,16 +312,6 @@ public class SupplementaryMergerTest
         assertRejected(
                 RejectReason.COMPLEX_CIGAR_SHAPE, merger,
                 placement(
-                        CHR1, true, READ_LEN, 1000, "10H94M57S",
-                        supp(0, CHR1, true, 1200, "90S61M", 60)));
-        assertRejected(
-                RejectReason.COMPLEX_CIGAR_SHAPE, merger,
-                placement(
-                        CHR1, true, READ_LEN, 1001, "94M57S",
-                        supp(0, CHR1, true, 1200, "5H90S61M", 60)));
-        assertRejected(
-                RejectReason.COMPLEX_CIGAR_SHAPE, merger,
-                placement(
                         CHR1, true, READ_LEN, 1000, "90M4I57S",
                         supp(0, CHR1, true, 1200, "94S57M", 60)));
         assertRejected(
