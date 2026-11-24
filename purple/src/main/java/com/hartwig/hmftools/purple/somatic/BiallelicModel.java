@@ -73,12 +73,12 @@ public class BiallelicModel
             double dampeningFactor = (BIALLELIC_DAMPENING_AD_LIMIT + factor) / conservativeAd;
 
             conservativeAd = round(conservativeAd * dampeningFactor);
-            readCountAtThreshold = floor(readCountAtThreshold * dampeningFactor);
+            readCountAtThreshold = readCountAtThreshold * dampeningFactor;
         }
 
         PoissonDistribution poissonDist = new PoissonDistribution(conservativeAd);
 
-        double probNoWildtypeGivenLoh = 1 - poissonDist.cumulativeProbability((int)readCountAtThreshold);
+        double probNoWildtypeGivenLoh = 1 - poissonDist.cumulativeProbability((int)round(readCountAtThreshold));
 
         double probWildtypeGivenLohRelative = probNoWildtypeGivenLoh == 0 ? PROB_UPPER_LIMIT : 0.5 * (1 - probNoWildtypeGivenLoh) / probNoWildtypeGivenLoh;
         probWildtypeGivenLohRelative = capProbability(probWildtypeGivenLohRelative);
