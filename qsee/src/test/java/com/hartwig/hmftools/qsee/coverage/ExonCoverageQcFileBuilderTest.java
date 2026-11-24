@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.lod;
+package com.hartwig.hmftools.qsee.coverage;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 
 import org.junit.Test;
 
-public class GeneLodCalculatorTest
+public class ExonCoverageQcFileBuilderTest
 {
     private static final String SAMPLE_ID = "TUMOR_SAMPLE";
     private static final String REPORTABLE_GENE = "REPORTABLE_GENE";
@@ -34,7 +34,7 @@ public class GeneLodCalculatorTest
     );
 
     @Test
-    public void canCalcGeneLods()
+    public void canCalcCoverageQcPerExon()
     {
         // purity, exon rank, expected tumor VAF LoD, expected detectable clonal variants
         Object[][] expectedRows = {
@@ -50,17 +50,17 @@ public class GeneLodCalculatorTest
             double tumorPurity = (double) expectedRow[0];
             int exonRank = (int) expectedRow[1];
 
-            List<GeneLod> geneLods = GeneLodCalculator.calcGeneLods(
+            List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQcFileBuilder.calcCoverageQcPerExon(
                     SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, List.of(REPORTABLE_GENE), tumorPurity);
 
-            assertEquals(2, geneLods.size()); // Non-reportable gene excluded
+            assertEquals(2, coverageQcPerExon.size()); // Non-reportable gene excluded
 
-            GeneLod geneLod = geneLods.stream().filter(x -> x.exonRank() == exonRank).findFirst().orElseThrow();
+            ExonCoverageQc exonCoverageQc = coverageQcPerExon.stream().filter(x -> x.exonRank() == exonRank).findFirst().orElseThrow();
 
-            assertEquals(REPORTABLE_GENE, geneLod.geneName());
-            assertEquals(100, geneLod.medianDepth(), 0);
-            assertEquals((double) expectedRow[2], geneLod.tumorVafLod(), 1e-3);
-            assertEquals(expectedRow[3], geneLod.variantDetectabilityStatus());
+            assertEquals(REPORTABLE_GENE, exonCoverageQc.geneName());
+            assertEquals(100, exonCoverageQc.medianDepth(), 0);
+            assertEquals((double) expectedRow[2], exonCoverageQc.tumorVafLod(), 1e-3);
+            assertEquals(expectedRow[3], exonCoverageQc.variantDetectabilityStatus());
         }
     }
 }

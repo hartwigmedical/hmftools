@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.lod;
+package com.hartwig.hmftools.qsee.coverage;
 
 public enum VariantDetectabilityStatus
 {

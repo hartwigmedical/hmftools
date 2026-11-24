@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.qsee.lod;
+package com.hartwig.hmftools.qsee.coverage;
 
 import java.util.Map;
 
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.qsee.common.SampleType;
 
-public record GeneLod(
+public record ExonCoverageQc(
         String sampleId,
         SampleType sampleType,
         String geneName,

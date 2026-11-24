@@ -104,7 +104,7 @@ public class QseeConfig
     public static final String SKIP_PLOT_DESC = "Write output files only, without plotting";
 
     public static final String WRITE_LOD_DETAILS = "write_lod_details";
-    public static final String WRITE_LOD_DETAILS_DESC = "Write exon depth distribution columns to gene LoD file";
+    public static final String WRITE_LOD_DETAILS_DESC = "Write exon depth distribution columns to exon variant LoD file";
 
     public QseeConfig(final ConfigBuilder configBuilder)
     {

@@ -77,7 +77,7 @@ java -jar qsee.jar \
 
 This will generate the following files:
 - `TUMOR_ID.qsee.status.tsv.gz`: QC status (PASS/WARN/FAIL) per sample and per feature with a QC threshold defined
-- `TUMOR_ID.qsee.gene_lod.tsv.gz`: Variant limit of detection per exon in reportable driver genes (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
+- `TUMOR_ID.qsee.exon_coverage_qc.tsv.gz`: Coverage QC (median depth, variant limit of detection and detectability status) per exon in reportable driver genes (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
 - `TUMOR_ID.qsee.vis.data.tsv.gz`: Visualisation raw data
 - `TUMOR_ID.qsee.vis.report.{png,pdf}`: Visualisation comparing samples to an existing cohort, and highlighting samples not meeting QC thresholds (see [**example**](#visualisation))
 

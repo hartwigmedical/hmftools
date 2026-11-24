@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.lod;
+package com.hartwig.hmftools.qsee.coverage;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
@@ -19,7 +19,7 @@ import com.hartwig.hmftools.qsee.feature.category.MissedGeneVariantPrep;
 
 import org.apache.logging.log4j.Level;
 
-public class GeneLodCalculator
+public class ExonCoverageQcFileBuilder
 {
     private final QseeConfig mConfig;
 
@@ -27,7 +27,7 @@ public class GeneLodCalculator
     private static final double TUMOR_VAF_CLONAL_HOM_VARIANT_DETECTABLE = 1;
     private static final double TUMOR_VAF_CLONAL_HET_VARIANT_DETECTABLE = 0.5;
 
-    public GeneLodCalculator(QseeConfig config)
+    public ExonCoverageQcFileBuilder(QseeConfig config)
     {
         mConfig = config;
     }
@@ -61,10 +61,10 @@ public class GeneLodCalculator
     }
 
     @VisibleForTesting
-    static List<GeneLod> calcGeneLods(
+    static List<ExonCoverageQc> calcCoverageQcPerExon(
             String sampleId, SampleType sampleType, List<ExonDepth> exonDepths, List<String> reportableGenes, double tumorPurity)
     {
-        List<GeneLod> geneLods = new ArrayList<>();
+        List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
         for(ExonDepth exonDepth : exonDepths)
         {
@@ -76,31 +76,31 @@ public class GeneLodCalculator
             double tumorVafLod = sampleVafLod / tumorPurity;
             VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(tumorVafLod);
 
-            GeneLod geneLod = new GeneLod(
+            ExonCoverageQc exonCoverageQc = new ExonCoverageQc(
                     sampleId, sampleType,
                     exonDepth.Gene, exonDepth.ExonRank, exonDepth.MedianDepth,
                     sampleVafLod, tumorVafLod, variantDetectabilityStatus,
                     exonDepth.DepthCounts
             );
 
-            geneLods.add(geneLod);
+            coverageQcPerExon.add(exonCoverageQc);
         }
 
-        return geneLods;
+        return coverageQcPerExon;
     }
 
-    private List<GeneLod> calcSampleGeneLods(String sampleId, SampleType sampleType) throws IOException
+    private List<ExonCoverageQc> calcSampleCoverageQcPerExon(String sampleId, SampleType sampleType) throws IOException
     {
         List<ExonDepth> exonDepths = loadExonCoverage(sampleId, sampleType);
         List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(mConfig.DriverGenes, sampleType);
         double tumorPurity = loadTumorPurity(sampleId, sampleType);
 
-        return calcGeneLods(sampleId, sampleType, exonDepths, reportableGenes, tumorPurity);
+        return calcCoverageQcPerExon(sampleId, sampleType, exonDepths, reportableGenes, tumorPurity);
     }
 
     public void run()
     {
-        List<GeneLod> geneLods = new ArrayList<>();
+        List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
         for(SampleType sampleType : List.of(SampleType.TUMOR, SampleType.NORMAL))
         {
@@ -108,12 +108,12 @@ public class GeneLodCalculator
             {
                 try
                 {
-                    geneLods.addAll(calcSampleGeneLods(sampleId, sampleType));
+                    coverageQcPerExon.addAll(calcSampleCoverageQcPerExon(sampleId, sampleType));
                 }
                 catch(IOException e)
                 {
                     Level logLevel = mConfig.AllowMissingInput ? Level.WARN : Level.ERROR;
-                    QC_LOGGER.log(logLevel, "sampleType({}) gene LoD - missing input file(s): {}", sampleType, e.getMessage());
+                    QC_LOGGER.log(logLevel, "sampleType({}) exon variant LoD - missing input file(s): {}", sampleType, e.getMessage());
 
                     if(!mConfig.AllowMissingInput)
                         System.exit(1);
@@ -122,10 +122,10 @@ public class GeneLodCalculator
         }
 
         if(!mConfig.isSinglePatient())
-            geneLods.sort(Comparator.comparing(GeneLod::sampleId));
+            coverageQcPerExon.sort(Comparator.comparing(ExonCoverageQc::sampleId));
 
-        String geneLodFile = GeneLodFile.generateFilename(mConfig);
-        GeneLodFile.write(geneLodFile, geneLods, mConfig.WriteLodDetails);
+        String exonCoverageQcFile = ExonCoverageQcFile.generateFilename(mConfig);
+        ExonCoverageQcFile.write(exonCoverageQcFile, coverageQcPerExon, mConfig.WriteLodDetails);
     }
 
     public static void main(String[] args)
@@ -135,7 +135,7 @@ public class GeneLodCalculator
         configBuilder.checkAndParseCommandLine(args);
 
         QseeConfig config = new QseeConfig(configBuilder);
-        GeneLodCalculator geneLodCalculator = new GeneLodCalculator(config);
-        geneLodCalculator.run();
+        ExonCoverageQcFileBuilder exonCoverageQcFileBuilder = new ExonCoverageQcFileBuilder(config);
+        exonCoverageQcFileBuilder.run();
     }
 }

@@ -14,12 +14,12 @@ import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs;
 import com.hartwig.hmftools.qsee.feature.CategoryPrep;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
-import com.hartwig.hmftools.qsee.lod.LimitOfDetectionCalcs;
 
 import org.jetbrains.annotations.NotNull;
 
