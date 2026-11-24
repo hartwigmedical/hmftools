@@ -12,7 +12,7 @@
     <packaging>jar</packaging>
     <!--suppress MavenRedundantVersion -->
     <version>local-SNAPSHOT</version>
-    <name>HMF Tools - ORANGE datamodel</name>
+    <name>HMF Tools - Orange datamodel</name>
 
     <dependencies>
         <dependency>

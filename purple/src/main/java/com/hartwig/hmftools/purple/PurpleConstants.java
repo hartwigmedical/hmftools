@@ -189,9 +189,15 @@ public class PurpleConstants
     public static final int MAX_INDEL_DRIVER_REPEAT_COUNT = 7;
 
     // biallelic (no wildtype allele remaining) probability
-    public static final int BIALLELIC_LOH_GROWTH_RATE = 40;
-    public static final double BIALLELIC_THRESHOLD_PARAMETER_I = 1.4;
-    public static final double BIALLELIC_THRESHOLD_PARAMETER_II = 0.8;
+    public static final int BIALLELIC_LOH_GROWTH_RATE = 70;
+    public static final double BIALLELIC_LOH_MIN_PURITY_EXP = 20;
+    public static final double BIALLELIC_AF_UNCERTAINTY_FACTOR = 0.025;
+    public static final int BIALLELIC_DAMPENING_AD_LIMIT = 300;
+    public static final double BIALLELIC_DAMPENING_AD_EXP = 0.75;
+
+    public static final int BIALLELIC_LOH_GROWTH_RATE_old = 40;
+    public static final double BIALLELIC_VCN_THRESHOLD_PI = 1.4;
+    public static final double BIALLELIC_VCN_THRESHOLD_P2 = 0.8;
     public static final double BIALLELIC_LOH_BASE_ERROR_RATE = 0.02;
     public static final double BIALLELIC_ASSUMED_FRACTION = 0.2;
 
