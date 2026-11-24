@@ -73,7 +73,7 @@ public class BiallelicModel
             double dampeningFactor = (BIALLELIC_DAMPENING_AD_LIMIT + factor) / conservativeAd;
 
             conservativeAd = round(conservativeAd * dampeningFactor);
-            readCountAtThreshold = readCountAtThreshold * dampeningFactor;
+            readCountAtThreshold *= dampeningFactor;
         }
 
         PoissonDistribution poissonDist = new PoissonDistribution(conservativeAd);
