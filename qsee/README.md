@@ -240,7 +240,7 @@ since at high depth, random sequencing errors alone can produce 3 alt reads, mea
 overly optimistic.
 
 Exons are marked in `VariantDetectabilityStatus` with:
-- `WARN` when `LodVaf` or `MedianDepth` fails its threshold (`EXON_VARIANT_LOD` thresholds `LOD_VAF` and `MEDIAN_DEPTH`)
+- `WARN` when `LodVaf` fails its threshold (`EXON_VARIANT_LOD` threshold `LOD_VAF`)
 - `PASS` otherwise
 - `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
   sequences)
@@ -296,7 +296,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.coverage.ExonExclusionsFileBuilder \
 where `sample_data_dir` contains the `*.bam_metric.exon_coverage.tsv` files for multiple tumor samples.
 
 This writes:
-- `qsee.exon_exclusions.tsv`: The exon exclusions file. Contains exons with status `WARN` (fails `LOD_VAF` or `MEDIAN_DEPTH` threshold) in >=0.95 of tumor samples (or configure with `-min_low_coverage_sample_fraction`).
+- `qsee.exon_exclusions.tsv`: The exon exclusions file. Contains exons with status `WARN` (fails `LOD_VAF` threshold) in >=0.95 of tumor samples (or configure with `-min_low_coverage_sample_fraction`).
 - `multisample.qsee.exon_coverage_qc.tsv.gz`: Per sample `LodVaf` values used to derive the exclusions.
 
 ### Input files in separate directories

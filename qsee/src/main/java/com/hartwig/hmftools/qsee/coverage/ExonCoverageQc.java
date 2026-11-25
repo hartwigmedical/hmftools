@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.status.QcStatusType;
+import com.hartwig.hmftools.qsee.status.QcThreshold;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 public record ExonCoverageQc(
@@ -24,13 +25,11 @@ public record ExonCoverageQc(
 )
 {
     public static final String LOD_VAF = "LOD_VAF";
-    public static final String MEDIAN_DEPTH = "MEDIAN_DEPTH";
 
     private static VariantDetectabilityStatus determineVariantDetectabilityStatus(
             SampleType sampleType,
             String geneName,
             int exonRank,
-            double medianDepth,
             double lodVaf,
             ExonExclusions exonExclusions,
             ThresholdRegistry qcThresholds
@@ -38,19 +37,13 @@ public record ExonCoverageQc(
         if(exonExclusions.isExcluded(geneName, exonRank))
             return VariantDetectabilityStatus.EXCLUDED;
 
-        boolean lodVafFails = isWarn(qcThresholds, sampleType, LOD_VAF, lodVaf);
-        boolean medianDepthFails = isWarn(qcThresholds, sampleType, MEDIAN_DEPTH, medianDepth);
+        QcThreshold threshold = qcThresholds.getThreshold(sampleType, EXON_VARIANT_LOD, LOD_VAF, QcStatusType.WARN);
+        QcStatusType lodVafStatus = threshold.getSampleQcStatus(lodVaf).type();
 
-        if(lodVafFails || medianDepthFails)
+        if(lodVafStatus == QcStatusType.WARN)
             return VariantDetectabilityStatus.WARN;
 
         return VariantDetectabilityStatus.PASS;
-    }
-
-    private static boolean isWarn(ThresholdRegistry qcThresholds, SampleType sampleType, String featureName, double value)
-    {
-        return qcThresholds.getThreshold(sampleType, EXON_VARIANT_LOD, featureName, QcStatusType.WARN)
-                .getSampleQcStatus(value).type() == QcStatusType.WARN;
     }
 
     public static ExonCoverageQc from(
@@ -65,7 +58,7 @@ public record ExonCoverageQc(
 
         VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(
                 sampleType,
-                exonDepth.Gene, exonDepth.ExonRank, exonDepth.MedianDepth,
+                exonDepth.Gene, exonDepth.ExonRank,
                 lodVaf, exonExclusions, qcThresholds
         );
 

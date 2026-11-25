@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.SampleType.NORMAL;
 import static com.hartwig.hmftools.qsee.common.SampleType.TUMOR;
 import static com.hartwig.hmftools.qsee.coverage.ExonCoverageQc.LOD_VAF;
-import static com.hartwig.hmftools.qsee.coverage.ExonCoverageQc.MEDIAN_DEPTH;
 import static com.hartwig.hmftools.qsee.feature.FeatureType.EXON_VARIANT_LOD;
 import static com.hartwig.hmftools.qsee.feature.FeatureType.SUMMARY_TABLE;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.CONTAMINATION;
@@ -125,8 +124,6 @@ public final class ThresholdRegistry
         setCommonThreshold(SUMMARY_TABLE, LOW_COVERAGE_EXONS.name(), WARN, GREATER_THAN, 0.1);
 
         setThreshold(TUMOR, EXON_VARIANT_LOD, LOD_VAF, WARN, GREATER_THAN, chooseThreshold(0.1, 0.05, targetedMode));
-        setThreshold(TUMOR, EXON_VARIANT_LOD, MEDIAN_DEPTH, WARN, LESS_THAN, chooseThreshold(30, 100, targetedMode));
-        setThreshold(NORMAL, EXON_VARIANT_LOD, MEDIAN_DEPTH, WARN, LESS_THAN, 10);
         setThreshold(NORMAL, EXON_VARIANT_LOD, LOD_VAF, WARN, GREATER_THAN, 0.3);
 
         return this;
