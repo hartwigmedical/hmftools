@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.purple.PurpleConstants.HOTSPOT_GNOMAD_FREQ_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.PANEL_GNOMAD_FREQ_THRESHOLD;
-import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -291,8 +290,8 @@ public class SomaticPurityFitter
 
     @Nullable
     public FittedPurity fitFromSomaticsOnly(
-            final DriverGeneResource driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates,
-            final boolean tumorOnlyMode)
+            final DriverGeneResource driverGenes, final List<SomaticVariant> variants, final List<StructuralVariant> hotspotSVs,
+            final List<FittedPurity> allCandidates, final boolean tumorOnlyMode)
     {
         List<Double> variantVafs = Lists.newArrayList();
 
@@ -351,14 +350,24 @@ public class SomaticPurityFitter
             variantVafs.add(vaf);
         }
 
-        if(variantVafs.isEmpty())
+        double maxVariantVaf = 0;
+
+        if(!variantVafs.isEmpty())
+        {
+            double vaf75thPercentile = calc75thPercentileValue(variantVafs);
+            maxVariantVaf = vaf75thPercentile;
+        }
+
+        double svHotspotVaf = findSvHotspotVaf(hotspotSVs);
+        maxVariantVaf = max(maxVariantVaf, svHotspotVaf);
+
+        if(maxVariantVaf == 0)
             return null;
 
-        double vaf75thPercentile = calc75thPercentileValue(variantVafs);
+        double somaticPurity = maxVariantVaf * 2;
 
-        double somaticPurity = vaf75thPercentile * 2;
-
-        PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
+        PPL_LOGGER.info("somatic VAF-based purity({}) from small variants({}) svHotspots({})",
+                formatPurity(somaticPurity), variantVafs.size(), hotspotSVs.size());
 
         FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates);
 
@@ -465,6 +474,16 @@ public class SomaticPurityFitter
             maxHotspotVaf = max(variant.alleleFrequency(), maxHotspotVaf);
         }
 
+        double svHotspotVaf = findSvHotspotVaf(hotspotSVs);
+        maxHotspotVaf = max(maxHotspotVaf, svHotspotVaf);
+
+        return maxHotspotVaf * 2;
+    }
+
+    private double findSvHotspotVaf(final List<StructuralVariant> hotspotSVs)
+    {
+        double maxHotspotVaf = 0;
+
         for(StructuralVariant sv : hotspotSVs)
         {
             if(!sv.hotspot() || sv.isFiltered() || sv.end() == null)
@@ -486,8 +505,9 @@ public class SomaticPurityFitter
             maxHotspotVaf = alleleFrequency;
         }
 
-        return maxHotspotVaf * 2;
+        return maxHotspotVaf;
     }
+
 
     private boolean belowRequiredProbability(double peakPurity, int totalReadCount, int alleleReadCount)
     {
