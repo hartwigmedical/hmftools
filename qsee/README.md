@@ -207,12 +207,14 @@ A read group with duplicate reads is collapsed into a consensus read with one of
 
 Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per exon depth distributions 
 (number of bases per depth range) from [BamTools](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#gene-panel-coverage). 
-A variant is reliably detected if it is supported by >=`lod_min_alt_reads` alt reads (default: 3).
+
+"Reliably detected" is defined as >= 3 alt read support by default. This threshold can be configured with arg `-lod_min_alt_reads`. A higher
+value is recommended for very high depths (e.g. 1000x), since alt reads are more likely to occur at random due to sequencing errors.
 
 ### Missed variant likelihood
 
-Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele is supported by <`lod_min_alt_reads` alt reads, i.e. not reliably 
-detected. MVLH is first calculated per depth range:
+Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele cannot be reliably detected. MVLH is first 
+calculated per depth range:
 
 ```
 theoreticalSampleVaf = purity / alleles
@@ -235,9 +237,8 @@ Gene depth distributions are the sum of the exon depth distributions, excluding 
 
 Qsee computes the minimum sample VAF at which a variant is reliably detected >=95% of the time given the exon's depth distribution.
 
-This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%. The result (`LodVaf`) is floored at 0.01,
-since at high depth, random sequencing errors alone can produce 3 alt reads, meaning that a `LodVaf` of e.g. ~0.006 at 1000x is
-overly optimistic.
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%. The result (`LodVaf`) is floored at 0.01 to avoid
+overly optimistic estimates - lower VAFs likely fall below the noise floor where variants are more likely artifacts (e.g. sequencing errors).
 
 Exons are marked in `VariantDetectabilityStatus` with:
 - `WARN` when `LodVaf` fails its threshold (`EXON_VARIANT_LOD` threshold `LOD_VAF`)
@@ -296,8 +297,13 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.coverage.ExonExclusionsFileBuilder \
 where `sample_data_dir` contains the `*.bam_metric.exon_coverage.tsv` files for multiple tumor samples.
 
 This writes:
-- `qsee.exon_exclusions.tsv`: The exon exclusions file. Contains exons with status `WARN` (fails `LOD_VAF` threshold) in >=0.95 of tumor samples (or configure with `-min_low_coverage_sample_fraction`).
-- `multisample.qsee.exon_coverage_qc.tsv.gz`: Per sample `LodVaf` values used to derive the exclusions.
+- `multisample.qsee.exon_coverage_qc.tsv.gz`: Per sample/exon `LodVaf` values used to derive the exclusions
+- `qsee.exon_exclusions.tsv`: Exon exclusions file
+
+By default, exons are excluded if `LodVaf` >= 0.07 (`-min_low_coverage_lod_vaf`) in >= 0.3 of tumor samples 
+(`-min_low_coverage_cohort_fraction`). These defaults are for ~100x tumor WGS. For panels, consider decreasing `-min_low_coverage_lod_vaf` since higher
+depths enable a lower limit of detection of variants. Also consider increasing `-lod_min_alt_reads` (more alt reads needed to distinguish 
+real variants from sequencing errors at high depths) and ensure the same value is used when running Qsee on samples.
 
 ### Input files in separate directories
 
@@ -377,6 +383,5 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 - `-skip_plot`: Write the output files (vis data, QC status) only, without plotting
 - `-lod_min_alt_reads`: Assumed min alt read support needed to detect a variant, used to model MVLH and LoD VAF (default: 3)
 - `-write_cohort_features`: If provided, write the raw feature values when calculating cohort percentiles. 
-- `-min_low_coverage_sample_fraction`: Min fraction of tumor samples with exon status `WARN` for an exon to be excluded when generating the exon exclusions file (default: 0.95)
 - `-threads`: Number of threads to use for parallel processing (one sample per thread)
 - `-log_level`: Log level (default: `INFO`). See [log4j docs](https://logging.apache.org/log4j/2.x/manual/customloglevels.html) for valid values
