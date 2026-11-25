@@ -52,8 +52,8 @@ public class LiftBackGroupProcessorTest
             final ExcludedRegions excludedRegions)
     {
         return new LiftBackGroupProcessor(
-                new AlignmentSelector(List.of(threeExonContig())), supplementaryMerger, new OverhangGate(refGenome),
-                new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
+                new AlignmentSelector(List.of(threeExonContig()), EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig()))),
+                supplementaryMerger, new OverhangGate(refGenome), new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
     }
 
     private static List<SAMRecord> process(

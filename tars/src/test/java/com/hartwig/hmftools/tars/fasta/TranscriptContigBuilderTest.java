@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneDa
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -112,14 +111,6 @@ public class TranscriptContigBuilderTest
 
         assertEquals(200, resultA.sequence().length());
         assertEquals(150, resultB.sequence().length());
-    }
-
-    @Test
-    public void testTranscriptWithNoExonsReturnsNull()
-    {
-        TranscriptData empty = transcript();
-        TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
-        assertNull(builder.build(gene(POS_STRAND), empty));
     }
 
     @Test

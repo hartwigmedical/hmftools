@@ -125,7 +125,7 @@ public class ShardedChunkProducerTest
     private static List<List<SAMRecord>> chunk(final List<SAMRecord> records, final int targetReads) throws InterruptedException
     {
         BlockingQueue<List<SAMRecord>> queue = new LinkedBlockingQueue<>();
-        ShardedChunkProducer.streamChunks(records.iterator(), targetReads, queue, null);
+        ShardedChunkProducer.streamChunks(records.iterator(), targetReads, queue, new LongAdder());
         return new ArrayList<>(queue);
     }
 

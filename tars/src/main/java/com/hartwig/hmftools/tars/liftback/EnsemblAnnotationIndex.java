@@ -24,8 +24,8 @@ public final class EnsemblAnnotationIndex
             final Map<ChrBaseRegion, Integer> junctionStrands)
     {
         mExonsByChromosome = exonsByChromosome;
-        mJunctions = junctions != null ? Set.copyOf(junctions) : Collections.emptySet();
-        mJunctionStrands = junctionStrands != null ? Map.copyOf(junctionStrands) : Collections.emptyMap();
+        mJunctions = Set.copyOf(junctions);
+        mJunctionStrands = Map.copyOf(junctionStrands);
     }
 
     public boolean containsExon(final String chromosome, final int pos)

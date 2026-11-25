@@ -49,7 +49,7 @@ public final class AlignmentLifter
         List<LiftedAlignment> alignments = new ArrayList<>(1 + alternatives.size());
         alignments.add(self);
         alignments.addAll(alternatives);
-        gate(alignments, record, overhangGate);
+        overhangGate.gatePlacements(alignments, record);
 
         return new LiftedRecord(record.getMappingQuality(), 0, "", 0, alignments);
     }
@@ -73,7 +73,7 @@ public final class AlignmentLifter
                 alignments.add(alignment);
             }
         }
-        gate(alignments, record, overhangGate);
+        overhangGate.gatePlacements(alignments, record);
 
         return new LiftedRecord(record.getMappingQuality(), 1, "", 0, alignments);
     }
@@ -89,15 +89,6 @@ public final class AlignmentLifter
             logLiftFailure(record);
         }
         return lifted;
-    }
-
-    private static void gate(
-            final List<LiftedAlignment> alignments, final SAMRecord record, final OverhangGate overhangGate)
-    {
-        if(overhangGate != null)
-        {
-            overhangGate.gatePlacements(alignments, record);
-        }
     }
 
     private void logLiftFailure(final SAMRecord record)

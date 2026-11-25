@@ -484,10 +484,7 @@ public class ShardedChunkProducer extends Thread
 
             if(currentName != null && !name.equals(currentName) && chunk.size() >= targetReads)
             {
-                if(readsCounter != null)
-                {
-                    readsCounter.add(chunk.size());
-                }
+                readsCounter.add(chunk.size());
                 queue.put(chunk);
                 chunk = new ArrayList<>(targetReads);
             }
@@ -498,10 +495,7 @@ public class ShardedChunkProducer extends Thread
 
         if(!chunk.isEmpty())
         {
-            if(readsCounter != null)
-            {
-                readsCounter.add(chunk.size());
-            }
+            readsCounter.add(chunk.size());
             queue.put(chunk);
         }
     }

@@ -21,11 +21,6 @@ public class TranscriptContigBuilder
 
     public TranscriptContigResult build(final GeneData gene, final TranscriptData transcript)
     {
-        if(transcript.exons() == null || transcript.exons().isEmpty())
-        {
-            return null;
-        }
-
         List<BaseRegion> spans = sortedExonSpans(transcript);
 
         StringBuilder sequence = new StringBuilder();

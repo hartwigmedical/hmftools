@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -294,6 +296,28 @@ public final class TarsTestFixtures
     {
         LiftedAlignment alignment = new LiftedAlignment(chromosome, pos, cigar, 0, false, !negativeStrand, 0);
         return recordBuilder().alignments(List.of(alignment)).build();
+    }
+
+    public static LiftedRecord resolve(final AlignmentSelector selector, final SAMRecord record)
+    {
+        if(record.getReadUnmappedFlag())
+        {
+            return LiftedRecord.unmapped("");
+        }
+
+        OverhangGate overhangGate = new OverhangGate(EMPTY_REF_GENOME);
+        if(record.getSupplementaryAlignmentFlag())
+        {
+            return AlignmentSelector.finaliseSupplementary(selector.liftSupplementaryAlignment(record, overhangGate));
+        }
+
+        LiftedRecord alignments = selector.liftPrimaryAlignments(record, overhangGate);
+        if(!alignments.hasPlacement())
+        {
+            return alignments;
+        }
+        AlignmentSelector.Selection selection = selector.choosePrimaryAlignment(record, alignments.liftedAlignments(), null);
+        return selector.selectPrimaryAlignment(record, alignments.liftedAlignments(), selection);
     }
 
     public static RecordBuilder recordBuilder()

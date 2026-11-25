@@ -45,7 +45,8 @@ public class SupplementaryMergerTest
     {
         return new Placement(
                 chrom, forward, readLen, primStart, primCigar,
-                supps.length == 0 ? Collections.emptyList() : Arrays.asList(supps));
+                supps.length == 0 ? Collections.emptyList() : Arrays.asList(supps),
+                bases("A".repeat(readLen)), Collections.emptyList());
     }
 
     private static RecordAlignment supp(
@@ -378,7 +379,7 @@ public class SupplementaryMergerTest
         RecordAlignment left = supp(1, CHR1, true, 500, "5M146S", 60);
         Placement cand = new Placement(
                 CHR1, true, READ_LEN, 1001, "5S90M56S",
-                Arrays.asList(right, left));
+                Arrays.asList(right, left), bases("A".repeat(READ_LEN)), Collections.emptyList());
 
         Result result = defaultMerger(annotated()).merge(cand);
 

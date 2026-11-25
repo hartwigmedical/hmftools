@@ -26,12 +26,6 @@ public class SupplementaryMerger
             String chromosome, boolean forwardStrand, int readLength, int primaryStart, String primaryCigar,
             List<RecordAlignment> supplementaries, byte[] readBases, List<ChrBaseRegion> mateHintIntrons)
     {
-        public Placement(
-                final String chromosome, final boolean forwardStrand, final int readLength,
-                final int primaryStart, final String primaryCigar, final List<RecordAlignment> supplementaries)
-        {
-            this(chromosome, forwardStrand, readLength, primaryStart, primaryCigar, supplementaries, null, Collections.emptyList());
-        }
     }
 
     public record Result(

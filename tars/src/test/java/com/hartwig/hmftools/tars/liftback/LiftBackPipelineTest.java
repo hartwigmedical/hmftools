@@ -254,9 +254,9 @@ public class LiftBackPipelineTest
     {
         File outputDirectory = mFolder.newFolder();
         SAMFileHeader outputHeader = nameGroupedHeader(new SAMSequenceRecord(CHR_1, 2_000));
+        EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig()));
         LiftBackResources resources = new LiftBackResources(
-                new AlignmentSelector(List.of(threeExonContig())),
-                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())),
+                new AlignmentSelector(List.of(threeExonContig()), annotationIndex), annotationIndex,
                 reference.getAbsolutePath(), supplementaryConfig(), null);
         BlockingQueue<List<SAMRecord>> queue = new LinkedBlockingQueue<>(2);
         List<LiftBackWorker> workers = new ArrayList<>();

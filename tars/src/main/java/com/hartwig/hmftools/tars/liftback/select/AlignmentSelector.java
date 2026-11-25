@@ -41,11 +41,6 @@ public final class AlignmentSelector
 
     private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
 
-    public AlignmentSelector(final List<ContigEntry> entries)
-    {
-        this(entries, null);
-    }
-
     public AlignmentSelector(final List<ContigEntry> entries, final EnsemblAnnotationIndex annotationIndex)
     {
         mAlignmentLifter = new AlignmentLifter(entries);
@@ -55,31 +50,6 @@ public final class AlignmentSelector
     public ContigTranslator contigTranslator()
     {
         return mAlignmentLifter.translator();
-    }
-
-    public LiftedRecord resolve(final SAMRecord record)
-    {
-        return resolve(record, null, null);
-    }
-
-    LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate, final LiftedRecord mate)
-    {
-        if(record.getReadUnmappedFlag())
-        {
-            return LiftedRecord.unmapped("");
-        }
-
-        if(record.getSupplementaryAlignmentFlag())
-        {
-            return finaliseSupplementary(liftSupplementaryAlignment(record, overhangGate));
-        }
-
-        LiftedRecord alignments = liftPrimaryAlignments(record, overhangGate);
-        if(!alignments.hasPlacement())
-        {
-            return alignments;
-        }
-        return selectPrimaryAlignment(record, alignments.liftedAlignments(), mate);
     }
 
     public LiftedRecord liftPrimaryAlignments(final SAMRecord record, final OverhangGate overhangGate)
@@ -130,8 +100,7 @@ public final class AlignmentSelector
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
         boolean hiddenTie = inputMapQuality == 0 && hasHiddenTie(record);
-        boolean inAnnotatedExon = mEnsemblAnnotationIndex != null
-                && mEnsemblAnnotationIndex.containsExon(effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos);
+        boolean inAnnotatedExon = mEnsemblAnnotationIndex.containsExon(effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos);
         boolean randomTie = selection.reason().equals("random");
         int updatedMapQuality = decidePrimaryMapQuality(
                 inputMapQuality, numLoci, hiddenTie, effectivePrimary.FromTxContig, inAnnotatedExon, randomTie);

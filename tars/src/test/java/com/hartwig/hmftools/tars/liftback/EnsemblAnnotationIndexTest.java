@@ -87,7 +87,7 @@ public class EnsemblAnnotationIndexTest
     @Test
     public void testEmptyJunctionIndex()
     {
-        EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions((Set<ChrBaseRegion>) null);
+        EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions(Set.of());
 
         assertEquals(0, annotationIndex.junctionCount());
         assertFalse(annotationIndex.containsJunction(new ChrBaseRegion(CHR_1, 200, 299)));
