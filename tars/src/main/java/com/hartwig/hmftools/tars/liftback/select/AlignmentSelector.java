@@ -266,7 +266,7 @@ public final class AlignmentSelector
 
     private static String appendNote(final String existing, final String note)
     {
-        if(existing == null || existing.isEmpty())
+        if(existing.isEmpty())
         {
             return note;
         }
@@ -884,7 +884,9 @@ public final class AlignmentSelector
                 return i;
             }
         }
-        return LiftedRecord.NO_PRIMARY;
+        throw new IllegalStateException(String.format(
+                "alignment(%s:%d %s) missing from its placement list",
+                target.LiftedChromosome, target.LiftedPos, target.LiftedCigar));
     }
 
     private static List<LiftedAlignment> closestMateSubset(final List<LiftedAlignment> top, final LiftedRecord mate)

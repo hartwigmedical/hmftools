@@ -32,17 +32,7 @@ public class OverhangGate
 
     public void gatePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
     {
-        if(alignments.isEmpty())
-        {
-            return;
-        }
-
         ReadBases readBases = ReadBases.of(record);
-        if(readBases == null)
-        {
-            return;
-        }
-
         LiftedAlignment self = alignments.get(0);
 
         for(int i = 0; i < alignments.size(); ++i)
@@ -69,11 +59,6 @@ public class OverhangGate
 
     public Outcome gate(final LiftedAlignment alignment, final byte[] readBases)
     {
-        if(readBases == null || readBases.length == 0)
-        {
-            return new Outcome(alignment, false);
-        }
-
         int pos = alignment.LiftedPos;
         String working = alignment.LiftedCigar;
 

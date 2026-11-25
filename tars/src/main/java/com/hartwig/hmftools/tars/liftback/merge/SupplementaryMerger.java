@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
@@ -27,14 +26,6 @@ public class SupplementaryMerger
             String chromosome, boolean forwardStrand, int readLength, int primaryStart, String primaryCigar,
             List<RecordAlignment> supplementaries, byte[] readBases, List<ChrBaseRegion> mateHintIntrons)
     {
-        public Placement
-        {
-            if(mateHintIntrons == null)
-            {
-                mateHintIntrons = Collections.emptyList();
-            }
-        }
-
         public Placement(
                 final String chromosome, final boolean forwardStrand, final int readLength,
                 final int primaryStart, final String primaryCigar, final List<RecordAlignment> supplementaries)
@@ -78,9 +69,7 @@ public class SupplementaryMerger
             final EnsemblAnnotationIndex annotationIndex, final RefGenomeInterface refGenome,
             final SupplementaryConfig config)
     {
-        EnsemblAnnotationIndex ensemblAnnotationIndex = annotationIndex != null
-                ? annotationIndex : EnsemblAnnotationIndex.fromJunctions(new HashSet<>());
-        mSpliceJunctions = new SpliceJunctions(ensemblAnnotationIndex, refGenome);
+        mSpliceJunctions = new SpliceJunctions(annotationIndex, refGenome);
         mConfig = config;
     }
 
@@ -102,17 +91,14 @@ public class SupplementaryMerger
         List<RecordAlignment> remaining = new ArrayList<>(placement.supplementaries());
         List<Integer> absorbed = new ArrayList<>();
         List<ChrBaseRegion> introns = new ArrayList<>();
-        RejectReason lastReject = null;
         int chainDepth = 0;
         int spliceStrand = 0;
         boolean conflictingStrands = false;
 
         while(chainDepth < mConfig.MaxSuppMerges && !remaining.isEmpty())
         {
-            boolean primaryHasLeadingS = !primaryCigar.isEmpty()
-                    && primaryCigar.get(0).getOperator() == CigarOperator.S;
-            boolean primaryHasTrailingS = !primaryCigar.isEmpty()
-                    && primaryCigar.get(primaryCigar.size() - 1).getOperator() == CigarOperator.S;
+            boolean primaryHasLeadingS = primaryCigar.get(0).getOperator() == CigarOperator.S;
+            boolean primaryHasTrailingS = primaryCigar.get(primaryCigar.size() - 1).getOperator() == CigarOperator.S;
             if(!primaryHasLeadingS && !primaryHasTrailingS)
             {
                 if(chainDepth == 0)
@@ -131,7 +117,6 @@ public class SupplementaryMerger
                 {
                     return Result.noMerge(merge.reject());
                 }
-                lastReject = merge.reject();
                 break;
             }
 
@@ -154,11 +139,6 @@ public class SupplementaryMerger
             // Do not reuse another XA placement from the absorbed supplementary record.
             remaining.removeIf(supp -> supp.recordIndex() == merge.mergedSupplementary().recordIndex());
             ++chainDepth;
-        }
-
-        if(chainDepth == 0)
-        {
-            return Result.noMerge(lastReject != null ? lastReject : RejectReason.NO_MATCHING_SUPP);
         }
 
         return new Result(
@@ -202,9 +182,7 @@ public class SupplementaryMerger
             }
         }
 
-        return chosen != null
-                ? chosen
-                : MergeOutcome.reject(lastReject != null ? lastReject : RejectReason.NO_MATCHING_SUPP);
+        return chosen != null ? chosen : MergeOutcome.reject(lastReject);
     }
 
     private static boolean isBetterMerge(final MergeOutcome outcome, final MergeOutcome chosen)
@@ -419,8 +397,7 @@ public class SupplementaryMerger
 
     private static int tieBreakSeed(final Placement placement, final Side up)
     {
-        int base = placement.readBases() != null ? Arrays.hashCode(placement.readBases()) : 0;
-        return 31 * base + up.referenceEnd();
+        return 31 * Arrays.hashCode(placement.readBases()) + up.referenceEnd();
     }
 
     // A mate hint pins the corresponding intron boundary.

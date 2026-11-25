@@ -99,15 +99,9 @@ public class LiftBackWorker extends Thread
         }
 
         Cigar cigar = record.getCigar();
-        if(cigar == null || cigar.isEmpty())
-        {
-            return;
-        }
-
         Cigar cleaned = TarsCigarUtils.normalize(cigar);
 
-        byte[] bases = record.getReadBases();
-        int seqLength = bases != null ? bases.length : 0;
+        int seqLength = record.getReadLength();
 
         if(seqLength > 0 && cleaned.getReadLength() != seqLength)
         {

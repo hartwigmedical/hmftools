@@ -36,17 +36,15 @@ import htsjdk.samtools.util.SequenceUtil;
 public final class BamRecordEmitter
 {
     private final ContigTranslator mContigTranslator;
-    private final boolean mSupplementaryMergerEnabled;
     private final RefGenomeInterface mRefGenome;
     private final ExcludedRegions mExcludedRegions;
     private final LiftBackStats mStats;
 
     public BamRecordEmitter(
-            final ContigTranslator contigTranslator, final boolean supplementaryMergerEnabled,
-            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions, final LiftBackStats stats)
+            final ContigTranslator contigTranslator, final RefGenomeInterface refGenome,
+            final ExcludedRegions excludedRegions, final LiftBackStats stats)
     {
         mContigTranslator = contigTranslator;
-        mSupplementaryMergerEnabled = supplementaryMergerEnabled;
         mRefGenome = refGenome;
         mExcludedRegions = excludedRegions;
         mStats = stats;
@@ -133,7 +131,7 @@ public final class BamRecordEmitter
             final SAMRecord record, final LiftedRecord result, final SAMRecord primary, final boolean primaryUnmapped,
             final Set<AlignmentKey> emittedSupplementaries)
     {
-        if(primaryUnmapped || result == null || !result.hasPlacement())
+        if(primaryUnmapped || !result.hasPlacement())
         {
             return false;
         }
@@ -143,7 +141,7 @@ public final class BamRecordEmitter
             return false;
         }
 
-        if(mSupplementaryMergerEnabled && !record.getReadUnmappedFlag())
+        if(!record.getReadUnmappedFlag())
         {
             Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
             if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
@@ -176,11 +174,6 @@ public final class BamRecordEmitter
         }
 
         String saTag = SaTagRewriter.buildForRecord(records, willEmit, primary, recordIndex);
-        if(saTag == null && record.getSupplementaryAlignmentFlag())
-        {
-            return;
-        }
-
         record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saTag);
         matePair.patchMateFields(record);
         consumer.accept(record);
@@ -274,11 +267,6 @@ public final class BamRecordEmitter
     private int computeEditDistance(final SAMRecord record)
     {
         byte[] readBases = record.getReadBases();
-        if(readBases == null || readBases.length == 0)
-        {
-            return -1;
-        }
-
         int refPos = record.getAlignmentStart();
         int readIndex = 0;
         int editDistance = 0;

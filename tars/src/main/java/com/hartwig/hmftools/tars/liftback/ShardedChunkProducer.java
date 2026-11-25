@@ -531,7 +531,7 @@ public class ShardedChunkProducer extends Thread
                 consumed += iter.consumedBytes();
             }
 
-            int percent = totalBytes > 0 ? (int) Math.min(100, consumed * 100 / totalBytes) : 0;
+            int percent = (int) Math.min(100, consumed * 100 / totalBytes);
             int memoryMb = MemoryCalcs.calcMemoryUsage();
             mPeakMemoryMb.accumulateAndGet(memoryMb, Math::max);
 

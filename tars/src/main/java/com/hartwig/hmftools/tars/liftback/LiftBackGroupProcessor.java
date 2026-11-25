@@ -42,9 +42,7 @@ public class LiftBackGroupProcessor
         mStats = new LiftBackStats();
         mSupplementaryResolver = new SupplementaryAlignmentResolver(
                 supplementaryMerger, alignmentScorer, mStats);
-        mEmitter = new BamRecordEmitter(
-                alignmentSelector.contigTranslator(), mSupplementaryResolver.enabled(),
-                refGenome, excludedRegions, mStats);
+        mEmitter = new BamRecordEmitter(alignmentSelector.contigTranslator(), refGenome, excludedRegions, mStats);
     }
 
     public LiftBackStats stats() { return mStats; }
@@ -195,11 +193,6 @@ public class LiftBackGroupProcessor
 
     private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
     {
-        if(!mSupplementaryResolver.enabled())
-        {
-            return null;
-        }
-
         if(lifted.hasPlacement())
         {
             LiftedAlignment finalAlignment = lifted.primaryAlignment();
@@ -212,11 +205,6 @@ public class LiftBackGroupProcessor
             if(GenomicAlignmentScorer.requiresRescore(primary, lifted))
             {
                 int score = mAlignmentScorer.scoreRecord(finalAlignment, primary);
-                if(score == Integer.MIN_VALUE)
-                {
-                    return null;
-                }
-
                 finalAlignment.GenomicScore = score;
                 return score;
             }

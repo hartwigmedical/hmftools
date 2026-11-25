@@ -48,31 +48,26 @@ import htsjdk.samtools.SAMRecord;
 public class LiftBackGroupProcessorTest
 {
     private static LiftBackGroupProcessor processor(
-            final SupplementaryMerger supplementaryMerger, final OverhangGate overhangGate,
-            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
+            final SupplementaryMerger supplementaryMerger, final RefGenomeInterface refGenome,
+            final ExcludedRegions excludedRegions)
     {
         return new LiftBackGroupProcessor(
-                new AlignmentSelector(List.of(threeExonContig())),
-                supplementaryMerger, overhangGate, new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
+                new AlignmentSelector(List.of(threeExonContig())), supplementaryMerger, new OverhangGate(refGenome),
+                new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
     }
 
     private static List<SAMRecord> process(
             final List<SAMRecord> group, final SupplementaryMerger supplementaryMerger,
-            final OverhangGate overhangGate, final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
+            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
         List<SAMRecord> emitted = new ArrayList<>();
-        processor(supplementaryMerger, overhangGate, refGenome, excludedRegions).processNameGroup(group, emitted::add);
+        processor(supplementaryMerger, refGenome, excludedRegions).processNameGroup(group, emitted::add);
         return emitted;
     }
 
     private static List<SAMRecord> process(final List<SAMRecord> group)
     {
-        return process(group, null, null, EMPTY_REF_GENOME, null);
-    }
-
-    private static List<SAMRecord> process(final List<SAMRecord> group, final SupplementaryMerger supplementaryMerger)
-    {
-        return process(group, supplementaryMerger, null, EMPTY_REF_GENOME, null);
+        return process(group, noopSupplementary(), EMPTY_REF_GENOME, null);
     }
 
     private static ExcludedRegions excludedRegion(final String chromosome, final int start, final int end)
@@ -96,7 +91,7 @@ public class LiftBackGroupProcessorTest
         // the tx primary lifts to chr1:100, inside the excluded region; REDUX-style unmapping keeps the record but clears the cigar
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
 
-        List<SAMRecord> emitted = process(List.of(primary), null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
@@ -106,7 +101,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testStatsCountInputsAndUnmapReasonsAcrossGroups()
     {
-        LiftBackGroupProcessor processor = processor(null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor processor = processor(noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
 
         // both mates lift to chr1:100, inside the excluded region
         processor.processNameGroup(
@@ -130,8 +125,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testStatsSumAcrossWorkers()
     {
-        LiftBackGroupProcessor first = processor(null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
-        LiftBackGroupProcessor second = processor(null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor first = processor(noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor second = processor(noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
         first.processNameGroup(
                 List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record ->
                 {
@@ -176,7 +171,7 @@ public class LiftBackGroupProcessorTest
     {
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");   // chr1:100
 
-        List<SAMRecord> emitted = process(List.of(primary), null, null, EMPTY_REF_GENOME, excludedRegion(CHR_1, 5000, 6000));
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 5000, 6000));
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());
@@ -192,7 +187,7 @@ public class LiftBackGroupProcessorTest
         primary.setAttribute("NM", 0);
         primary.setAttribute("MD", "50");
 
-        List<SAMRecord> emitted = process(List.of(primary), null, null, refGenome(CHR_1, "A".repeat(600)), null);
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), refGenome(CHR_1, "A".repeat(600)), null);
 
         assertEquals(1, emitted.size());
         SAMRecord out = emitted.get(0);
@@ -237,8 +232,10 @@ public class LiftBackGroupProcessorTest
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
         primary.setMappingQuality(0);
         primary.setAttribute("XA", CHR_1 + ",+5000,50M,0;");
+        primary.setReadBases(bases("A".repeat(50)));
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 6000, 'A').asRefGenome();
 
-        List<SAMRecord> emitted = process(List.of(primary));
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), ref, null);
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());
@@ -405,7 +402,7 @@ public class LiftBackGroupProcessorTest
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 
-        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary());
+        List<SAMRecord> emitted = process(List.of(primary));
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
@@ -416,19 +413,6 @@ public class LiftBackGroupProcessorTest
     {
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 60);
-
-        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary());
-
-        assertEquals(1, emitted.size());
-        assertFalse(emitted.get(0).getReadUnmappedFlag());
-    }
-
-    @Test
-    public void testLowAsPrimaryKeptWithoutSupplementaryMerger()
-    {
-        // with no supplementary merger the AS-unmap gate is inactive, so a low-AS primary is left as-is.
-        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
-        primary.setAttribute("AS", 20);
 
         List<SAMRecord> emitted = process(List.of(primary));
 
@@ -446,7 +430,7 @@ public class LiftBackGroupProcessorTest
         primary.setAttribute("AS", 20);
         SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
 
-        List<SAMRecord> emitted = process(List.of(primary, supp), noopSupplementary());
+        List<SAMRecord> emitted = process(List.of(primary, supp));
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
@@ -477,7 +461,7 @@ public class LiftBackGroupProcessorTest
         mate2.setReadBases(bases(seq));
         mate2.setAttribute("XA", "chr5,+100,55M,0;");
 
-        List<SAMRecord> emitted = process(List.of(mate1, mate2), null, new OverhangGate(ref), ref, null);
+        List<SAMRecord> emitted = process(List.of(mate1, mate2), noopSupplementary(), ref, null);
 
         assertEquals(2, emitted.size());
         SAMRecord out1 = emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow();
@@ -512,7 +496,7 @@ public class LiftBackGroupProcessorTest
         SAMRecord second = secondMateRecord("paired", "chr10", 120, "52M");
         second.setReadBases(bases(sequence));
 
-        List<SAMRecord> emitted = process(List.of(first, second), null, new OverhangGate(ref), ref, null);
+        List<SAMRecord> emitted = process(List.of(first, second), noopSupplementary(), ref, null);
 
         assertEquals("chr10", emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow().getReferenceName());
     }
@@ -541,7 +525,7 @@ public class LiftBackGroupProcessorTest
         second.setProperPairFlag(false);
         second.setReadBases(bases(sequence));
 
-        List<SAMRecord> emitted = process(List.of(first, second), null, new OverhangGate(ref), ref, null);
+        List<SAMRecord> emitted = process(List.of(first, second), noopSupplementary(), ref, null);
 
         SAMRecord outFirst = emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow();
         SAMRecord outSecond = emitted.stream().filter(SAMRecord::getSecondOfPairFlag).findFirst().orElseThrow();
@@ -573,7 +557,7 @@ public class LiftBackGroupProcessorTest
         second.setProperPairFlag(false);
         second.setReadBases(bases(sequence));
 
-        List<SAMRecord> emitted = process(List.of(first, second), null, new OverhangGate(ref), ref, null);
+        List<SAMRecord> emitted = process(List.of(first, second), noopSupplementary(), ref, null);
 
         SAMRecord outFirst = emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow();
         SAMRecord outSecond = emitted.stream().filter(SAMRecord::getSecondOfPairFlag).findFirst().orElseThrow();
@@ -596,7 +580,7 @@ public class LiftBackGroupProcessorTest
                 EMPTY_REF_GENOME, supplementaryConfig());
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 4000, 'A').asRefGenome();
 
-        List<SAMRecord> emitted = process(List.of(primary, middle, last), merger, null, ref, null);
+        List<SAMRecord> emitted = process(List.of(primary, middle, last), merger, ref, null);
 
         assertEquals(1, emitted.size());
         assertEquals("50M950N60M940N41M", emitted.get(0).getCigarString());
@@ -612,7 +596,7 @@ public class LiftBackGroupProcessorTest
         supplementary.setReadBases(bases("A".repeat(151)));
 
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 1000, 'A').asRefGenome();
-        List<SAMRecord> emitted = process(List.of(primary, supplementary), contigSupplementary(), null, ref, null);
+        List<SAMRecord> emitted = process(List.of(primary, supplementary), contigSupplementary(), ref, null);
 
         assertEquals(1, emitted.size());
         assertEquals("50M100N101M", emitted.get(0).getCigarString());
@@ -634,7 +618,7 @@ public class LiftBackGroupProcessorTest
         LiftBackGroupProcessor processor = processor(
                 new SupplementaryMerger(
                         EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
-                null, ref, null);
+                ref, null);
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(List.of(primary, supplementary), emitted::add);
 
@@ -665,7 +649,7 @@ public class LiftBackGroupProcessorTest
                 List.of(primary, supplementary),
                 new SupplementaryMerger(
                         EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
-                null, ref, null);
+                ref, null);
 
         assertEquals(2, emitted.size());
         SAMRecord emittedSupplementary = emitted.stream()
@@ -691,7 +675,7 @@ public class LiftBackGroupProcessorTest
         LiftBackGroupProcessor processor = processor(
                 new SupplementaryMerger(
                         EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
-                null, EMPTY_REF_GENOME, null);
+                EMPTY_REF_GENOME, null);
         processor.processNameGroup(
                 List.of(primary, supplementary), record ->
                 {
@@ -711,7 +695,7 @@ public class LiftBackGroupProcessorTest
         primary.setReadBases(bases("C".repeat(50)));
         primary.setAttribute("AS", 60);
 
-        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), null, ref, null);
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), ref, null);
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());
@@ -726,26 +710,10 @@ public class LiftBackGroupProcessorTest
         primary.setReadBases(bases("C".repeat(71)));
         primary.setAttribute("AS", 60);
 
-        List<SAMRecord> emitted = process(
-                List.of(primary), noopSupplementary(), new OverhangGate(ref), ref, null);
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), ref, null);
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
-    }
-
-    @Test
-    public void testChangedPlacementWithoutSequenceDoesNotUseStaleAlignmentScore()
-    {
-        RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
-        SAMRecord primary = primaryRecord(CHR_1, 1, "20M100N3M48S");
-        primary.setAttribute("AS", 20);
-
-        List<SAMRecord> emitted = process(
-                List.of(primary), noopSupplementary(), new OverhangGate(ref), ref, null);
-
-        assertEquals(1, emitted.size());
-        assertFalse(emitted.get(0).getReadUnmappedFlag());
-        assertNull(emitted.get(0).getAttribute("AS"));
     }
 
     // bwa emits a pair with both ends unmapped as flags 77/141. Clearing the mate-unmapped bit leaves a record claiming a mapped
@@ -810,7 +778,7 @@ public class LiftBackGroupProcessorTest
         SAMRecord supp = supplementaryRecord(CHR_1, 1000, "99S2M100N50M", CHR_1 + ",5000,+,50M101S,60,0;");
         supp.setReadBases(primary.getReadBases());
 
-        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), new OverhangGate(ref), ref, null);
+        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), ref, null);
 
         SAMRecord emittedPrimary = emitted.stream().filter(x -> !x.getSupplementaryAlignmentFlag()).findFirst().orElse(null);
         SAMRecord emittedSupp = emitted.stream().filter(SAMRecord::getSupplementaryAlignmentFlag).findFirst().orElse(null);

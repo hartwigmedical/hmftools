@@ -31,17 +31,12 @@ public final class SupplementaryAlignmentResolver
         mStats = stats;
     }
 
-    public boolean enabled()
-    {
-        return mMerger != null;
-    }
-
     public LiftedRecord addSupportedAlignments(
             final List<SAMRecord> records, final LiftedRecord primaryAlignments,
             final List<LiftedRecord> liftedRecords, final List<ChrBaseRegion> mateHintIntrons)
     {
         SAMRecord primary = records.get(0);
-        if(!enabled() || primary.getReadUnmappedFlag() || !primaryAlignments.hasPlacement())
+        if(!primaryAlignments.hasPlacement())
         {
             return primaryAlignments;
         }
@@ -102,7 +97,7 @@ public final class SupplementaryAlignmentResolver
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
             final LiftedRecord primaryResult)
     {
-        Set<Integer> absorbed = absorbedSupplementaries(records.size(), primaryResult);
+        Set<Integer> absorbed = absorbedSupplementaries(primaryResult);
         if(hasSupplementaryMerge(primaryResult))
         {
             ++mStats.SupplementaryMerges;
@@ -121,17 +116,12 @@ public final class SupplementaryAlignmentResolver
         List<LiftedRecord> finalised = null;
         for(int i = 1; i < records.size(); ++i)
         {
-            if(absorbedSupplementaries.contains(i) || !records.get(i).getSupplementaryAlignmentFlag())
+            if(absorbedSupplementaries.contains(i))
             {
                 continue;
             }
 
             LiftedRecord lifted = liftedRecords.get(i);
-            if(lifted == null)
-            {
-                continue;
-            }
-
             LiftedRecord result = AlignmentSelector.finaliseSupplementary(lifted);
             if(result != lifted)
             {
@@ -149,7 +139,7 @@ public final class SupplementaryAlignmentResolver
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
             final LiftedRecord primaryResult, final Set<Integer> absorbedSupplementaries)
     {
-        if(!enabled() || !primaryResult.hasPlacement())
+        if(!primaryResult.hasPlacement())
         {
             return liftedRecords;
         }
@@ -176,17 +166,14 @@ public final class SupplementaryAlignmentResolver
 
             int alignmentIndex = supplementary.alignmentIndex();
             LiftedRecord lifted = liftedRecords.get(recordIndex);
-            if(lifted == null || alignmentIndex == lifted.primaryIndex())
+            if(alignmentIndex == lifted.primaryIndex())
             {
                 continue;
             }
 
             LiftedRecord selectedRecord = lifted.withPrimaryIndex(alignmentIndex);
             int score = mAlignmentScorer.scoreRecord(selectedRecord.primaryAlignment(), records.get(recordIndex));
-            if(score != Integer.MIN_VALUE)
-            {
-                selectedRecord.primaryAlignment().GenomicScore = score;
-            }
+            selectedRecord.primaryAlignment().GenomicScore = score;
 
             if(revised == null)
             {
@@ -206,8 +193,7 @@ public final class SupplementaryAlignmentResolver
         {
             SAMRecord record = records.get(i);
             LiftedRecord lifted = liftedRecords.get(i);
-            if(!record.getSupplementaryAlignmentFlag() || record.getReadUnmappedFlag()
-                    || lifted == null || !lifted.hasPlacement())
+            if(!lifted.hasPlacement())
             {
                 continue;
             }
@@ -229,16 +215,11 @@ public final class SupplementaryAlignmentResolver
 
     private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
     {
-        if(!enabled())
-        {
-            return liftedRecords;
-        }
-
         List<LiftedRecord> annotated = null;
         for(int i = 0; i < liftedRecords.size(); ++i)
         {
             LiftedRecord lifted = liftedRecords.get(i);
-            if(lifted == null || !lifted.hasPlacement() || !lifted.hasNCigar() || lifted.transcriptStrand() != 0)
+            if(!lifted.hasPlacement() || !lifted.hasNCigar() || lifted.transcriptStrand() != 0)
             {
                 continue;
             }
@@ -257,28 +238,19 @@ public final class SupplementaryAlignmentResolver
         return annotated != null ? List.copyOf(annotated) : liftedRecords;
     }
 
-    private static Set<Integer> absorbedSupplementaries(
-            final int recordCount, final LiftedRecord primaryResult)
+    private static Set<Integer> absorbedSupplementaries(final LiftedRecord primaryResult)
     {
         if(!hasSupplementaryMerge(primaryResult))
         {
             return Set.of();
         }
 
-        Set<Integer> absorbed = new HashSet<>();
-        for(Integer index : primaryResult.primaryAlignment().MergedSupplementaryIndices)
-        {
-            if(index >= 0 && index < recordCount)
-            {
-                absorbed.add(index);
-            }
-        }
-        return Set.copyOf(absorbed);
+        return Set.copyOf(primaryResult.primaryAlignment().MergedSupplementaryIndices);
     }
 
     private static boolean hasSupplementaryMerge(final LiftedRecord primaryResult)
     {
-        return primaryResult != null && primaryResult.hasPlacement()
+        return primaryResult.hasPlacement()
                 && primaryResult.primaryAlignment().hasSupplementaryMerge();
     }
 

@@ -44,10 +44,6 @@ public class GenomicAlignmentScorer
         }
 
         ReadBases readBases = ReadBases.of(record);
-        if(readBases == null)
-        {
-            return;
-        }
 
         for(LiftedAlignment alignment : alignments)
         {
@@ -62,18 +58,7 @@ public class GenomicAlignmentScorer
 
     public int scoreRecord(final LiftedAlignment alignment, final SAMRecord record)
     {
-        if(alignment.Dropped)
-        {
-            return Integer.MIN_VALUE;
-        }
-
-        ReadBases readBases = ReadBases.of(record);
-        if(readBases == null)
-        {
-            return Integer.MIN_VALUE;
-        }
-
-        return scoreAlignment(alignment, record, readBases);
+        return scoreAlignment(alignment, record, ReadBases.of(record));
     }
 
     private int scoreAlignment(final LiftedAlignment alignment, final SAMRecord record, final ReadBases readBases)

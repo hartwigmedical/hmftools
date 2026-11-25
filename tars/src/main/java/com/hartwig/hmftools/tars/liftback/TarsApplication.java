@@ -62,11 +62,6 @@ public class TarsApplication
 
         List<String> shardBams = new ArrayList<>();
         List<LiftBackWorker> workers = runChunkStream(resources, outputHeader, shardBams);
-        if(workers == null)
-        {
-            TARS_LOGGER.error("liftback chunk stream failed");
-            System.exit(1);
-        }
 
         LiftBackStats counts = aggregate(workers);
         logLiftFailureRate(counts);
@@ -119,7 +114,10 @@ public class TarsApplication
             threadTasks.add(worker);
         }
 
-        return runThreadTasks(threadTasks) ? workers : null;
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
+
+        return workers;
     }
 
     private LiftBackResources buildResources(final List<ContigEntry> contigEntries, final SAMFileHeader inputHeader)

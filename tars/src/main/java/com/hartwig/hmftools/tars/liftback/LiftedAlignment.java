@@ -122,7 +122,7 @@ public class LiftedAlignment
     // not aligned sequence; treating the outer CIGAR span as one interval would make a mate inside an intron distance 0.
     public int alignedBlockDistance(final LiftedAlignment other)
     {
-        if(other == null || !LiftedChromosome.equals(other.LiftedChromosome))
+        if(!LiftedChromosome.equals(other.LiftedChromosome))
         {
             return Integer.MAX_VALUE;
         }
@@ -191,7 +191,7 @@ public class LiftedAlignment
     // absent primary collapses nothing.
     public boolean overlaps(final LiftedAlignment other)
     {
-        if(other == null || !LiftedChromosome.equals(other.LiftedChromosome))
+        if(!LiftedChromosome.equals(other.LiftedChromosome))
         {
             return false;
         }

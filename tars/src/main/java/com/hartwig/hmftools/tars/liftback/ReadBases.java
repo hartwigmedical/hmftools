@@ -20,13 +20,7 @@ public final class ReadBases
     // null when the record carries no sequence, which leaves nothing to score or gate against
     public static ReadBases of(final SAMRecord record)
     {
-        byte[] forward = record.getReadBases();
-        if(forward == null || forward.length == 0)
-        {
-            return null;
-        }
-
-        return new ReadBases(forward, !record.getReadNegativeStrandFlag());
+        return new ReadBases(record.getReadBases(), !record.getReadNegativeStrandFlag());
     }
 
     public byte[] forAlignment(final LiftedAlignment alignment)
