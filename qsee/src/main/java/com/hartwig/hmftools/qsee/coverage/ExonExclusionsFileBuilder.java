@@ -24,7 +24,8 @@ public class ExonExclusionsFileBuilder
     private record Exon(String geneName, int exonRank) {}
 
     @VisibleForTesting
-    static ExonExclusions calcExonExclusions(List<ExonCoverageQc> coverageQcPerExon, double minLowCoverageSampleFraction)
+    static ExonExclusions calcExonExclusions(
+            List<ExonCoverageQc> coverageQcPerExon, double minLowCoverageLodVaf, double minLowCoverageCohortFraction)
     {
         Map<Exon,List<ExonCoverageQc>> coverageQcByExon = new HashMap<>();
         for(ExonCoverageQc exonCoverageQc : coverageQcPerExon)
@@ -41,8 +42,8 @@ public class ExonExclusionsFileBuilder
         {
             List<ExonCoverageQc> exonCoverageQcPerSample = coverageQcByExon.get(exon);
 
-            long lowCoverageSampleCount = exonCoverageQcPerSample.stream().filter(x -> x.variantDetectabilityStatus() == VariantDetectabilityStatus.WARN).count();
-            int minLowCoverageSampleCount = (int) Math.ceil(exonCoverageQcPerSample.size() * minLowCoverageSampleFraction);
+            long lowCoverageSampleCount = exonCoverageQcPerSample.stream().filter(x -> x.lodVaf() >= minLowCoverageLodVaf).count();
+            int minLowCoverageSampleCount = (int) Math.ceil(exonCoverageQcPerSample.size() * minLowCoverageCohortFraction);
 
             if(lowCoverageSampleCount >= minLowCoverageSampleCount)
                 exonExclusions.add(exon.geneName(), exon.exonRank());
@@ -60,7 +61,8 @@ public class ExonExclusionsFileBuilder
         }
 
         List<ExonCoverageQc> coverageQcPerExon = new ExonCoverageQcFileBuilder(mConfig.Qsee).run();
-        ExonExclusions exonExclusions = calcExonExclusions(coverageQcPerExon, mConfig.MinLowCoverageSampleFraction);
+        ExonExclusions exonExclusions = calcExonExclusions(
+                coverageQcPerExon, mConfig.MinLowCoverageLodVaf, mConfig.MinLowCoverageCohortFraction);
 
         String filename = ExonExclusions.generateFilename(mConfig.Qsee.OutputDir, mConfig.Qsee.OutputId);
         exonExclusions.write(filename);
