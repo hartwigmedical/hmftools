@@ -288,7 +288,7 @@ public class SomaticStream
         }
         else
         {
-            mTmb = mTumorMutationalLoad.burden() / MB_PER_GENOME;
+            mTmb = mTumorMutationalLoad.calcWgsTmb();
         }
 
         PPL_LOGGER.info(String.format("load(tml=%.4f) msiIndels(%d perMb=%.4f) burden(%.1f perMb=%.4f)",

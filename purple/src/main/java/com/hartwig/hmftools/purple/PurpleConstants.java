@@ -13,7 +13,6 @@ public class PurpleConstants
     public static final int WINDOW_SIZE = 1000;
 
     // TMB calcs
-    public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
     public static final double TUMOR_MSI_LOAD_MIN_VAF = 0.02;
     public static final double TUMOR_MUT_LOAD_MIN_VAF = 0.05;
 
@@ -211,13 +210,14 @@ public class PurpleConstants
     public static final int TML_THRESHOLD = 140;
 
     // target-region TML and TMB
-    public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
+    public static final double MUTATIONAL_LOAD_CODING_BASE_FACTOR = 150000; // also used for tumor-only WGS
+
     public static final double DEFAULT_TARGETED_TMB_RATIO = 0.05;
     public static final double DEFAULT_TARGETED_TML_RATIO = 1.0;
 
     public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW = 0.08;
     public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.05;
 
-    public static final List<String> TARGETED_TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A", "HLA-B", "HLA-C", "PIM1", "BCL2");
+    public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A", "HLA-B", "HLA-C", "PIM1", "BCL2");
 
 }

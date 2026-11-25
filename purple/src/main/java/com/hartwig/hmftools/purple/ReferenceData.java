@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
-import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
@@ -11,7 +10,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
-import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_CODING_BASE_FACTOR;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TMB_RATIO;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TML_RATIO;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -270,6 +268,6 @@ public class ReferenceData
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
         CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(null);
-        TargetRegions = new TargetRegionsData(DEFAULT_CODING_BASE_FACTOR, DEFAULT_TARGETED_TMB_RATIO, DEFAULT_TARGETED_TML_RATIO);
+        TargetRegions = new TargetRegionsData(DEFAULT_TARGETED_TMB_RATIO, DEFAULT_TARGETED_TML_RATIO);
     }
 }

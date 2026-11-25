@@ -4,10 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_CODING_BASE_FACTOR;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TMB_RATIO;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TML_RATIO;
-import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_TMB_GENE_EXCLUSIONS;
+import static com.hartwig.hmftools.purple.PurpleConstants.TMB_GENE_EXCLUSIONS;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
@@ -33,7 +32,6 @@ public class TargetRegionsData
     private int mChromosomeXBases;
     private int mCodingBases;
 
-    private int mCodingBaseFactor;
     private double mTmbRatio;
     private double mTmlRatio;
 
@@ -41,16 +39,14 @@ public class TargetRegionsData
 
     private static final String TARGETED_TMB_RATIO = "target_tmb_ratio";
     private static final String TARGETED_TML_RATIO = "target_tml_ratio";
-    private static final String TARGETED_CODING_FACTOR = "target_coding_factor";
 
-    public TargetRegionsData(final int codingBaseFactor, final double tmbRatio, final double tmlRatio)
+    public TargetRegionsData(final double tmbRatio, final double tmlRatio)
     {
         mTotalBases = 0;
         mCodingBases = 0;
         mChromosomeXBases = 0;
         mTmlRatio = tmlRatio;
         mTmbRatio = tmbRatio;
-        mCodingBaseFactor = codingBaseFactor;
 
         mTargetRegions = Maps.newHashMap();
         mIsValid = true;
@@ -58,14 +54,12 @@ public class TargetRegionsData
 
     public TargetRegionsData(final ConfigBuilder configBuilder)
     {
-        this(configBuilder.getInteger(TARGETED_CODING_FACTOR),
-                configBuilder.getDecimal(TARGETED_TMB_RATIO),
+        this(configBuilder.getDecimal(TARGETED_TMB_RATIO),
                 configBuilder.getDecimal(TARGETED_TML_RATIO));
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addInteger(TARGETED_CODING_FACTOR, "Targeted panel coding base factor", DEFAULT_CODING_BASE_FACTOR);
         configBuilder.addDecimal(TARGETED_TMB_RATIO, "Targeted panel TMB adjustment factor", DEFAULT_TARGETED_TMB_RATIO);
         configBuilder.addDecimal(TARGETED_TML_RATIO, "Targeted panel TML adjustment factor", DEFAULT_TARGETED_TML_RATIO);
     }
@@ -93,22 +87,9 @@ public class TargetRegionsData
         return chrRegions.stream().anyMatch(x -> x.containsPosition(position));
     }
 
-    public int codingBases()
-    {
-        return mCodingBases;
-    }
-    public double tmlRatio()
-    {
-        return mTmlRatio;
-    }
-    public double tmbRatio()
-    {
-        return mTmbRatio;
-    }
-    public int codingBaseFactor()
-    {
-        return mCodingBaseFactor;
-    }
+    public int codingBases() { return mCodingBases; }
+    public double tmlRatio() { return mTmlRatio; }
+    public double tmbRatio() { return mTmbRatio; }
 
     public void loadTargetRegionsBed(final String targetRegionsBed, final EnsemblDataCache ensemblDataCache)
     {
@@ -137,7 +118,7 @@ public class TargetRegionsData
             // find the genes and then coding transcripts which overlap with these entries
             for(GeneData geneData : geneList)
             {
-                if(TARGETED_TMB_GENE_EXCLUSIONS.contains(geneData.GeneName))
+                if(TMB_GENE_EXCLUSIONS.contains(geneData.GeneName))
                 {
                     continue;
                 }
