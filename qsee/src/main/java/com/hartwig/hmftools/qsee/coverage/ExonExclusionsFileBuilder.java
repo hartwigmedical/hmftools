@@ -10,22 +10,15 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.SampleType;
 
 public class ExonExclusionsFileBuilder
 {
-    private static final String MIN_LOW_COVERAGE_SAMPLE_FRACTION = "min_low_coverage_sample_fraction";
-    private static final String MIN_LOW_COVERAGE_SAMPLE_FRACTION_DESC = "Min fraction of tumor samples with exon status WARN for an exon to be excluded";
-    private static final double DEFAULT_MIN_LOW_COVERAGE_SAMPLE_FRACTION = 0.95;
+    private final ExonExclusionsConfig mConfig;
 
-    private final QseeConfig mConfig;
-    private final double mMinLowCoverageSampleFraction;
-
-    public ExonExclusionsFileBuilder(QseeConfig config, double minLowCoverageSampleFraction)
+    public ExonExclusionsFileBuilder(ExonExclusionsConfig config)
     {
         mConfig = config;
-        mMinLowCoverageSampleFraction = minLowCoverageSampleFraction;
     }
 
     private record Exon(String geneName, int exonRank) {}
@@ -60,29 +53,27 @@ public class ExonExclusionsFileBuilder
 
     public void run()
     {
-        if(mConfig.getSampleIds(SampleType.TUMOR).size() <= 1)
+        if(mConfig.Qsee.getSampleIds(SampleType.TUMOR).size() <= 1)
         {
             QC_LOGGER.error("Building exon exclusions requires a cohort of tumor samples");
             System.exit(1);
         }
 
-        List<ExonCoverageQc> coverageQcPerExon = new ExonCoverageQcFileBuilder(mConfig).run();
-        ExonExclusions exonExclusions = calcExonExclusions(coverageQcPerExon, mMinLowCoverageSampleFraction);
+        List<ExonCoverageQc> coverageQcPerExon = new ExonCoverageQcFileBuilder(mConfig.Qsee).run();
+        ExonExclusions exonExclusions = calcExonExclusions(coverageQcPerExon, mConfig.MinLowCoverageSampleFraction);
 
-        String filename = ExonExclusions.generateFilename(mConfig.OutputDir, mConfig.OutputId);
+        String filename = ExonExclusions.generateFilename(mConfig.Qsee.OutputDir, mConfig.Qsee.OutputId);
         exonExclusions.write(filename);
     }
 
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        QseeConfig.registerConfig(configBuilder);
-        configBuilder.addDecimal(MIN_LOW_COVERAGE_SAMPLE_FRACTION, MIN_LOW_COVERAGE_SAMPLE_FRACTION_DESC, DEFAULT_MIN_LOW_COVERAGE_SAMPLE_FRACTION);
+        ExonExclusionsConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        QseeConfig config = new QseeConfig(configBuilder);
-        double minLowCoverageSampleFraction = configBuilder.getDecimal(MIN_LOW_COVERAGE_SAMPLE_FRACTION);
-        ExonExclusionsFileBuilder exonExclusionsFileBuilder = new ExonExclusionsFileBuilder(config, minLowCoverageSampleFraction);
+        ExonExclusionsConfig config = new ExonExclusionsConfig(configBuilder);
+        ExonExclusionsFileBuilder exonExclusionsFileBuilder = new ExonExclusionsFileBuilder(config);
         exonExclusionsFileBuilder.run();
     }
 }
