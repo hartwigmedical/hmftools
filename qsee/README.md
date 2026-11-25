@@ -207,16 +207,16 @@ A read group with duplicate reads is collapsed into a consensus read with one of
 
 Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per exon depth distributions 
 (number of bases per depth range) from [BamTools](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#gene-panel-coverage). 
-A variant is reliably detected if it is supported by >=3 alt reads.
+A variant is reliably detected if it is supported by >=`lod_min_alt_reads` alt reads (default: 3).
 
 ### Missed variant likelihood
 
-Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele is supported by <=2 alt reads, i.e. not reliably 
+Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele is supported by <`lod_min_alt_reads` alt reads, i.e. not reliably 
 detected. MVLH is first calculated per depth range:
 
 ```
 theoreticalSampleVaf = purity / alleles
-mvlhForDepth = binomialCDF(x = 2, n = depth, p = theoreticalSampleVaf)
+mvlhForDepth = binomialCDF(x = lod_min_alt_reads - 1, n = depth, p = theoreticalSampleVaf)
 ```
 
 where `depth` is the depth range midpoint, and `alleles` is 1 for sex chromosomes in male samples and 2 otherwise. Tumor samples use the 
@@ -375,6 +375,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 - `-sequencing_type`: Can be `ILLUMINA`, `SBX` or `ULTIMA`. Only used to determine base qual bins in BaseQualRecalibrationPrep
 - `-skip_categories`: A comma separated list of categories to skip prep for. Valid options: BASE_QUAL_RECALIBRATION, COVERAGE_DISTRIBUTION, DISCORDANT_FRAG_FREQ, DUPLICATE_FREQ, FRAG_LENGTH_DISTRIBUTION, GC_BIAS, MISSED_GENE_VARIANT, MS_INDEL_ERROR
 - `-skip_plot`: Write the output files (vis data, QC status) only, without plotting
+- `-lod_min_alt_reads`: Assumed min alt read support needed to detect a variant, used to model MVLH and LoD VAF (default: 3)
 - `-write_cohort_features`: If provided, write the raw feature values when calculating cohort percentiles. 
 - `-min_low_coverage_sample_fraction`: Min fraction of tumor samples with exon status `WARN` for an exon to be excluded when generating the exon exclusions file (default: 0.95)
 - `-threads`: Number of threads to use for parallel processing (one sample per thread)

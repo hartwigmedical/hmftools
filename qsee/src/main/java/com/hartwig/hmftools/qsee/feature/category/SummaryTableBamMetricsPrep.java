@@ -177,7 +177,7 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
 
         List<String> reportableGenes = ReportableGenes.forSampleType(mConfig.DriverGenes, sampleType);
 
-        return ExonCoverageQc.fromExonDepths(sampleId, sampleType, exonDepths, mConfig.ExcludedExons, reportableGenes, mConfig.QcThresholds);
+        return ExonCoverageQc.fromExonDepths(sampleId, sampleType, exonDepths, mConfig.ExcludedExons, reportableGenes, mConfig.QcThresholds, mConfig.LodMinAltReads);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.qsee.feature.category;
 
+import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.DEFAULT_LOD_MIN_ALT_READS;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -82,7 +83,7 @@ public class MissedGeneVariantPrepTest
     public void canGetGermlineMissedVariantLikelihoods()
     {
         List<String> reportableGenes = ReportableGenes.forSampleType(DRIVER_GENES, SampleType.NORMAL);
-        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(EXON_DEPTHS, reportableGenes, EXON_EXCLUSIONS, 1, Gender.FEMALE);
+        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(EXON_DEPTHS, reportableGenes, EXON_EXCLUSIONS, 1, Gender.FEMALE, DEFAULT_LOD_MIN_ALT_READS);
 
         List<Feature> expectedFeatures = List.of(
                 createExpectedFeature(GERMLINE_GENE, 0.000389385),
@@ -96,7 +97,7 @@ public class MissedGeneVariantPrepTest
     public void canGetSomaticMissedVariantLikelihoods()
     {
         List<String> reportableGenes = ReportableGenes.forSampleType(DRIVER_GENES, SampleType.TUMOR);
-        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(EXON_DEPTHS, reportableGenes, EXON_EXCLUSIONS, 0.5, Gender.MALE);
+        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(EXON_DEPTHS, reportableGenes, EXON_EXCLUSIONS, 0.5, Gender.MALE, DEFAULT_LOD_MIN_ALT_READS);
 
         List<Feature> expectedFeatures = List.of(
                 createExpectedFeature(SOMATIC_GENE, 0.032975381),

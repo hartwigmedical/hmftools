@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.qsee.coverage;
 
+import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.DEFAULT_LOD_MIN_ALT_READS;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -55,7 +56,7 @@ public class ExonCoverageQcTest
         };
 
         List<ExonCoverageQc> coverageQcPerExon = ExonCoverageQc.fromExonDepths(
-                SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, EXON_EXCLUSIONS, List.of(REPORTABLE_GENE), ThresholdRegistry.createDefault(false));
+                SAMPLE_ID, SampleType.TUMOR, EXON_DEPTHS, EXON_EXCLUSIONS, List.of(REPORTABLE_GENE), ThresholdRegistry.createDefault(false), DEFAULT_LOD_MIN_ALT_READS);
 
         assertEquals(4, coverageQcPerExon.size()); // Non-reportable gene excluded
 

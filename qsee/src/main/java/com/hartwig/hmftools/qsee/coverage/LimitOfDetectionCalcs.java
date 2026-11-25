@@ -10,10 +10,9 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class LimitOfDetectionCalcs
 {
-    public static final int MIN_ALT_READS = 3;
+    public static final int DEFAULT_LOD_MIN_ALT_READS = 3;
 
-    // At high depth, random sequencing errors alone can produce 3 alt reads, meaning that an LoD VAF of e.g. ~0.006 at 1000x is
-    // overly optimistic
+    // Floor LoD VAF at an approximate noise floor, below which variants are more likely artifacts (e.g. sequencing errors)
     public static final double LOD_VAF_LOWER_BOUND = 0.01;
 
     private static final int LOD_VAF_BISECTION_ITERATIONS = 20; // VAF precision 1 / 2^20 = ~1e-6
@@ -62,12 +61,12 @@ public class LimitOfDetectionCalcs
         return mvlhWeightedMean;
     }
 
-    public static double calcMinSampleVafToDetectVariant(Map<DepthRange,Integer> depthCounts)
+    public static double calcMinSampleVafToDetectVariant(Map<DepthRange,Integer> depthCounts, int minAltReads)
     {
         // Inverse of the missed variant likelihood calculation: finds the VAF that gives the target missed variant likelihood.
         // Missed variant likelihood (y) slopes monotonically downward as VAF (x) increases, so bisection can quickly find 'x' given 'y'.
 
-        double minAchievableMvlh = calcMissedVariantLikelihood(depthCounts, 1, MIN_ALT_READS);
+        double minAchievableMvlh = calcMissedVariantLikelihood(depthCounts, 1, minAltReads);
         if(minAchievableMvlh > LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
             return 1.0;
 
@@ -77,7 +76,7 @@ public class LimitOfDetectionCalcs
 
         for(int iteration = 0; iteration < LOD_VAF_BISECTION_ITERATIONS; ++iteration)
         {
-            double currentMvlh = calcMissedVariantLikelihood(depthCounts, midVaf, MIN_ALT_READS);
+            double currentMvlh = calcMissedVariantLikelihood(depthCounts, midVaf, minAltReads);
 
             if(currentMvlh <= LOD_TARGET_MISSED_VARIANT_LIKELIHOOD)
                 upperVaf = midVaf;

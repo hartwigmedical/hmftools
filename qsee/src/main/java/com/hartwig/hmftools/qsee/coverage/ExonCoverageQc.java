@@ -58,9 +58,10 @@ public record ExonCoverageQc(
             SampleType sampleType,
             ExonDepth exonDepth,
             ExonExclusions exonExclusions,
-            ThresholdRegistry qcThresholds
+            ThresholdRegistry qcThresholds,
+            int lodMinAltReads
     ){
-        double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts);
+        double lodVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(exonDepth.DepthCounts, lodMinAltReads);
 
         VariantDetectabilityStatus variantDetectabilityStatus = determineVariantDetectabilityStatus(
                 sampleType,
@@ -82,7 +83,8 @@ public record ExonCoverageQc(
             List<ExonDepth> exonDepths,
             ExonExclusions exonExclusions,
             List<String> reportableGenes,
-            ThresholdRegistry qcThresholds
+            ThresholdRegistry qcThresholds,
+            int lodMinAltReads
     ){
         List<ExonCoverageQc> coverageQcPerExon = new ArrayList<>();
 
@@ -91,7 +93,7 @@ public record ExonCoverageQc(
             if(!reportableGenes.contains(exonDepth.Gene))
                 continue;
 
-            coverageQcPerExon.add(from(sampleId, sampleType, exonDepth, exonExclusions, qcThresholds));
+            coverageQcPerExon.add(from(sampleId, sampleType, exonDepth, exonExclusions, qcThresholds, lodMinAltReads));
         }
 
         return coverageQcPerExon;

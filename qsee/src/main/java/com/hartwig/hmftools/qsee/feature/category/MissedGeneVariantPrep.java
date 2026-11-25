@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.qsee.feature.category;
 
-import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.MIN_ALT_READS;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +63,8 @@ public class MissedGeneVariantPrep implements CategoryPrep
             List<ExonDepth> exonDepths,
             List<String> reportableGenes,
             ExonExclusions exonExclusions,
-            double purity, Gender gender
+            double purity, Gender gender,
+            int minAltReads
     ){
         // Gene depth counts are the sum of the non-excluded exon depth counts
         Map<String,Map<DepthRange,Integer>> geneDepthCounts = new LinkedHashMap<>();
@@ -96,7 +95,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
             HumanChromosome geneChromosome = HumanChromosome.fromString(geneChromosomes.get(gene));
             double theoreticalVaf = LimitOfDetectionCalcs.calcTheoreticalVafMutationOnOneAllele(purity, geneChromosome, gender);
 
-            double missedVariantLikelihood = LimitOfDetectionCalcs.calcMissedVariantLikelihood(entry.getValue(), theoreticalVaf, MIN_ALT_READS);
+            double missedVariantLikelihood = LimitOfDetectionCalcs.calcMissedVariantLikelihood(entry.getValue(), theoreticalVaf, minAltReads);
 
             Feature feature = new Feature(key, missedVariantLikelihood);
             features.add(feature);
@@ -128,7 +127,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
             gender = loadPurplePurity(tumorId).Sex;
         }
 
-        List<Feature> features = getMissedVariantLikelihoods(exonCoverage, reportableGenes, mConfig.ExcludedExons, purity, gender);
+        List<Feature> features = getMissedVariantLikelihoods(exonCoverage, reportableGenes, mConfig.ExcludedExons, purity, gender, mConfig.LodMinAltReads);
         return features;
     }
 }
