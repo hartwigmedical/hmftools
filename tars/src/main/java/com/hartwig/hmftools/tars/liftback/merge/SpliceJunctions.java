@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.tars.liftback.merge;
 
-import static com.hartwig.hmftools.tars.common.BwaScoring.refWindow;
+import static com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer.referenceBases;
 
 import java.nio.charset.StandardCharsets;
 
@@ -39,8 +39,8 @@ public class SpliceJunctions
         {
             return Tier.ANNOTATED;
         }
-        byte[] donor = refWindow(mRefGenome, candidateIntron.Chromosome, candidateIntron.start(), candidateIntron.start() + 1);
-        byte[] acceptor = refWindow(mRefGenome, candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
+        byte[] donor = referenceBases(mRefGenome, candidateIntron.Chromosome, candidateIntron.start(), candidateIntron.start() + 1);
+        byte[] acceptor = referenceBases(mRefGenome, candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
         return motifTier(donor, acceptor);
     }
 
@@ -52,8 +52,8 @@ public class SpliceJunctions
             return annotatedStrand;
         }
 
-        byte[] donor = refWindow(mRefGenome, intron.Chromosome, intron.start(), intron.start() + 1);
-        byte[] acceptor = refWindow(mRefGenome, intron.Chromosome, intron.end() - 1, intron.end());
+        byte[] donor = referenceBases(mRefGenome, intron.Chromosome, intron.start(), intron.start() + 1);
+        byte[] acceptor = referenceBases(mRefGenome, intron.Chromosome, intron.end() - 1, intron.end());
         return motifStrand(donor, acceptor);
     }
 

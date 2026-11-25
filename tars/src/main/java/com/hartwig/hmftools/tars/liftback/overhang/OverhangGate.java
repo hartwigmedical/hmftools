@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.tars.liftback.overhang;
 
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
-import static com.hartwig.hmftools.tars.common.BwaScoring.maxScoringPrefix;
-import static com.hartwig.hmftools.tars.common.BwaScoring.refWindow;
-import static com.hartwig.hmftools.tars.common.BwaScoring.score;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_OVERHANG_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_OVERHANG_SCORE;
+import static com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer.bestScoringPrefixLength;
+import static com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer.referenceBases;
+import static com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer.ungappedScore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -163,7 +163,7 @@ public class OverhangGate
 
         int window = overhang.window();
         int nearEnd = alignmentStart + CigarUtils.cigarAlignedLength(elements.subList(0, overhang.intronIndex())) - 1;
-        byte[] windowRef = refWindow(mRefGenome, chromosome, nearEnd + 1, nearEnd + window);
+        byte[] windowRef = referenceBases(mRefGenome, chromosome, nearEnd + 1, nearEnd + window);
         if(windowRef == null)
         {
             return CollapseResult.unchanged();
@@ -171,16 +171,16 @@ public class OverhangGate
 
         int windowStart = readBases.length - window;
         byte[] anchorRead = Arrays.copyOfRange(readBases, windowStart, windowStart + overhang.anchorLength());
-        byte[] anchorRef = refWindow(
+        byte[] anchorRef = referenceBases(
                 mRefGenome, chromosome, nearEnd + overhang.intronLength() + 1,
                 nearEnd + overhang.intronLength() + overhang.anchorLength());
-        int overhangScore = anchorRef != null ? score(anchorRead, anchorRef) : Integer.MIN_VALUE;
+        int overhangScore = anchorRef != null ? ungappedScore(anchorRead,anchorRef) : Integer.MIN_VALUE;
         if(keepJunction(overhangScore, anchorRead, windowRef, overhang.softclipLength()))
         {
             return CollapseResult.unchanged();
         }
 
-        int extended = maxScoringPrefix(Arrays.copyOfRange(readBases, windowStart, readBases.length), windowRef);
+        int extended = bestScoringPrefixLength(Arrays.copyOfRange(readBases, windowStart, readBases.length), windowRef);
 
         CigarElement nearExon = elements.get(overhang.nearIndex());
         List<CigarElement> merged = new ArrayList<>(elements.subList(0, overhang.nearIndex()));
@@ -204,7 +204,7 @@ public class OverhangGate
 
         int window = overhang.window();
         int nearStart = alignmentStart + overhang.anchorLength() + overhang.intronLength();
-        byte[] windowRef = refWindow(mRefGenome, chromosome, nearStart - window, nearStart - 1);
+        byte[] windowRef = referenceBases(mRefGenome, chromosome, nearStart - window, nearStart - 1);
         if(windowRef == null)
         {
             return CollapseResult.unchanged();
@@ -212,14 +212,14 @@ public class OverhangGate
 
         byte[] anchorRead = Arrays.copyOfRange(
                 readBases, overhang.softclipLength(), overhang.softclipLength() + overhang.anchorLength());
-        byte[] anchorRef = refWindow(mRefGenome, chromosome, alignmentStart, alignmentStart + overhang.anchorLength() - 1);
-        int overhangScore = anchorRef != null ? score(anchorRead, anchorRef) : Integer.MIN_VALUE;
+        byte[] anchorRef = referenceBases(mRefGenome, chromosome, alignmentStart, alignmentStart + overhang.anchorLength() - 1);
+        int overhangScore = anchorRef != null ? ungappedScore(anchorRead,anchorRef) : Integer.MIN_VALUE;
         if(keepJunction(overhangScore, anchorRead, windowRef, overhang.softclipLength()))
         {
             return CollapseResult.unchanged();
         }
 
-        int extended = maxScoringPrefix(reverseArray(Arrays.copyOfRange(readBases, 0, window)), reverseArray(windowRef));
+        int extended = bestScoringPrefixLength(reverseArray(Arrays.copyOfRange(readBases, 0, window)), reverseArray(windowRef));
 
         CigarElement nearExon = elements.get(overhang.nearIndex());
         List<CigarElement> merged = new ArrayList<>();
@@ -243,7 +243,7 @@ public class OverhangGate
             return true;
         }
         byte[] contiguousRef = Arrays.copyOfRange(windowRef, 0, anchorRead.length);
-        int altRefScore = score(anchorRead, contiguousRef);
+        int altRefScore = ungappedScore(anchorRead,contiguousRef);
         return altRefScore <= overhangScore;
     }
 

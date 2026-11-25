@@ -18,7 +18,6 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.AlignmentKey;
 import com.hartwig.hmftools.tars.liftback.ExcludedRegions;
@@ -295,7 +294,7 @@ public final class BamRecordEmitter
                     {
                         return -1;
                     }
-                    byte[] refBases = BwaScoring.refWindow(
+                    byte[] refBases = GenomicAlignmentScorer.referenceBases(
                             mRefGenome, record.getReferenceName(), refPos, refPos + length - 1);
                     if(refBases == null)
                     {
