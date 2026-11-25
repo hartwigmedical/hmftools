@@ -208,8 +208,8 @@ A read group with duplicate reads is collapsed into a consensus read with one of
 Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per exon depth distributions 
 (number of bases per depth range) from [BamTools](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#gene-panel-coverage). 
 
-"Reliably detected" is defined as >= 3 alt read support by default. This threshold can be configured with arg `-lod_min_alt_reads`. A higher
-value is recommended for very high depths (e.g. 1000x), since alt reads are more likely to occur at random due to sequencing errors.
+"Reliably detected" is defined as >= 3 alt read support by default. This threshold can be increased with arg `-lod_min_alt_reads` if you 
+expect higher sequencing error rates (e.g. in FFPE samples). Lowering the threshold from the default is not recommended.
 
 ### Missed variant likelihood
 
@@ -301,9 +301,8 @@ This writes:
 - `qsee.exon_exclusions.tsv`: Exon exclusions file
 
 By default, exons are excluded if `LodVaf` >= 0.07 (`-min_low_coverage_lod_vaf`) in >= 0.3 of tumor samples 
-(`-min_low_coverage_cohort_fraction`). These defaults are for ~100x tumor WGS. For panels, consider decreasing `-min_low_coverage_lod_vaf` since higher
-depths enable a lower limit of detection of variants. Also consider increasing `-lod_min_alt_reads` (more alt reads needed to distinguish 
-real variants from sequencing errors at high depths) and ensure the same value is used when running Qsee on samples.
+(`-min_low_coverage_cohort_fraction`). These defaults are for ~100x tumor WGS. For panels, consider decreasing `-min_low_coverage_lod_vaf` 
+since higher depths enable a lower limit of detection of variants.
 
 ### Input files in separate directories
 
