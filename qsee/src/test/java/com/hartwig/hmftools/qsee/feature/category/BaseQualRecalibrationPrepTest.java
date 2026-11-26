@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.qsee.feature.category;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 import static com.hartwig.hmftools.qsee.feature.category.BaseQualRecalibrationPrep.aggregateChangeInQualPerOriginalQual;
@@ -39,7 +40,10 @@ public class BaseQualRecalibrationPrepTest
             createBqrRecord(ConsensusType.NONE, 'C', 'A', "ACA", 90, (byte) 37, 41.0),
             createBqrRecord(ConsensusType.NONE, 'C', 'A', "ACA", 90, (byte) 42, 46.0),
             createBqrRecord(ConsensusType.NONE, 'G', 'T', "TGT", 10, (byte) 37, 36.5),
-            createBqrRecord(ConsensusType.NONE, 'G', 'T', "TGT", 10, (byte) 42, 41.5)
+            createBqrRecord(ConsensusType.NONE, 'G', 'T', "TGT", 10, (byte) 42, 41.5),
+
+            // T>A_ATA: count below min count
+            createBqrRecord(ConsensusType.NONE, 'T', 'A', "ATA", 2, (byte) 37, 39.0)
     );
 
     @Test
@@ -62,7 +66,7 @@ public class BaseQualRecalibrationPrepTest
         BaseQualBinner baseQualBinner = new BaseQualBinner(SequencingType.ILLUMINA);
         List<Feature> features = aggregateChangeInQualPerTrinucContext(BQR_RECORDS, baseQualBinner);
 
-        assertEquals(4, features.size());
+        assertEquals(5, features.size());
 
         Feature actualFeature;
 
@@ -81,6 +85,10 @@ public class BaseQualRecalibrationPrepTest
         actualFeature = features.get(3);
         assertEquals("ReadType:NONE;StandardMutation:C>A;StandardTrinucContext:ACA;ReadOrientation:REVERSE;OriginalQualBin:HIGH (30+)", actualFeature.key().name());
         assertEquals(-0.5, actualFeature.value(), 0.001);
+
+        actualFeature = features.get(4);
+        assertEquals("ReadType:NONE;StandardMutation:T>A;StandardTrinucContext:ATA;ReadOrientation:FORWARD;OriginalQualBin:HIGH (30+)", actualFeature.key().name());
+        assertTrue(Double.isNaN(actualFeature.value()));
     }
 
     @Test
@@ -89,7 +97,7 @@ public class BaseQualRecalibrationPrepTest
         BaseQualBinner baseQualBinner = new BaseQualBinner(SequencingType.ILLUMINA);
         List<Feature> features = aggregateChangeInQualPerOriginalQual(BQR_RECORDS, baseQualBinner);
 
-        assertEquals(4, features.size());
+        assertEquals(5, features.size());
 
         Feature actualFeature;
 
@@ -108,6 +116,10 @@ public class BaseQualRecalibrationPrepTest
         actualFeature = features.get(3);
         assertEquals("ReadType:NONE;StandardMutation:C>A;StandardTrinucContext:ANY;ReadOrientation:REVERSE;OriginalQualBin:HIGH (30+)", actualFeature.key().name());
         assertEquals(-0.5, actualFeature.value(), 0.001);
+
+        actualFeature = features.get(4);
+        assertEquals("ReadType:NONE;StandardMutation:T>A;StandardTrinucContext:ANY;ReadOrientation:FORWARD;OriginalQualBin:HIGH (30+)", actualFeature.key().name());
+        assertTrue(Double.isNaN(actualFeature.value()));
     }
 
     private static StandardBqrRecord createBqrRecord(ConsensusType readType, char refBase, char altBase, String trinucContext,

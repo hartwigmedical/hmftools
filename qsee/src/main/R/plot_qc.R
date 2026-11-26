@@ -673,11 +673,16 @@ plot_bqr <- function(plot_data, x, row_facet, plot_labels){
 
    ## Sufficiently different from plot_pairwise_comparison to warrant a separate function
 
+   ## Low count features have NaN sample values. Also hide their cohort boxplots
+   for(colname in sapply(NAMED_PERCENTILES, `[[`, "name")){
+      plot_data[[colname]][is.na(plot_data$FeatureValue)] <- NA
+   }
+
    gg_position_dodge <- position_dodge(width = 0.6)
 
    gg_geom_boxplot <- geom_boxplot(
       aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
-      position = gg_position_dodge, width = 0.5, stat = "identity", alpha = 0.3
+      position = gg_position_dodge, width = 0.5, stat = "identity", alpha = 0.3, na.rm = TRUE
    )
 
    if(is.na(COHORT_PERCENTILES_FILE)){
@@ -705,7 +710,7 @@ plot_bqr <- function(plot_data, x, row_facet, plot_labels){
       ) +
          geom_hline(yintercept = 0, linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour) +
          gg_geom_boxplot +
-         geom_point(aes(shape = ReadOrientation), position = gg_position_dodge) +
+         geom_point(aes(shape = ReadOrientation), position = gg_position_dodge, na.rm = TRUE) +
          facet_grid(
             rows = vars(.data[[row_facet]]), cols = vars(StandardMutation), scales = "free_x", space = "free_x",
             labeller = labeller(SampleType = sapply(SAMPLE_TYPE, `[[`, "display_name"))

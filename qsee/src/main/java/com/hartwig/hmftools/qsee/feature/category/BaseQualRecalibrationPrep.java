@@ -49,6 +49,8 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
      */
     private static final int PSEUDOCOUNT = 5;
 
+    private static final int MIN_COUNT = 5;
+
     public BaseQualRecalibrationPrep(QseeConfig config)
     {
         mConfig = config;
@@ -146,6 +148,13 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         for(FeatureKey groupKey : bqrRecordGroups.keySet())
         {
             List<StandardBqrRecord> bqrRecordsInGroup = bqrRecordGroups.get(groupKey);
+
+            int totalCount = bqrRecordsInGroup.stream().mapToInt(StandardBqrRecord::Count).sum();
+            if(totalCount < MIN_COUNT)
+            {
+                features.add(new Feature(groupKey, Double.NaN));
+                continue;
+            }
 
             double[] changeInQualPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.RecalibratedQuality() - x.OriginalQuality()).toArray();
             double[] variantCountPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count() + PSEUDOCOUNT).toArray();
