@@ -35,8 +35,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_I
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_PLOT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
@@ -337,7 +335,6 @@ public class OrangeConfig
         configBuilder.addPath(VIRIDIAN_DIR_CFG, false, VIRIDIAN_DIR_DESC);
 
         configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
-        configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(PURPLE_PLOT_DIR_CFG, false, PURPLE_PLOT_DIR_DESC);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
