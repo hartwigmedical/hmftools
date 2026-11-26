@@ -74,7 +74,7 @@ public class ShardedChunkProducer extends Thread
         try
         {
             LongAdder readsCounter = new LongAdder();
-            long totalBytes = totalInputBytes();
+            long totalBytes = mInputBams.stream().mapToLong(inputBam -> new File(inputBam).length()).sum();
             long completedBytes = 0;
 
             for(String inputBam : mInputBams)
@@ -103,16 +103,6 @@ public class ShardedChunkProducer extends Thread
         {
             throw new RuntimeException(e);
         }
-    }
-
-    private long totalInputBytes()
-    {
-        long total = 0;
-        for(String inputBam : mInputBams)
-        {
-            total += new File(inputBam).length();
-        }
-        return total;
     }
 
     private void readInput(

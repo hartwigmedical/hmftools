@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -77,5 +78,28 @@ public class ContigSidecarTest
 
         List<ContigEntry> readBack = ContigSidecar.read(tempFile.getAbsolutePath());
         assertTrue(readBack.isEmpty());
+    }
+
+    @Test
+    public void testAnnotationOnlyRowsReadWithoutContigRegion() throws IOException
+    {
+        File tempFile = Files.createTempFile("contig_sidecar_annotation_", ".tsv").toFile();
+        tempFile.deleteOnExit();
+
+        String header = Arrays.stream(ContigSidecar.Column.values())
+                .map(Enum::name)
+                .collect(Collectors.joining(TSV_DELIM));
+        String namedRow = String.join(
+                TSV_DELIM, "annotation", "0", "0", "ENSG0000003", "GENEC", "ENST0000003", CHR_1, "1", "100-199;300-399");
+        String unnamedRow = String.join(TSV_DELIM, "", "0", "0", "ENSG0000004", "GENED", "ENST0000004", CHR_2, "-1", "500-549");
+        Files.writeString(tempFile.toPath(), header + "\n" + namedRow + "\n" + unnamedRow + "\n");
+
+        List<ContigEntry> readBack = ContigSidecar.read(tempFile.getAbsolutePath());
+
+        assertEquals(2, readBack.size());
+        assertNull(readBack.get(0).contigRegion());
+        assertEquals(List.of(new BaseRegion(100, 199), new BaseRegion(300, 399)), readBack.get(0).exonSpans());
+        assertNull(readBack.get(1).contigRegion());
+        assertEquals(List.of(new BaseRegion(500, 549)), readBack.get(1).exonSpans());
     }
 }

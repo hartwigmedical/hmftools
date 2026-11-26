@@ -63,9 +63,9 @@ public final class ContigSidecar
         {
             for(DelimFileReader.Row row : reader)
             {
-                String contigName = row.get(Column.ContigName);
-                ChrBaseRegion contigRegion = contigName.isEmpty() ? null : new ChrBaseRegion(
-                        contigName, Integer.parseInt(row.get(Column.ContigStart)), Integer.parseInt(row.get(Column.ContigEnd)));
+                int contigStart = Integer.parseInt(row.get(Column.ContigStart));
+                ChrBaseRegion contigRegion = contigStart == 0 ? null : new ChrBaseRegion(
+                        row.get(Column.ContigName), contigStart, Integer.parseInt(row.get(Column.ContigEnd)));
                 entries.add(new ContigEntry(
                         contigRegion,
                         row.get(Column.GeneId),
