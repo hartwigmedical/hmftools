@@ -88,7 +88,7 @@ public final class ContigTranslator
     public List<LiftedAlignment> liftXaAlignments(final String xaTag)
     {
         List<LiftedAlignment> lifted = new ArrayList<>();
-        if(xaTag == null || xaTag.isEmpty())
+        if(xaTag == null)
         {
             return lifted;
         }
@@ -96,35 +96,15 @@ public final class ContigTranslator
         Set<AlignmentKey> seenKeys = new HashSet<>();
         for(String entry : xaTag.split(";"))
         {
-            if(entry.isEmpty())
-                continue;
-
             String[] fields = entry.split(",");
-            if(fields.length < 4)
-                continue;
-
-            int signedPosition;
-            try
+            if(fields.length != 4)
             {
-                signedPosition = Integer.parseInt(fields[1]);
-            }
-            catch(NumberFormatException e)
-            {
-                continue;
+                throw new IllegalStateException(String.format("malformed XA(%s) entry(%s)", xaTag, entry));
             }
 
-            int numMismatches;
-            try
-            {
-                numMismatches = Integer.parseInt(fields[3]);
-            }
-            catch(NumberFormatException e)
-            {
-                numMismatches = 0;
-            }
-
+            int signedPosition = Integer.parseInt(fields[1]);
             LiftedAlignment alignment = liftAlignment(
-                    fields[0], Math.abs(signedPosition), fields[2], numMismatches, signedPosition >= 0);
+                    fields[0], Math.abs(signedPosition), fields[2], Integer.parseInt(fields[3]), signedPosition >= 0);
             if(alignment != null && seenKeys.add(alignment.key()))
             {
                 lifted.add(alignment);
@@ -202,11 +182,6 @@ public final class ContigTranslator
         int clampedContigPos = Math.max(contigPos, contig.contigStart());
         int localPos = clampedContigPos - contig.contigStart() + 1;
         SpanLocation start = locateStartSpan(spans, localPos);
-        if(start == null)
-        {
-            return null; // read starts past the end of the contig
-        }
-
         return walkCigarToGenome(contig, spans, start, clampedCigar);
     }
 
@@ -253,7 +228,7 @@ public final class ContigTranslator
             }
             exonLengthSoFar += span.baseLength();
         }
-        return null;
+        throw new IllegalStateException(String.format("localPos(%d) beyond exon length(%d)", localPos, exonLengthSoFar));
     }
 
     // Walks the clamped contig-space CIGAR, emitting an N at every exon boundary crossed.

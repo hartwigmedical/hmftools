@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.tars.liftback.LiftBackScenario.primary;
 import static com.hartwig.hmftools.tars.liftback.LiftBackScenario.supp;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.unpairedPrimaryRecord;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,7 +23,8 @@ public class LiftBackScenarioTest
     @Test
     public void testScenarioCanBeRunRepeatedlyWithoutChangingInputsOrEarlierResults()
     {
-        LiftBackScenario.ReadSpec read = primary("repeat", TX_CONTIG, 51, "100M").bases("A".repeat(100));
+        LiftBackScenario.ReadSpec read = new LiftBackScenario.ReadSpec(
+                "repeat", PRIMARY, unpairedPrimaryRecord("repeat", TX_CONTIG, 51, "100M")).bases("A".repeat(100));
         LiftBackScenario scenario = scenario().read(read);
 
         LiftBackScenario.Result first = scenario.run();
@@ -57,8 +59,8 @@ public class LiftBackScenarioTest
     {
         // the mate at tx 197 starts 4 bases before the exon2 boundary, so the lift splits it across the exon2->exon3 junction.
         scenario()
-                .read(primary("frag1", TX_CONTIG, 51, "100M"))
-                .read(mate("frag1", TX_CONTIG, 197, "50M"))
+                .read(primary("frag1", TX_CONTIG, 51, "100M").bases("A".repeat(100)))
+                .read(mate("frag1", TX_CONTIG, 197, "50M").bases("A".repeat(50)))
                 .run()
                 .assertLifted("frag1", PRIMARY, CHR_1, 150, "50M100N50M")
                 .assertLifted("frag1", MATE, CHR_1, 396, "4M100N46M")
@@ -71,8 +73,8 @@ public class LiftBackScenarioTest
     {
         // the primary starts past the contig end (tx 251, contig length 250), so translation fails.
         scenario()
-                .read(primary("frag7", TX_CONTIG, 251, "50M"))
-                .read(mate("frag7", CHR_1, 600, "50M"))
+                .read(primary("frag7", TX_CONTIG, 251, "50M").bases("A".repeat(50)))
+                .read(mate("frag7", CHR_1, 600, "50M").bases("A".repeat(50)))
                 .run()
                 .assertUnmapped("frag7", PRIMARY)
                 .assertNoXa("frag7", PRIMARY)
@@ -86,9 +88,9 @@ public class LiftBackScenarioTest
     {
         // the primary has no terminal soft clip so the supplementary is not merged in; both keep a tx-contig SA to rewrite.
         scenario()
-                .read(primary("frag8", TX_CONTIG, 51, "100M").sa(TX_CONTIG + ",197,+,50M,60,0;"))
-                .read(supp("frag8", TX_CONTIG, 197, "50M").sa(TX_CONTIG + ",51,+,100M,60,0;"))
-                .read(mate("frag8", CHR_1, 600, "50M"))
+                .read(primary("frag8", TX_CONTIG, 51, "100M").sa(TX_CONTIG + ",197,+,50M,60,0;").bases("A".repeat(100)))
+                .read(supp("frag8", TX_CONTIG, 197, "50M").sa(TX_CONTIG + ",51,+,100M,60,0;").bases("A".repeat(50)))
+                .read(mate("frag8", CHR_1, 600, "50M").bases("A".repeat(50)))
                 .run()
                 .assertTag("frag8", PRIMARY, "SA", CHR_1 + ",396,+,4M100N46M,60,0;")
                 .assertTag("frag8", SUPPLEMENTARY, "SA", CHR_1 + ",150,+,50M100N50M,60,0;")
@@ -125,7 +127,8 @@ public class LiftBackScenarioTest
     public void testSingleLocusTxMapQualityZeroBumpsToSixty()
     {
         scenario()
-                .read(primary("frag2", TX_CONTIG, 1, "50M").mapQuality(0))
+                .read(new LiftBackScenario.ReadSpec("frag2", PRIMARY, unpairedPrimaryRecord("frag2", TX_CONTIG, 1, "50M"))
+                        .mapQuality(0).bases("A".repeat(50)))
                 .run()
                 .assertLifted("frag2", PRIMARY, CHR_1, 100, "50M")
                 .assertMapQuality("frag2", PRIMARY, 60)
@@ -199,8 +202,8 @@ public class LiftBackScenarioTest
     public void testNativeGenomicReadPassesThroughUntouched()
     {
         scenario()
-                .read(primary("frag4", CHR_1, 1000, "100M"))
-                .read(mate("frag4", CHR_1, 1100, "50M"))
+                .read(primary("frag4", CHR_1, 1000, "100M").bases("A".repeat(100)))
+                .read(mate("frag4", CHR_1, 1100, "50M").bases("A".repeat(50)))
                 .run()
                 .assertLifted("frag4", PRIMARY, CHR_1, 1000, "100M");
     }

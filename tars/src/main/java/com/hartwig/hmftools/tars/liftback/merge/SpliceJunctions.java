@@ -84,11 +84,6 @@ public class SpliceJunctions
 
     static int motifStrand(final byte[] donorBases, final byte[] acceptorBases)
     {
-        if(donorBases == null || donorBases.length != 2 || acceptorBases == null || acceptorBases.length != 2)
-        {
-            return 0;
-        }
-
         String donor = upperCase(donorBases);
         String acceptor = upperCase(acceptorBases);
         if(donor.equals("GT") && acceptor.equals("AG")
@@ -110,11 +105,6 @@ public class SpliceJunctions
     // unknown at scan time, so each motif's reverse complement is accepted too.
     static Tier motifTier(final byte[] donorBases, final byte[] acceptorBases)
     {
-        if(donorBases == null || donorBases.length != 2 || acceptorBases == null || acceptorBases.length != 2)
-        {
-            return Tier.NONE;
-        }
-
         String donor = upperCase(donorBases);
         String acceptor = upperCase(acceptorBases);
 

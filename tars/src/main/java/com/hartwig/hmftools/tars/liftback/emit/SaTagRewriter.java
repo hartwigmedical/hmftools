@@ -19,10 +19,19 @@ public final class SaTagRewriter
     // final name group, not from these pre-lift coordinates.
     static boolean hasLiftableAlignment(final String saTag, final ContigTranslator translator)
     {
-        List<SupplementaryReadData> alignments = SupplementaryReadData.extractAlignments(saTag);
+        List<SupplementaryReadData> alignments;
+        try
+        {
+            alignments = SupplementaryReadData.extractAlignments(saTag);
+        }
+        catch(RuntimeException e)
+        {
+            alignments = null;
+        }
+
         if(alignments == null)
         {
-            return false;
+            throw new IllegalStateException(String.format("malformed SA(%s)", saTag));
         }
 
         for(SupplementaryReadData alignment : alignments)
@@ -52,11 +61,6 @@ public final class SaTagRewriter
             }
 
             SAMRecord alignment = records.get(i);
-            if(alignment.getReadUnmappedFlag())
-            {
-                continue;
-            }
-
             boolean include = targetIsSupplementary
                     ? alignment == primary || alignment.getSupplementaryAlignmentFlag()
                     : alignment.getSupplementaryAlignmentFlag();
@@ -71,10 +75,9 @@ public final class SaTagRewriter
 
     private static String asSaEntry(final SAMRecord record)
     {
-        Integer nm = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
         return record.getReferenceName() + ',' + record.getAlignmentStart()
                 + ',' + (record.getReadNegativeStrandFlag() ? SUPP_NEG_STRAND : SUPP_POS_STRAND)
                 + ',' + record.getCigarString() + ',' + record.getMappingQuality()
-                + ',' + (nm != null ? nm : 0) + ';';
+                + ',' + record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE) + ';';
     }
 }

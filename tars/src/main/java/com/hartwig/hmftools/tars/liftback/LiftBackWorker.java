@@ -103,7 +103,7 @@ public class LiftBackWorker extends Thread
 
         int seqLength = record.getReadLength();
 
-        if(seqLength > 0 && cleaned.getReadLength() != seqLength)
+        if(cleaned.getReadLength() != seqLength)
         {
             throw new IllegalStateException(String.format(
                     "read(%s) SEQ length(%d) disagrees with CIGAR(%s) read length(%d)",

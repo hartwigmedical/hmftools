@@ -3,7 +3,6 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.pairedUnmappedRecord;
@@ -11,7 +10,6 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refGenome;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryConfig;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.unpairedPrimaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.unpairedSupplementaryRecord;
@@ -33,7 +31,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.emit.LiftedMatePair;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger.RejectReason;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
@@ -47,6 +44,8 @@ import htsjdk.samtools.SAMRecord;
 // SA entries all fail to lift is dropped rather than emitted with a null SA.
 public class LiftBackGroupProcessorTest
 {
+    private static final String REF_BASES = "A".repeat(10_000);
+
     private static LiftBackGroupProcessor processor(
             final SupplementaryMerger supplementaryMerger, final RefGenomeInterface refGenome,
             final ExcludedRegions excludedRegions)
@@ -67,7 +66,7 @@ public class LiftBackGroupProcessorTest
 
     private static List<SAMRecord> process(final List<SAMRecord> group)
     {
-        return process(group, noopSupplementary(), EMPTY_REF_GENOME, null);
+        return process(group, noopSupplementary(), refGenome(CHR_1, REF_BASES), null);
     }
 
     private static ExcludedRegions excludedRegion(final String chromosome, final int start, final int end)
@@ -82,16 +81,17 @@ public class LiftBackGroupProcessorTest
     private static SupplementaryMerger noopSupplementary()
     {
         return new SupplementaryMerger(
-                EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig());
+                EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), refGenome(CHR_1, REF_BASES), supplementaryConfig());
     }
 
     @Test
     public void testPrimaryLiftingIntoExcludedRegionIsUnmapped()
     {
         // the tx primary lifts to chr1:100, inside the excluded region; REDUX-style unmapping keeps the record but clears the cigar
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
 
-        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        List<SAMRecord> emitted = process(
+                List.of(primary), noopSupplementary(), refGenome(CHR_1, REF_BASES), excludedRegion(CHR_1, 50, 300));
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
@@ -101,7 +101,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testStatsCountInputsAndUnmapReasonsAcrossGroups()
     {
-        LiftBackGroupProcessor processor = processor(noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor processor = processor(noopSupplementary(), refGenome(CHR_1, REF_BASES), excludedRegion(CHR_1, 50, 300));
 
         // both mates lift to chr1:100, inside the excluded region
         processor.processNameGroup(
@@ -125,8 +125,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testStatsSumAcrossWorkers()
     {
-        LiftBackGroupProcessor first = processor(noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
-        LiftBackGroupProcessor second = processor(noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor first = processor(noopSupplementary(), refGenome(CHR_1, REF_BASES), excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor second = processor(noopSupplementary(), refGenome(CHR_1, REF_BASES), excludedRegion(CHR_1, 50, 300));
         first.processNameGroup(
                 List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record ->
                 {
@@ -169,9 +169,10 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testPrimaryOutsideExcludedRegionIsKept()
     {
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");   // chr1:100
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");   // chr1:100
 
-        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), EMPTY_REF_GENOME, excludedRegion(CHR_1, 5000, 6000));
+        List<SAMRecord> emitted = process(
+                List.of(primary), noopSupplementary(), refGenome(CHR_1, REF_BASES), excludedRegion(CHR_1, 5000, 6000));
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());
@@ -182,7 +183,7 @@ public class LiftBackGroupProcessorTest
     {
         // the genomic ref stub is all 'A' and the read ends in two mismatches, so NM must be recomputed to 2 rather than carried
         // from the stale tx-contig NM:0, and MD must be dropped
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
         primary.setReadBases(bases("A".repeat(48) + "CC"));
         primary.setAttribute("NM", 0);
         primary.setAttribute("MD", "50");
@@ -201,7 +202,7 @@ public class LiftBackGroupProcessorTest
     {
         // bwa emits MAPQ 0 and no XA when a read maps past the -h 75 XA cap, so this genomic primary is unmapped even though the
         // placement selection sees a single locus and would otherwise bump it to 60
-        SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 100, "50M");
         primary.setMappingQuality(0);
 
         List<SAMRecord> emitted = process(List.of(primary));
@@ -215,7 +216,7 @@ public class LiftBackGroupProcessorTest
     {
         // a tx-contig primary at MAPQ 0 with no XA hit the XA cap on transcript contigs of one gene which all lift to one genomic
         // locus, so the over-cap rule is ref-only-gated and must not unmap it
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
         primary.setMappingQuality(0);
 
         List<SAMRecord> emitted = process(List.of(primary));
@@ -229,7 +230,7 @@ public class LiftBackGroupProcessorTest
     public void testMapQuality0WithXaKeptMapped()
     {
         // MAPQ 0 with XA present is an ordinary multimapper within the cap: keep and lift it
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
         primary.setMappingQuality(0);
         primary.setAttribute("XA", CHR_1 + ",+5000,50M,0;");
         primary.setReadBases(bases("A".repeat(50)));
@@ -337,9 +338,9 @@ public class LiftBackGroupProcessorTest
     public void testDuplicateSupplementariesCollapsed()
     {
         // bwa can emit the same junction on multiple tx contigs, so supps lifting to identical coords and strand collapse to one
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
-        SAMRecord supp1 = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",1,+,50M,0,0;");
-        SAMRecord supp2 = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",1,+,50M,0,0;");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord supp1 = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",1,+,50M,0,0;");
+        SAMRecord supp2 = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",1,+,50M,0,0;");
 
         List<SAMRecord> emitted = process(List.of(primary, supp1, supp2));
 
@@ -351,8 +352,8 @@ public class LiftBackGroupProcessorTest
     public void testOrphanedSupplementaryIsDropped()
     {
         // the supp's only SA entry is an out-of-range tx position, so the SA rewrite yields null and the supp is dropped
-        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
-        SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",9999,+,30M,0,0;");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
+        SAMRecord supp = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",9999,+,30M,0,0;");
 
         List<SAMRecord> emitted = process(List.of(primary, supp));
 
@@ -363,8 +364,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSupplementaryWhoseOwnPlacementCannotBeLiftedIsDropped()
     {
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
-        SAMRecord supplementary = supplementaryRecord(
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord supplementary = unpairedSupplementaryRecord(
                 TX_CONTIG, 251, "10M", TX_CONTIG + ",1,+,50M,60,0;");
 
         List<SAMRecord> emitted = process(List.of(primary, supplementary));
@@ -378,8 +379,8 @@ public class LiftBackGroupProcessorTest
     public void testSupplementaryWithLiftableSaIsKept()
     {
         // same shape as the orphan case, but the SA entry lifts, so the supp is emitted with a rewritten genomic SA
-        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
-        SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
+        SAMRecord supp = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
         supp.setMappingQuality(0);
 
         List<SAMRecord> emitted = process(List.of(primary, supp));
@@ -399,7 +400,7 @@ public class LiftBackGroupProcessorTest
     public void testLowAsPrimaryUnmappedWhenLiftbackDidNotImprove()
     {
         // the primary lifts but scores below the AS floor of 30, and supplementary merge with no junctions cannot improve it
-        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 
         List<SAMRecord> emitted = process(List.of(primary));
@@ -411,7 +412,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testHighAsPrimaryKeptMapped()
     {
-        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 60);
 
         List<SAMRecord> emitted = process(List.of(primary));
@@ -426,9 +427,9 @@ public class LiftBackGroupProcessorTest
         // the AS-floor unmap happens during decide, so the supp-orphan gate sees the unmapped primary and drops the supplementary.
         // Unmapping only at emit would leave the supp with an SA referencing a primary emitted as unmapped, a dangling locus for
         // REDUX FragmentCoords. The supp's SA lifts cleanly, so without the decide-time unmap this emits two records, not one.
-        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
-        SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
+        SAMRecord supp = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
 
         List<SAMRecord> emitted = process(List.of(primary, supp));
 
@@ -568,16 +569,16 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testProcessorMergesSupplementaryChainBeforeDiscrimination()
     {
-        SAMRecord primary = primaryRecord(CHR_1, 1000, "50M101S");
-        SAMRecord middle = supplementaryRecord(CHR_1, 2000, "50S60M41S", CHR_1 + ",1000,+,50M101S,0,0;");
-        SAMRecord last = supplementaryRecord(CHR_1, 3000, "110S41M", CHR_1 + ",1000,+,50M101S,0,0;");
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 1000, "50M101S");
+        SAMRecord middle = unpairedSupplementaryRecord(CHR_1, 2000, "50S60M41S", CHR_1 + ",1000,+,50M101S,0,0;");
+        SAMRecord last = unpairedSupplementaryRecord(CHR_1, 3000, "110S41M", CHR_1 + ",1000,+,50M101S,0,0;");
         primary.setReadBases(bases("A".repeat(151)));
         middle.setReadBases(bases("A".repeat(151)));
         last.setReadBases(bases("A".repeat(151)));
         SupplementaryMerger merger = new SupplementaryMerger(
                 EnsemblAnnotationIndex.fromJunctions(
                         Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999))),
-                EMPTY_REF_GENOME, supplementaryConfig());
+                refGenome(CHR_1, REF_BASES), supplementaryConfig());
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 4000, 'A').asRefGenome();
 
         List<SAMRecord> emitted = process(List.of(primary, middle, last), merger, ref, null);
@@ -590,8 +591,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testGenomicSupplementaryMergeGetsXsFromAnnotation()
     {
-        SAMRecord primary = primaryRecord(CHR_1, 150, "50M101S");
-        SAMRecord supplementary = supplementaryRecord(CHR_1, 300, "50S101M", CHR_1 + ",150,+,50M101S,0,0;");
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 150, "50M101S");
+        SAMRecord supplementary = unpairedSupplementaryRecord(CHR_1, 300, "50S101M", CHR_1 + ",150,+,50M101S,0,0;");
         primary.setReadBases(bases("A".repeat(151)));
         supplementary.setReadBases(bases("A".repeat(151)));
 
@@ -606,8 +607,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSupplementaryXaCanSupplyTheClosestMergePlacement()
     {
-        SAMRecord primary = primaryRecord(CHR_1, 1000, "50M50S");
-        SAMRecord supplementary = supplementaryRecord(
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 1000, "50M50S");
+        SAMRecord supplementary = unpairedSupplementaryRecord(
                 "chr5", 5000, "50S50M", CHR_1 + ",1000,+,50M50S,60,0;");
         supplementary.setMappingQuality(0);
         supplementary.setAttribute("XA", CHR_1 + ",+1200,50S50M,0;");
@@ -617,7 +618,7 @@ public class LiftBackGroupProcessorTest
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 2000, 'A').asRefGenome();
         LiftBackGroupProcessor processor = processor(
                 new SupplementaryMerger(
-                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
+                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), refGenome(CHR_1, REF_BASES), supplementaryConfig()),
                 ref, null);
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(List.of(primary, supplementary), emitted::add);
@@ -633,8 +634,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSelectedSupplementaryXaIsEmittedWhenMergeFails()
     {
-        SAMRecord primary = primaryRecord(CHR_1, 1000, "100M");
-        SAMRecord supplementary = supplementaryRecord(
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 1000, "100M");
+        SAMRecord supplementary = unpairedSupplementaryRecord(
                 "chr5", 5000, "50S50M", CHR_1 + ",1000,+,100M,60,0;");
         supplementary.setMappingQuality(0);
         supplementary.setAttribute("XA", CHR_1 + ",+1200,50S50M,0;");
@@ -648,7 +649,7 @@ public class LiftBackGroupProcessorTest
         List<SAMRecord> emitted = process(
                 List.of(primary, supplementary),
                 new SupplementaryMerger(
-                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
+                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), refGenome(CHR_1, REF_BASES), supplementaryConfig()),
                 ref, null);
 
         assertEquals(2, emitted.size());
@@ -668,14 +669,14 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSupplementaryMergeRejectionIsCounted()
     {
-        SAMRecord primary = primaryRecord(CHR_1, 1000, "100M");
-        SAMRecord supplementary = supplementaryRecord(
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 1000, "100M");
+        SAMRecord supplementary = unpairedSupplementaryRecord(
                 CHR_1, 1200, "50S50M", CHR_1 + ",1000,+,100M,60,0;");
 
         LiftBackGroupProcessor processor = processor(
                 new SupplementaryMerger(
-                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), EMPTY_REF_GENOME, supplementaryConfig()),
-                EMPTY_REF_GENOME, null);
+                        EnsemblAnnotationIndex.fromJunctions(Collections.emptySet()), refGenome(CHR_1, REF_BASES), supplementaryConfig()),
+                refGenome(CHR_1, REF_BASES), null);
         processor.processNameGroup(
                 List.of(primary, supplementary), record ->
                 {
@@ -691,7 +692,7 @@ public class LiftBackGroupProcessorTest
     {
         // chr1:1 50M forward lifts to itself, so bwa's AS still describes the emitted record and the floor trusts it
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
-        SAMRecord primary = primaryRecord(CHR_1, 1, "50M");
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 1, "50M");
         primary.setReadBases(bases("C".repeat(50)));
         primary.setAttribute("AS", 60);
 
@@ -706,7 +707,7 @@ public class LiftBackGroupProcessorTest
     {
         // the overhang gate rewrites the cigar, so bwa's AS=60 no longer describes the record; the genome says otherwise
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
-        SAMRecord primary = primaryRecord(CHR_1, 1, "20M100N3M48S");
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 1, "20M100N3M48S");
         primary.setReadBases(bases("C".repeat(71)));
         primary.setAttribute("AS", 60);
 
@@ -740,24 +741,12 @@ public class LiftBackGroupProcessorTest
         }
     }
 
-    // Isolates the mate patch from the group processor: an unrecorded mate must leave the mate-unmapped bit set.
-    @Test
-    public void testPatchMateFieldsKeepsMateUnmappedForUnplacedMate()
-    {
-        SAMRecord record = pairedUnmappedRecord("frag1", true);
-        record.setMateUnmappedFlag(true);
-
-        new LiftedMatePair().patchMateFields(record);
-
-        assertEquals("flags", 77, record.getFlags());
-    }
-
     // junctions built from the same sidecar entry the selector lifts against, so the intron coords and chromosome key match
     // what the lift emits: chr1 introns 200-299 and 400-499 between the three exons
     private static SupplementaryMerger contigSupplementary()
     {
         return new SupplementaryMerger(
-                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), EMPTY_REF_GENOME, supplementaryConfig());
+                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), refGenome(CHR_1, REF_BASES), supplementaryConfig());
     }
 
     @Test
@@ -772,10 +761,10 @@ public class LiftBackGroupProcessorTest
 
         // the primary's matched bases stop at 50 and the supplementary's resume at 100, so the read-coverage gap refuses the merge
         // and the supplementary is emitted on its own, which is where an ungated overhang survives
-        SAMRecord primary = primaryRecord(CHR_1, 5000, "50M101S");
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 5000, "50M101S");
         primary.setReadBases(bases("A".repeat(151)));
 
-        SAMRecord supp = supplementaryRecord(CHR_1, 1000, "99S2M100N50M", CHR_1 + ",5000,+,50M101S,60,0;");
+        SAMRecord supp = unpairedSupplementaryRecord(CHR_1, 1000, "99S2M100N50M", CHR_1 + ",5000,+,50M101S,60,0;");
         supp.setReadBases(primary.getReadBases());
 
         List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), ref, null);
@@ -797,10 +786,11 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testEveryEmittedAlignmentGetsACompleteReciprocalSaTag()
     {
-        SAMRecord primary = primaryRecord(CHR_1, 100, "50M100S");
-        SAMRecord supp1 = supplementaryRecord(
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 100, "50M100S");
+        SAMRecord supp1 = unpairedSupplementaryRecord(
                 CHR_1, 300, "50S50M50S", CHR_1 + ",100,+,50M100S,60,0;");
-        SAMRecord supp2 = supplementaryRecord(
+        supp1.setReadNegativeStrandFlag(true);
+        SAMRecord supp2 = unpairedSupplementaryRecord(
                 CHR_1, 500, "100S50M", CHR_1 + ",100,+,50M100S,60,0;");
         supp2.setReadNegativeStrandFlag(true);
         supp2.setMappingQuality(40);
@@ -812,13 +802,13 @@ public class LiftBackGroupProcessorTest
         SAMRecord emittedSupp1 = emitted.get(1);
         SAMRecord emittedSupp2 = emitted.get(2);
         assertEquals(
-                CHR_1 + ",300,+,50S50M50S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
+                CHR_1 + ",300,-,50S50M50S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
                 emittedPrimary.getStringAttribute("SA"));
         assertEquals(
                 CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
                 emittedSupp1.getStringAttribute("SA"));
         assertEquals(
-                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",300,+,50S50M50S,60,0;",
+                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",300,-,50S50M50S,60,0;",
                 emittedSupp2.getStringAttribute("SA"));
     }
 

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.viridian.common.Utils.getRequiredSamTag;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getRequiredSamTag;
 import static com.hartwig.hmftools.viridian.common.Utils.parseMdTagMismatchPositions;
 
 import java.io.File;

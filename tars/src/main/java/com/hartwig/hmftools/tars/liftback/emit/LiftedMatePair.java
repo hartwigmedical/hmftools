@@ -90,8 +90,12 @@ public class LiftedMatePair
         }
 
         LiftedRecord mate = mateOf(firstInPair(record));
+        if(mate == null)
+        {
+            throw new IllegalStateException(String.format("read %s: paired read has no mate in its group", record.getReadName()));
+        }
 
-        if(mate == null || !mate.hasPlacement())
+        if(!mate.hasPlacement())
         {
             applyUnmappedMate(record);
             return;

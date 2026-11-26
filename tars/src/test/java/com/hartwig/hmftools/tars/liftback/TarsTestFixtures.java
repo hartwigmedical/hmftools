@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
@@ -25,6 +28,7 @@ import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -117,7 +121,20 @@ public final class TarsTestFixtures
         record.setReferenceName(contig);
         record.setAlignmentStart(pos);
         record.setCigarString(cigar);
+        record.setReadBases(bases("A".repeat(record.getCigar().getReadLength())));
         record.setMappingQuality(60);
+
+        int alignedBases = 0;
+        for(CigarElement element : record.getCigar().getCigarElements())
+        {
+            if(element.getOperator().isAlignment())
+            {
+                alignedBases += element.getLength();
+            }
+        }
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 0);
+        record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignedBases);
+        record.setAttribute(XS_ATTRIBUTE, 0);
         return record;
     }
 
@@ -298,14 +315,15 @@ public final class TarsTestFixtures
         return recordBuilder().alignments(List.of(alignment)).build();
     }
 
-    public static LiftedRecord resolve(final AlignmentSelector selector, final SAMRecord record)
+    public static LiftedRecord resolve(
+            final AlignmentSelector selector, final SAMRecord record, final RefGenomeInterface refGenome)
     {
         if(record.getReadUnmappedFlag())
         {
             return LiftedRecord.unmapped("");
         }
 
-        OverhangGate overhangGate = new OverhangGate(EMPTY_REF_GENOME);
+        OverhangGate overhangGate = new OverhangGate(refGenome);
         if(record.getSupplementaryAlignmentFlag())
         {
             return AlignmentSelector.finaliseSupplementary(selector.liftSupplementaryAlignment(record, overhangGate));
@@ -316,6 +334,12 @@ public final class TarsTestFixtures
         {
             return alignments;
         }
+
+        if(AlignmentSelector.usesGenomicScore(alignments.liftedAlignments(), record.getMappingQuality()))
+        {
+            new GenomicAlignmentScorer(refGenome).scorePlacements(alignments.liftedAlignments(), record);
+        }
+
         AlignmentSelector.Selection selection = selector.choosePrimaryAlignment(record, alignments.liftedAlignments(), null);
         return selector.selectPrimaryAlignment(record, alignments.liftedAlignments(), selection);
     }

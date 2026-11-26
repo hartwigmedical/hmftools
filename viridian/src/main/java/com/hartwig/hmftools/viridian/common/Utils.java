@@ -8,23 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.function.BiFunction;
-
-import htsjdk.samtools.SAMRecord;
 
 public class Utils
 {
-    public static <T> T getRequiredSamTag(SAMRecord record, String tag, BiFunction<SAMRecord, String, T> getter)
-    {
-        T value = getter.apply(record, tag);
-        if(value == null)
-        {
-            throw new IllegalStateException(
-                    String.format("aligned read missing %s tag on contig: %s", tag, record.getReferenceName()));
-        }
-        return value;
-    }
-
     // Cached value to save memory on empty arrays which are common.
     private static final int[] NO_POSITIONS = new int[0];
 

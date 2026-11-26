@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getRequiredSamTag;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
@@ -191,7 +192,7 @@ public class LiftBackGroupProcessor
         }
     }
 
-    private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
+    private int finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
     {
         if(lifted.hasPlacement())
         {
@@ -210,7 +211,7 @@ public class LiftBackGroupProcessor
             }
         }
 
-        return primary.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        return getRequiredSamTag(primary, ALIGNMENT_SCORE_ATTRIBUTE, SAMRecord::getIntegerAttribute);
     }
 
     private UnmapDecision applyUnmapPolicy(final SAMRecord primary, final LiftedRecord result)
@@ -233,8 +234,8 @@ public class LiftBackGroupProcessor
             return new UnmapDecision(LiftedRecord.unmapped("over_cap_unmapped"), true);
         }
 
-        Integer alignmentScore = finalAlignmentScore(primary, result);
-        if(alignmentScore != null && alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
+        int alignmentScore = finalAlignmentScore(primary, result);
+        if(alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
         {
             ++mStats.UnmappedLowAlignmentScore;
             TARS_LOGGER.trace(

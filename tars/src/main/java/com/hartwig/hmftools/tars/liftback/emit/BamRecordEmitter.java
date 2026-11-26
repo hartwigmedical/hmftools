@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getRequiredSamTag;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
@@ -63,8 +64,7 @@ public final class BamRecordEmitter
         SAMRecord primary = records.get(0);
         LiftedRecord primaryResult = liftedRecords.get(0);
         boolean finalPrimaryUnmapped = primaryUnmapped || willBeUnmapped(primary, primaryResult);
-        boolean[] willEmit = computeWillEmit(
-                records, liftedRecords, absorbedSupplementaries, primary, finalPrimaryUnmapped);
+        boolean[] willEmit = computeWillEmit(records, liftedRecords, absorbedSupplementaries, finalPrimaryUnmapped);
 
         // Apply every final placement before building any SA tag, so SA entries take coordinates, cigar, strand, MAPQ and
         // refreshed NM from the records that are emitted.
@@ -109,7 +109,7 @@ public final class BamRecordEmitter
 
     private boolean[] computeWillEmit(
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
-            final Set<Integer> absorbedSupplementaries, final SAMRecord primary, final boolean primaryUnmapped)
+            final Set<Integer> absorbedSupplementaries, final boolean primaryUnmapped)
     {
         Set<AlignmentKey> emittedSupplementaries = new HashSet<>();
         boolean[] willEmit = new boolean[records.size()];
@@ -122,13 +122,13 @@ public final class BamRecordEmitter
 
             SAMRecord record = records.get(i);
             willEmit[i] = !record.getSupplementaryAlignmentFlag()
-                    || keepSupplementary(record, liftedRecords.get(i), primary, primaryUnmapped, emittedSupplementaries);
+                    || keepSupplementary(record, liftedRecords.get(i), primaryUnmapped, emittedSupplementaries);
         }
         return willEmit;
     }
 
     private boolean keepSupplementary(
-            final SAMRecord record, final LiftedRecord result, final SAMRecord primary, final boolean primaryUnmapped,
+            final SAMRecord record, final LiftedRecord result, final boolean primaryUnmapped,
             final Set<AlignmentKey> emittedSupplementaries)
     {
         if(primaryUnmapped || !result.hasPlacement())
@@ -136,26 +136,24 @@ public final class BamRecordEmitter
             return false;
         }
 
-        if(record != primary && !emittedSupplementaries.add(result.primaryAlignment().key()))
+        if(!emittedSupplementaries.add(result.primaryAlignment().key()))
         {
             return false;
         }
 
-        if(!record.getReadUnmappedFlag())
+        int alignmentScore = getRequiredSamTag(record, ALIGNMENT_SCORE_ATTRIBUTE, SAMRecord::getIntegerAttribute);
+        if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
         {
-            Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-            if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
-            {
-                alignmentScore = result.primaryAlignment().GenomicScore;
-            }
-            if(alignmentScore != null && alignmentScore < SUPP_AS_DROP_THRESHOLD)
-            {
-                return false;
-            }
+            alignmentScore = result.primaryAlignment().GenomicScore;
+        }
+        if(alignmentScore < SUPP_AS_DROP_THRESHOLD)
+        {
+            return false;
         }
 
         return !excludes(result)
-                && SaTagRewriter.hasLiftableAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mContigTranslator);
+                && SaTagRewriter.hasLiftableAlignment(
+                getRequiredSamTag(record, SUPPLEMENTARY_ATTRIBUTE, SAMRecord::getStringAttribute), mContigTranslator);
     }
 
     private static void writeRecord(
@@ -260,8 +258,7 @@ public final class BamRecordEmitter
     private void refreshNmDropMd(final SAMRecord record)
     {
         record.setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, null);
-        int editDistance = computeEditDistance(record);
-        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, editDistance >= 0 ? Integer.valueOf(editDistance) : null);
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, computeEditDistance(record));
     }
 
     private int computeEditDistance(final SAMRecord record)
@@ -278,16 +275,8 @@ public final class BamRecordEmitter
                 case M:
                 case EQ:
                 case X:
-                    if(readIndex + length > readBases.length)
-                    {
-                        return -1;
-                    }
                     byte[] refBases = GenomicAlignmentScorer.referenceBases(
                             mRefGenome, record.getReferenceName(), refPos, refPos + length - 1);
-                    if(refBases == null)
-                    {
-                        return -1;
-                    }
                     for(int i = 0; i < length; ++i)
                     {
                         if(!SequenceUtil.basesEqual(readBases[readIndex + i], refBases[i]))

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback.translate;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getRequiredSamTag;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.util.ArrayList;
@@ -80,10 +81,10 @@ public final class AlignmentLifter
 
     private LiftedAlignment liftSelf(final SAMRecord record)
     {
-        Integer mismatches = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
         LiftedAlignment lifted = mTranslator.liftAlignment(
                 record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
-                mismatches != null ? mismatches : 0, !record.getReadNegativeStrandFlag());
+                getRequiredSamTag(record, NUM_MUTATONS_ATTRIBUTE, SAMRecord::getIntegerAttribute),
+                !record.getReadNegativeStrandFlag());
         if(lifted == null)
         {
             logLiftFailure(record);

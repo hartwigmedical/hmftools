@@ -115,7 +115,9 @@ public class TarsApplication
         }
 
         if(!runThreadTasks(threadTasks))
+        {
             System.exit(1);
+        }
 
         return workers;
     }

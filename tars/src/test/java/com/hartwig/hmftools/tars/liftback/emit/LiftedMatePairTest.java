@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.tars.liftback.LiftedRecord;
@@ -166,17 +167,6 @@ public class LiftedMatePairTest
     }
 
     @Test
-    public void testPatchMissingMateClearsProperPair()
-    {
-        LiftedMatePair pair = new LiftedMatePair();
-        SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
-        r1.setProperPairFlag(true);
-        pair.patchMateFields(r1);
-
-        assertFalse(r1.getProperPairFlag());
-    }
-
-    @Test
     public void testUnmappedReadWithMappedMateParkedAtMateLocus()
     {
         // An unmapped read is parked at its mapped mate's coordinates so the pair stays together in a coord-sorted BAM.
@@ -292,5 +282,13 @@ public class LiftedMatePairTest
 
         // forward 5'=100, reverse 5'=211 -> 211 - 100 + 1 = 112, positive on forward read
         assertEquals(112, r2.getInferredInsertSize());
+    }
+
+    @Test
+    public void testPairedReadWithoutItsMateIsRejected()
+    {
+        SAMRecord record = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
+
+        assertThrows(IllegalStateException.class, () -> new LiftedMatePair().patchMateFields(record));
     }
 }

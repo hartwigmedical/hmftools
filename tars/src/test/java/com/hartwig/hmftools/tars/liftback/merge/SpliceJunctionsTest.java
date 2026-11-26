@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.tars.liftback.merge;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refGenome;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,19 +48,9 @@ public class SpliceJunctionsTest
     }
 
     @Test
-    public void testRejectsNullOrWrongLengthInputs()
-    {
-        assertEquals(Tier.NONE, SpliceJunctions.motifTier(null, bases("AG")));
-        assertEquals(Tier.NONE, SpliceJunctions.motifTier(bases("GT"), null));
-        assertEquals(Tier.NONE, SpliceJunctions.motifTier(bases("G"), bases("AG")));
-        assertEquals(Tier.NONE, SpliceJunctions.motifTier(bases("GT"), bases("A")));
-        assertEquals(Tier.NONE, SpliceJunctions.motifTier(bases("GTC"), bases("AG")));
-    }
-
-    @Test
     public void testSpliceStrandComesFromTheAnnotatedTranscriptStrand()
     {
-        SpliceJunctions spliceJunctions = new SpliceJunctions(reverseStrandTranscript(), EMPTY_REF_GENOME);
+        SpliceJunctions spliceJunctions = new SpliceJunctions(reverseStrandTranscript(), refGenome(CHR_1, "A".repeat(500)));
 
         assertEquals(-1, spliceJunctions.spliceStrand(CHR_1, 150, "50M100N50M"));
 

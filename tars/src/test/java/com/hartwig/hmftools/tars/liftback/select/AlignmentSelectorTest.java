@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.tars.liftback.select;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.EMPTY_REF_GENOME;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.exonRegionIndex;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.resolve;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
@@ -11,17 +13,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.LiftedRecord;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
+import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
 
@@ -43,7 +48,7 @@ public class AlignmentSelectorTest
     public void testSingleEndPrimaryLifted()
     {
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, TarsTestFixtures.unpairedPrimaryRecord(TX_CONTIG, 51, "100M"));
+        LiftedRecord result = resolve(selector, TarsTestFixtures.unpairedPrimaryRecord(TX_CONTIG, 51, "100M"), EMPTY_REF_GENOME);
 
         assertTrue(result.hasPlacement());
         assertEquals(CHR_1, result.finalChromosome());
@@ -55,8 +60,9 @@ public class AlignmentSelectorTest
     public void testSingleEndSupplementaryLifted()
     {
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, 
-                TarsTestFixtures.unpairedSupplementaryRecord(TX_CONTIG, 51, "100M", TX_CONTIG + ",1,+,60M40S,60,0;"));
+        LiftedRecord result = resolve(
+                selector, TarsTestFixtures.unpairedSupplementaryRecord(TX_CONTIG, 51, "100M", TX_CONTIG + ",1,+,60M40S,60,0;"),
+                EMPTY_REF_GENOME);
 
         assertTrue(result.hasPlacement());
         assertEquals(CHR_1, result.finalChromosome());
@@ -67,7 +73,7 @@ public class AlignmentSelectorTest
     public void testUnmapped()
     {
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, TarsTestFixtures.unmappedRecord("read"));
+        LiftedRecord result = resolve(selector, TarsTestFixtures.unmappedRecord("read"), EMPTY_REF_GENOME);
 
         assertFalse(result.hasPlacement());
         assertTrue(result.liftedAlignments().isEmpty());
@@ -79,7 +85,7 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(CHR_1, 1000, "150M");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(1000, result.finalPos());
@@ -94,7 +100,7 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(100, result.finalPos());
@@ -108,7 +114,7 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(150, result.finalPos());
@@ -123,7 +129,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(1, result.numLoci());
     }
@@ -135,7 +141,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(1, result.numLoci());
     }
@@ -147,7 +153,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(1, result.numLoci());
     }
@@ -159,7 +165,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.numLoci());
     }
@@ -170,9 +176,13 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
+        record.setReadBases(bases("A".repeat(50)));
+        RefGenomeInterface ref = new TestGenome()
+                .with(CHR_1, 200, 'A').with("chr5", 5100, 'A').set("chr5", 5000, "CCC")
+                .asRefGenome();
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, ref);
 
         assertEquals(2, result.numLoci());
         assertEquals(0, result.updatedMapQuality());
@@ -184,9 +194,11 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setMappingQuality(0);
         record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;");
+        record.setReadBases(bases("A".repeat(100)));
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 600, 'A').asRefGenome();
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, ref);
 
         assertEquals(1, result.numLoci());
         assertEquals(60, result.updatedMapQuality());
@@ -198,9 +210,13 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(CHR_1, 1000, "100M");
         record.setMappingQuality(0);
         record.setAttribute("XA", CHR_1 + ",+1080,100M,0;" + CHR_1 + ",+1160,100M,0;");
+        record.setReadBases(bases("A".repeat(100)));
+        RefGenomeInterface ref = new TestGenome()
+                .with(CHR_1, 1300, 'A').set(CHR_1, 1150, "C").set(CHR_1, 1250, "C")
+                .asRefGenome();
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, ref);
 
         assertEquals(2, result.numLoci());
         assertEquals(0, result.updatedMapQuality());
@@ -213,7 +229,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.numLoci());
     }
@@ -230,7 +246,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", "ensG_OTHER_T,+1,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(twoContigs, EnsemblAnnotationIndex.fromContigEntries(twoContigs));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.numLoci());
     }
@@ -242,7 +258,7 @@ public class AlignmentSelectorTest
         record.setSupplementaryAlignmentFlag(true);
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertTrue(result.hasPlacement());
     }
@@ -255,7 +271,7 @@ public class AlignmentSelectorTest
         record.setMappingQuality(0);
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertTrue(result.hasPlacement());
         assertEquals(CHR_1, result.finalChromosome());
@@ -274,7 +290,8 @@ public class AlignmentSelectorTest
         record.setAttribute(
                 "XA", CHR_1 + ",+300,50S50M,0;" + TX_CONTIG + ",+151,50S50M,0;");
 
-        LiftedRecord result = resolve(new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap())), record);
+        LiftedRecord result = resolve(
+                new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap())), record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.liftedAlignments().size());
         assertEquals(CHR_1, result.liftedAlignments().get(1).LiftedChromosome);
@@ -290,7 +307,7 @@ public class AlignmentSelectorTest
         record.setSupplementaryAlignmentFlag(true);
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertFalse(result.hasPlacement());
         assertTrue(result.notes().contains("supp_translate_failed"));
@@ -303,7 +320,7 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertFalse(result.hasPlacement());
         assertTrue(result.notes().contains("primary_translate_failed"));
@@ -315,7 +332,7 @@ public class AlignmentSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 200, "100M");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertTrue(result.finalCigar().endsWith("49S"));
     }
@@ -327,7 +344,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(1, result.numLoci());
     }
@@ -339,7 +356,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,+5000,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.liftedAlignments().size());
         assertEquals(1, result.numXaAlts());
@@ -352,22 +369,10 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.liftedAlignments().size());
         assertEquals(1, result.numXaAlts());
-    }
-
-    @Test
-    public void testXaWithMalformedNmStillLifted()
-    {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
-        record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
-
-        AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
-
-        assertEquals(2, result.liftedAlignments().size());
     }
 
     @Test
@@ -377,7 +382,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertTrue(result.primaryAlignment().FromTxContig);
     }
@@ -394,7 +399,7 @@ public class AlignmentSelectorTest
                         + TX_CONTIG + ",+51,100M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, primary);
+        LiftedRecord result = resolve(selector, primary, EMPTY_REF_GENOME);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(150, result.finalPos());
@@ -412,7 +417,7 @@ public class AlignmentSelectorTest
                         + CHR_1 + ",+3000,150M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, primary);
+        LiftedRecord result = resolve(selector, primary, EMPTY_REF_GENOME);
 
         assertEquals(3, result.numLoci());
     }
@@ -426,11 +431,11 @@ public class AlignmentSelectorTest
         record.setAttribute("XS", 151);
 
         AlignmentSelector sidecarIndex = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        assertEquals(0, resolve(sidecarIndex, record).updatedMapQuality());
+        assertEquals(0, resolve(sidecarIndex, record, EMPTY_REF_GENOME).updatedMapQuality());
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 }));
         AlignmentSelector withIndex = new AlignmentSelector(contigMap(), annotationIndex);
-        LiftedRecord result = resolve(withIndex, record);
+        LiftedRecord result = resolve(withIndex, record, EMPTY_REF_GENOME);
         assertEquals(0, result.updatedMapQuality());
     }
 
@@ -445,7 +450,7 @@ public class AlignmentSelectorTest
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(
                 CHR_1, List.of(new int[] { 1400, 1700 }));
         AlignmentSelector selector = new AlignmentSelector(contigMap(), annotationIndex);
-        assertEquals(0, resolve(selector, record).updatedMapQuality());
+        assertEquals(0, resolve(selector, record, EMPTY_REF_GENOME).updatedMapQuality());
     }
 
     @Test
@@ -482,7 +487,7 @@ public class AlignmentSelectorTest
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,-5000,50M,0;");
 
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
-        LiftedRecord result = resolve(selector, record);
+        LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         String xa = result.xaTag();
         assertNotNull(xa);
@@ -585,17 +590,6 @@ public class AlignmentSelectorTest
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, true);
         assertSame(alignments.get(0), outcome.alignment());
         assertEquals("", outcome.reason());
-    }
-
-    @Test
-    public void testUnscoredKeepsSelf()
-    {
-        List<LiftedAlignment> alignments = contestedSet();
-        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, false);
-        assertSame(alignments.get(0), outcome.alignment());
-        assertEquals("", outcome.reason());
-        assertFalse(alignments.get(0).Dropped);
-        assertFalse(alignments.get(1).Dropped);
     }
 
     @Test
@@ -861,22 +855,6 @@ public class AlignmentSelectorTest
     }
 
     @Test
-    public void testPairSelectionFallsBackWhenAllPlacementsAreDropped()
-    {
-        LiftedAlignment first = ref(CHR1, 100, "100M");
-        LiftedAlignment second = refReverse(CHR1, 300, "100M");
-        first.Dropped = true;
-        second.Dropped = true;
-
-        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(first), false, first, false,
-                set(second), false, second, false, 0);
-
-        assertSame(first, outcome.first().alignment());
-        assertSame(second, outcome.second().alignment());
-    }
-
-    @Test
     public void testPairSelectionIsIndependentOfMateOrder()
     {
         LiftedAlignment firstChr1 = ref(CHR1, 100, "52M");
@@ -1004,5 +982,15 @@ public class AlignmentSelectorTest
     {
         return AlignmentSelector.selectSupplementaryAlignments(
                 CHR1, true, 1001, "94M57S", null, List.of(alignments));
+    }
+
+    @Test
+    public void testRecordWithoutNmTagIsRejected()
+    {
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        record.setAttribute("NM", null);
+        AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
+
+        assertThrows(IllegalStateException.class, () -> resolve(selector, record, EMPTY_REF_GENOME));
     }
 }

@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -257,7 +258,7 @@ public class ContigTranslatorTest
         ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
 
         List<LiftedAlignment> alignments = translator.liftXaAlignments(
-                TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",-201,30M,2;bad;unknown_tx,+1,10M,0;");
+                TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",-201,30M,2;unknown_tx,+1,10M,0;");
 
         assertEquals(2, alignments.size());
         assertEquals(150, alignments.get(0).LiftedPos);
@@ -346,4 +347,12 @@ public class ContigTranslatorTest
         return new Cigar(ContigTranslator.mergeDeletionsIntoSplice(cigarFromStr(cigarString).getCigarElements())).toString();
     }
 
+    @Test
+    public void testMalformedXaEntryIsRejected()
+    {
+        ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
+
+        assertThrows(IllegalStateException.class, () -> translator.liftXaAlignments(""));
+        assertThrows(IllegalStateException.class, () -> translator.liftXaAlignments(TX_CONTIG + ",+51,50M;"));
+    }
 }

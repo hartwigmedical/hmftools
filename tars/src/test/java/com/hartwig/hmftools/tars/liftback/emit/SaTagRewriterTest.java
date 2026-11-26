@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonConti
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -28,7 +29,6 @@ public class SaTagRewriterTest
 
         assertTrue(SaTagRewriter.hasLiftableAlignment(TX_CONTIG + ",1,+,50M,60,2;", translator));
         assertFalse(SaTagRewriter.hasLiftableAlignment(TX_CONTIG + ",9999,+,50M,60,2;", translator));
-        assertFalse(SaTagRewriter.hasLiftableAlignment(null, translator));
     }
 
     @Test
@@ -73,10 +73,18 @@ public class SaTagRewriterTest
     {
         SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
         SAMRecord dropped = supplementaryRecord(CHR_1, 250, "30M20S", "stale");
-        SAMRecord unmapped = supplementaryRecord(CHR_1, 400, "20S30M", "stale");
-        unmapped.setReadUnmappedFlag(true);
 
-        assertNull(SaTagRewriter.buildForRecord(
-                List.of(primary, dropped, unmapped), new boolean[] { true, false, true }, primary, 0));
+        assertNull(SaTagRewriter.buildForRecord(List.of(primary, dropped), new boolean[] { true, false }, primary, 0));
+    }
+
+    @Test
+    public void testMalformedSaIsRejected()
+    {
+        ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
+
+        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment("", translator));
+        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment(TX_CONTIG + ",1,+;", translator));
+        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment("bad", translator));
+        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment("chr1,x,+,50M,60,0;", translator));
     }
 }

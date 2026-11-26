@@ -74,11 +74,6 @@ public class SupplementaryMerger
 
     public Result merge(final Placement placement)
     {
-        if(placement.supplementaries().isEmpty())
-        {
-            return Result.noMerge(RejectReason.NO_MATCHING_SUPP);
-        }
-
         List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(placement.primaryCigar());
 
         int primaryStart = placement.primaryStart();

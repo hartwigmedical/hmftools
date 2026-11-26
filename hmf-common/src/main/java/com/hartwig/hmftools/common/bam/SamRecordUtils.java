@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -270,6 +271,16 @@ public final class SamRecordUtils
     {
         Integer numEvents = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
         return numEvents != null ? numEvents : 0;
+    }
+
+    public static <T> T getRequiredSamTag(final SAMRecord record, final String tag, final BiFunction<SAMRecord, String, T> getter)
+    {
+        T value = getter.apply(record, tag);
+        if(value == null)
+        {
+            throw new IllegalStateException(format("aligned read missing %s tag on contig: %s", tag, record.getReferenceName()));
+        }
+        return value;
     }
 
     public static String readToString(final SAMRecord read)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback.select;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getRequiredSamTag;
 import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAP_QUALITY;
 import static com.hartwig.hmftools.tars.common.TarsConstants.LOCAL_SV_MAX_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
@@ -15,7 +16,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
@@ -313,9 +313,9 @@ public final class AlignmentSelector
 
     private static boolean hasHiddenTie(final SAMRecord record)
     {
-        Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-        Integer suboptimalScore = record.getIntegerAttribute(XS_ATTRIBUTE);
-        return alignmentScore != null && suboptimalScore != null && suboptimalScore.intValue() == alignmentScore.intValue();
+        int alignmentScore = getRequiredSamTag(record, ALIGNMENT_SCORE_ATTRIBUTE, SAMRecord::getIntegerAttribute);
+        int suboptimalScore = getRequiredSamTag(record, XS_ATTRIBUTE, SAMRecord::getIntegerAttribute);
+        return suboptimalScore == alignmentScore;
     }
 
     static boolean isConcordant(final List<LiftedAlignment> alignments)
@@ -384,23 +384,18 @@ public final class AlignmentSelector
         Selection independentSecond = select(
                 secondAlignments, secondConcordant, secondSelf, seed, secondBwaHasPriority);
 
-        Optional<PairChoice> selection = selectMateAlignments(
+        PairChoice winner = selectMateAlignments(
                 new MateAlignments(
                         firstAlignments, independentFirst.alignment(), firstMapQualityZero && !firstConcordant),
                 new MateAlignments(
                         secondAlignments, independentSecond.alignment(), secondMapQualityZero && !secondConcordant),
                 seed);
-        if(selection.isEmpty())
-        {
-            return new PairSelection(independentFirst, independentSecond);
-        }
-        PairChoice winner = selection.get();
         return new PairSelection(
                 new Selection(indexOf(firstAlignments, winner.first()), winner.first(), winner.note()),
                 new Selection(indexOf(secondAlignments, winner.second()), winner.second(), winner.note()));
     }
 
-    private static Optional<PairChoice> selectMateAlignments(
+    private static PairChoice selectMateAlignments(
             final MateAlignments first, final MateAlignments second, final int seed)
     {
         List<AlignmentPair> bestPairs = new ArrayList<>();
@@ -425,16 +420,11 @@ public final class AlignmentSelector
             }
         }
 
-        if(bestPairs.isEmpty())
-        {
-            return Optional.empty();
-        }
-
         List<AlignmentPair> contenders = topScoringPairs(bestPairs);
         contenders.sort(Comparator.comparing(AlignmentPair::canonicalKey));
         AlignmentPair winner = contenders.get(Math.floorMod(seed, contenders.size()));
         String note = bestPairs.size() == 1 ? "mate" : (contenders.size() == 1 ? "score" : "random");
-        return Optional.of(new PairChoice(winner.first(), winner.second(), note));
+        return new PairChoice(winner.first(), winner.second(), note);
     }
 
     private static List<LiftedAlignment> matePlacements(final MateAlignments mate)
@@ -765,10 +755,6 @@ public final class AlignmentSelector
         for(LiftedAlignment alignment : placements)
         {
             topScore = Math.max(topScore, alignment.GenomicScore);
-        }
-        if(topScore == Integer.MIN_VALUE && !hasMergeableSupplementary(placements))
-        {
-            return keepBwaPrimary(alignments, self);
         }
 
         // Do not weight a placement by the number of sources that produced it.
