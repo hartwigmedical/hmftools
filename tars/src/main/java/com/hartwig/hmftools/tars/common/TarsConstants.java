@@ -9,6 +9,8 @@ public final class TarsConstants
 
     public static final String APP_NAME = "Tars";
 
+    public static final String FILE_ID = "tars";
+
     // alt contig name suffix, e.g. chr1 -> chr1_tx
     public static final String ALT_CONTIG_SUFFIX = "_tx";
 

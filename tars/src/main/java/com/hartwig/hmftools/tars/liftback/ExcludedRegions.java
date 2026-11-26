@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
-
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,10 +16,12 @@ public final class ExcludedRegions
 
     ExcludedRegions(final Map<String, List<BaseRegion>> regionsByChromosome)
     {
-        mRegionsByChromosome = regionsByChromosome;
-        for(List<BaseRegion> regions : mRegionsByChromosome.values())
+        mRegionsByChromosome = new HashMap<>();
+        for(Map.Entry<String, List<BaseRegion>> entry : regionsByChromosome.entrySet())
         {
-            regions.sort(Comparator.comparingInt(BaseRegion::start));
+            List<BaseRegion> regions = new ArrayList<>(entry.getValue());
+            Collections.sort(regions);
+            mRegionsByChromosome.put(entry.getKey(), regions);
         }
     }
 
@@ -28,8 +30,7 @@ public final class ExcludedRegions
         Map<String, List<BaseRegion>> regions = ChrBaseRegion.loadChrBaseRegions(filename, false);
         if(regions == null)
         {
-            TARS_LOGGER.error("failed to read excluded regions file {}", filename);
-            System.exit(1);
+            throw new IllegalStateException(String.format("failed to read excluded regions file %s", filename));
         }
         return new ExcludedRegions(regions);
     }

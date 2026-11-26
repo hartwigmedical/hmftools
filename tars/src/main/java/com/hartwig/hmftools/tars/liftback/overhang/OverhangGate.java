@@ -32,17 +32,19 @@ public class OverhangGate
 
     public void gatePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
     {
-        ReadBases readBases = ReadBases.of(record);
+        ReadBases readBases = new ReadBases(record.getReadBases());
         LiftedAlignment self = alignments.get(0);
 
         for(int i = 0; i < alignments.size(); ++i)
         {
             LiftedAlignment alignment = alignments.get(i);
-            Outcome outcome = gate(alignment, readBases.forAlignment(alignment));
+            byte[] alignmentBases = alignment.forwardStrand() != record.getReadNegativeStrandFlag()
+                    ? readBases.getBases() : readBases.getReverseComplement();
+            Outcome outcome = gate(alignment, alignmentBases);
 
             if(alignment != self && outcome.dropped())
             {
-                alignment.Dropped = true;
+                alignments.set(i, alignment.withDropped());
                 continue;
             }
 
@@ -59,8 +61,8 @@ public class OverhangGate
 
     public Outcome gate(final LiftedAlignment alignment, final byte[] readBases)
     {
-        int pos = alignment.LiftedPos;
-        String working = alignment.LiftedCigar;
+        int pos = alignment.liftedPosition().Position;
+        String working = alignment.liftedCigar();
 
         for(int side = 0; side <= 1; ++side)
         {
@@ -69,8 +71,8 @@ public class OverhangGate
             while(working.indexOf('N') >= 0)
             {
                 CollapseResult collapse = leading
-                        ? tryCollapseLeading(alignment.LiftedChromosome, pos, working, readBases)
-                        : tryCollapseTrailing(alignment.LiftedChromosome, pos, working, readBases);
+                        ? tryCollapseLeading(alignment.liftedPosition().Chromosome, pos, working, readBases)
+                        : tryCollapseTrailing(alignment.liftedPosition().Chromosome, pos, working, readBases);
                 if(!collapse.collapsed())
                 {
                     break;
@@ -81,7 +83,7 @@ public class OverhangGate
         }
 
         boolean dropped = alignment.cigarHasN() && working.indexOf('N') < 0;
-        if(pos == alignment.LiftedPos && working.equals(alignment.LiftedCigar))
+        if(pos == alignment.liftedPosition().Position && working.equals(alignment.liftedCigar()))
         {
             return new Outcome(alignment, dropped);
         }

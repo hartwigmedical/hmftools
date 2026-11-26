@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
@@ -238,7 +240,7 @@ public class AlignmentSelectorTest
     public void testTxPrimaryMulti()
     {
         ContigEntry entryB = new ContigEntry(
-                "ensG_OTHER_T", 1, 100, "GO", "OTHER", "TO", "chr5", 1,
+                new ChrBaseRegion("ensG_OTHER_T", 1, 100), "GO", "OTHER", "TO", "chr5", 1,
                 List.of(new BaseRegion(2000, 2099)));
         List<ContigEntry> twoContigs = List.of(threeExonContig(), entryB);
 
@@ -294,10 +296,10 @@ public class AlignmentSelectorTest
                 new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap())), record, EMPTY_REF_GENOME);
 
         assertEquals(2, result.liftedAlignments().size());
-        assertEquals(CHR_1, result.liftedAlignments().get(1).LiftedChromosome);
-        assertEquals(350, result.liftedAlignments().get(1).LiftedPos);
-        assertEquals("50S50M", result.liftedAlignments().get(1).LiftedCigar);
-        assertTrue(result.liftedAlignments().get(1).FromTxContig);
+        assertEquals(CHR_1, result.liftedAlignments().get(1).liftedPosition().Chromosome);
+        assertEquals(350, result.liftedAlignments().get(1).liftedPosition().Position);
+        assertEquals("50S50M", result.liftedAlignments().get(1).liftedCigar());
+        assertTrue(result.liftedAlignments().get(1).fromTxContig());
     }
 
     @Test
@@ -384,7 +386,7 @@ public class AlignmentSelectorTest
         AlignmentSelector selector = new AlignmentSelector(contigMap(), EnsemblAnnotationIndex.fromContigEntries(contigMap()));
         LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
-        assertTrue(result.primaryAlignment().FromTxContig);
+        assertTrue(result.primaryAlignment().fromTxContig());
     }
 
     @Test
@@ -504,17 +506,17 @@ public class AlignmentSelectorTest
     private static LiftedAlignment tx(
             final String chrom, final int pos, final String cigar, final int numMismatches)
     {
-        return new LiftedAlignment(chrom, pos, cigar, numMismatches, true, true, 1);
+        return new LiftedAlignment(chrom, pos, cigar, numMismatches, true, true, Orientation.FORWARD);
     }
 
     private static LiftedAlignment ref(final String chrom, final int pos, final String cigar)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, null);
     }
 
     private static LiftedAlignment refReverse(final String chrom, final int pos, final String cigar)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, null);
     }
 
     private static List<LiftedAlignment> set(final LiftedAlignment... alignments)
@@ -561,8 +563,7 @@ public class AlignmentSelectorTest
     @Test
     public void testConcordantSkipsGateDroppedAlt()
     {
-        LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, 0);
-        droppedTx.Dropped = true;
+        LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, 0).withDropped();
 
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR), droppedTx));
     }
@@ -585,8 +586,8 @@ public class AlignmentSelectorTest
     public void testBwaPriorityKeepsSelf()
     {
         List<LiftedAlignment> alignments = contestedSet();
-        alignments.get(0).GenomicScore = 10;
-        alignments.get(1).GenomicScore = 99;
+        alignments.set(0, alignments.get(0).withGenomicScore(10));
+        alignments.set(1, alignments.get(1).withGenomicScore(99));
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, true);
         assertSame(alignments.get(0), outcome.alignment());
         assertEquals("", outcome.reason());
@@ -596,64 +597,60 @@ public class AlignmentSelectorTest
     public void testDecisiveScoreWinsRegardlessOfSeed()
     {
         List<LiftedAlignment> refWins = contestedSet();
-        refWins.get(0).GenomicScore = 90;
-        refWins.get(1).GenomicScore = 50;
+        refWins.set(0, refWins.get(0).withGenomicScore(90));
+        refWins.set(1, refWins.get(1).withGenomicScore(50));
         AlignmentSelector.Selection refResult = AlignmentSelector.select(refWins, false, refWins.get(0), 1, false);
         assertSame(refWins.get(0), refResult.alignment());
         assertEquals("score", refResult.reason());
 
         List<LiftedAlignment> txWins = contestedSet();
-        txWins.get(0).GenomicScore = 40;
-        txWins.get(1).GenomicScore = 88;
+        txWins.set(0, txWins.get(0).withGenomicScore(40));
+        txWins.set(1, txWins.get(1).withGenomicScore(88));
         AlignmentSelector.Selection txResult = AlignmentSelector.select(txWins, false, txWins.get(0), 0, false);
         assertSame(txWins.get(1), txResult.alignment());
         assertEquals("score", txResult.reason());
         assertEquals(1, txResult.alignmentIndex());
-        assertFalse("loser rides in XA, not dropped", txWins.get(0).Dropped);
+        assertFalse("loser rides in XA, not dropped", txWins.get(0).dropped());
     }
 
     @Test
     public void testScoreTieFallsToSeededRandom()
     {
         List<LiftedAlignment> even = contestedSet();
-        even.get(0).GenomicScore = 70;
-        even.get(1).GenomicScore = 70;
+        even.set(0, even.get(0).withGenomicScore(70));
+        even.set(1, even.get(1).withGenomicScore(70));
         AlignmentSelector.Selection evenResult = AlignmentSelector.select(even, false, even.get(0), 0, false);
         assertSame(even.get(0), evenResult.alignment());
         assertEquals("random", evenResult.reason());
 
         List<LiftedAlignment> odd = contestedSet();
-        odd.get(0).GenomicScore = 70;
-        odd.get(1).GenomicScore = 70;
+        odd.set(0, odd.get(0).withGenomicScore(70));
+        odd.set(1, odd.get(1).withGenomicScore(70));
         AlignmentSelector.Selection oddResult = AlignmentSelector.select(odd, false, odd.get(0), 1, false);
         assertSame(odd.get(1), oddResult.alignment());
         assertEquals("random", oddResult.reason());
-        assertFalse("tie loser rides in XA, not dropped", odd.get(0).Dropped);
+        assertFalse("tie loser rides in XA, not dropped", odd.get(0).dropped());
     }
 
     @Test
     public void testScoreTieJunctionBeatsSoftClipAtSameLocus()
     {
-        LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
-        LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0);
+        LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR).withGenomicScore(80);
+        LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0).withGenomicScore(80);
         List<LiftedAlignment> alignments = set(softClip, junction);
-        alignments.get(0).GenomicScore = 80;
-        alignments.get(1).GenomicScore = 80;
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, softClip, 0, false);
         assertSame(junction, outcome.alignment());
         assertEquals("junction", outcome.reason());
         assertEquals(alignments.indexOf(junction), outcome.alignmentIndex());
-        assertFalse("soft-clip loser rides in XA, not dropped", softClip.Dropped);
+        assertFalse("soft-clip loser rides in XA, not dropped", softClip.dropped());
     }
 
     @Test
     public void testScoreTieJunctionAtDifferentLocusStaysRandom()
     {
-        LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
-        LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, 0);
+        LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR).withGenomicScore(80);
+        LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, 0).withGenomicScore(80);
         List<LiftedAlignment> alignments = set(softClip, junction);
-        alignments.get(0).GenomicScore = 80;
-        alignments.get(1).GenomicScore = 80;
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, softClip, 0, false);
         assertSame("seed 0 -> first placement", softClip, outcome.alignment());
         assertEquals("random", outcome.reason());
@@ -663,20 +660,20 @@ public class AlignmentSelectorTest
     public void testMultiLocusDecisiveScorePicksBestLocus()
     {
         List<LiftedAlignment> alignments = multiLocusSet();
-        alignments.get(0).GenomicScore = 60;
-        alignments.get(1).GenomicScore = 130;
+        alignments.set(0, alignments.get(0).withGenomicScore(60));
+        alignments.set(1, alignments.get(1).withGenomicScore(130));
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(1), outcome.alignment());
         assertEquals("score", outcome.reason());
-        assertFalse("all placements ride in XA", alignments.get(0).Dropped);
+        assertFalse("all placements ride in XA", alignments.get(0).dropped());
     }
 
     @Test
     public void testMultiLocusScoreTieSeededRandom()
     {
         List<LiftedAlignment> alignments = multiLocusSet();
-        alignments.get(0).GenomicScore = 100;
-        alignments.get(1).GenomicScore = 100;
+        alignments.set(0, alignments.get(0).withGenomicScore(100));
+        alignments.set(1, alignments.get(1).withGenomicScore(100));
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 1, false);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
         assertEquals("random", outcome.reason());
@@ -685,13 +682,10 @@ public class AlignmentSelectorTest
     @Test
     public void testScoreTieCollapsesIdenticalPlacements()
     {
-        LiftedAlignment self = ref(CHR1, 100, "100M");
-        LiftedAlignment txSame = tx(CHR1, 100, "100M", 0);
-        LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0);
+        LiftedAlignment self = ref(CHR1, 100, "100M").withGenomicScore(100);
+        LiftedAlignment txSame = tx(CHR1, 100, "100M", 0).withGenomicScore(100);
+        LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0).withGenomicScore(100);
         List<LiftedAlignment> alignments = set(self, txSame, txSpliced);
-        alignments.get(0).GenomicScore = 100;
-        alignments.get(1).GenomicScore = 100;
-        alignments.get(2).GenomicScore = 100;
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, self, 1, false);
         assertSame(txSpliced, outcome.alignment());
         assertEquals("random", outcome.reason());
@@ -701,23 +695,21 @@ public class AlignmentSelectorTest
     public void testMultiLocusTieMateProximityPicksMateLocus()
     {
         List<LiftedAlignment> alignments = multiLocusSet();
-        alignments.get(0).GenomicScore = 100;
-        alignments.get(1).GenomicScore = 100;
+        alignments.set(0, alignments.get(0).withGenomicScore(100));
+        alignments.set(1, alignments.get(1).withGenomicScore(100));
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR2, 250, "100M", false);
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, false, mate);
         assertSame(alignments.get(1), outcome.alignment());
         assertEquals("mate", outcome.reason());
         assertEquals(1, outcome.alignmentIndex());
-        assertFalse("tie loser rides in XA, not dropped", alignments.get(0).Dropped);
+        assertFalse("tie loser rides in XA, not dropped", alignments.get(0).dropped());
     }
 
     @Test
     public void testMultiLocusTiePicksClosestMatePlacement()
     {
-        LiftedAlignment close = ref(CHR1, 100, "100M");
-        LiftedAlignment distant = tx(CHR1, 500_000, "100M", 0);
-        close.GenomicScore = 100;
-        distant.GenomicScore = 100;
+        LiftedAlignment close = ref(CHR1, 100, "100M").withGenomicScore(100);
+        LiftedAlignment distant = tx(CHR1, 500_000, "100M", 0).withGenomicScore(100);
         List<LiftedAlignment> alignments = set(close, distant);
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
 
@@ -731,11 +723,9 @@ public class AlignmentSelectorTest
     @Test
     public void testClosestMatePlacementBeatsSupplementarySupport()
     {
-        LiftedAlignment close = ref(CHR1, 100, "100M");
+        LiftedAlignment close = ref(CHR1, 100, "100M").withGenomicScore(100);
         LiftedAlignment distant = tx(CHR1, 500_000, "50M50S", 0).withSupplementaryMerge(
-                500_000, "100M", List.of(1), List.of(), 0, 0);
-        close.GenomicScore = 100;
-        distant.GenomicScore = 100;
+                500_000, "100M", List.of(1), List.of(), 0, null).withGenomicScore(100);
         List<LiftedAlignment> alignments = set(close, distant);
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
 
@@ -749,13 +739,10 @@ public class AlignmentSelectorTest
     @Test
     public void testPairProximityPrecedesCombinedAlignmentScore()
     {
-        LiftedAlignment close = ref(CHR1, 100, "52M");
-        LiftedAlignment distant = ref(CHR1, 500_000, "52M");
-        close.GenomicScore = 50;
-        distant.GenomicScore = 100;
+        LiftedAlignment close = ref(CHR1, 100, "52M").withGenomicScore(50);
+        LiftedAlignment distant = ref(CHR1, 500_000, "52M").withGenomicScore(100);
 
-        LiftedAlignment mate = ref(CHR1, 250, "52M");
-        mate.GenomicScore = 100;
+        LiftedAlignment mate = ref(CHR1, 250, "52M").withGenomicScore(100);
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(close, distant), false, close, false, true,
@@ -769,11 +756,9 @@ public class AlignmentSelectorTest
     @Test
     public void testPairScoreIgnoresUnsetScoreForFixedMate()
     {
-        LiftedAlignment spliced = ref(CHR1, 150_704_335, "9M2209N142M");
-        LiftedAlignment clipped = ref(CHR1, 150_706_572, "28S123M");
+        LiftedAlignment spliced = ref(CHR1, 150_704_335, "9M2209N142M").withGenomicScore(151);
+        LiftedAlignment clipped = ref(CHR1, 150_706_572, "28S123M").withGenomicScore(123);
         LiftedAlignment mate = ref(CHR1, 150_704_161, "34M82N67M2209N50M");
-        spliced.GenomicScore = 151;
-        clipped.GenomicScore = 123;
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(spliced, clipped), false, clipped, false, true,
@@ -787,8 +772,8 @@ public class AlignmentSelectorTest
     @Test
     public void testPairSelectionPrefersDeletionBeforeShorterDuplication()
     {
-        LiftedAlignment deletion = ref(CHR1, 100, "100M");
-        LiftedAlignment duplication = ref(CHR1, 12_000, "100M");
+        LiftedAlignment deletion = ref(CHR1, 100, "100M").withGenomicScore(100);
+        LiftedAlignment duplication = ref(CHR1, 12_000, "100M").withGenomicScore(100);
         LiftedAlignment mate = refReverse(CHR1, 10_000, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
@@ -801,8 +786,8 @@ public class AlignmentSelectorTest
     @Test
     public void testLocalPairingPrecedesSvShapedAlternative()
     {
-        LiftedAlignment localPlacement = ref(CHR1, 100_000, "100M");
-        LiftedAlignment deletion = ref(CHR1, 100, "100M");
+        LiftedAlignment localPlacement = ref(CHR1, 100_000, "100M").withGenomicScore(100);
+        LiftedAlignment deletion = ref(CHR1, 100, "100M").withGenomicScore(100);
         LiftedAlignment mate = refReverse(CHR1, 100_050, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
@@ -815,8 +800,8 @@ public class AlignmentSelectorTest
     @Test
     public void testPairSvPreferenceStopsPastOneMegabase()
     {
-        LiftedAlignment distantDeletion = ref(CHR1, 100, "100M");
-        LiftedAlignment localInversion = refReverse(CHR1, 1_999_000, "100M");
+        LiftedAlignment distantDeletion = ref(CHR1, 100, "100M").withGenomicScore(100);
+        LiftedAlignment localInversion = refReverse(CHR1, 1_999_000, "100M").withGenomicScore(100);
         LiftedAlignment mate = refReverse(CHR1, 2_000_000, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
@@ -829,8 +814,8 @@ public class AlignmentSelectorTest
     @Test
     public void testPairSvPreferenceIncludesOneMegabaseBoundary()
     {
-        LiftedAlignment boundaryDeletion = ref(CHR1, 100, "100M");
-        LiftedAlignment localInversion = refReverse(CHR1, 998_000, "100M");
+        LiftedAlignment boundaryDeletion = ref(CHR1, 100, "100M").withGenomicScore(100);
+        LiftedAlignment localInversion = refReverse(CHR1, 998_000, "100M").withGenomicScore(100);
         LiftedAlignment mate = refReverse(CHR1, 1_000_199, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
@@ -857,14 +842,10 @@ public class AlignmentSelectorTest
     @Test
     public void testPairSelectionIsIndependentOfMateOrder()
     {
-        LiftedAlignment firstChr1 = ref(CHR1, 100, "52M");
-        LiftedAlignment firstChr2 = ref(CHR2, 100, "52M");
-        LiftedAlignment secondChr1 = ref(CHR1, 250, "52M");
-        LiftedAlignment secondChr2 = ref(CHR2, 250, "52M");
-        firstChr1.GenomicScore = 50;
-        firstChr2.GenomicScore = 100;
-        secondChr1.GenomicScore = 100;
-        secondChr2.GenomicScore = 50;
+        LiftedAlignment firstChr1 = ref(CHR1, 100, "52M").withGenomicScore(50);
+        LiftedAlignment firstChr2 = ref(CHR2, 100, "52M").withGenomicScore(100);
+        LiftedAlignment secondChr1 = ref(CHR1, 250, "52M").withGenomicScore(100);
+        LiftedAlignment secondChr2 = ref(CHR2, 250, "52M").withGenomicScore(50);
 
         AlignmentSelector.PairSelection forward = AlignmentSelector.selectPair(
                 set(firstChr1, firstChr2), false, firstChr1, false, true,
@@ -895,8 +876,8 @@ public class AlignmentSelectorTest
     public void testMultiLocusTieMateOnNeitherChromStaysRandom()
     {
         List<LiftedAlignment> alignments = multiLocusSet();
-        alignments.get(0).GenomicScore = 100;
-        alignments.get(1).GenomicScore = 100;
+        alignments.set(0, alignments.get(0).withGenomicScore(100));
+        alignments.set(1, alignments.get(1).withGenomicScore(100));
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt("chr9", 500, "100M", false);
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 1, false, mate);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
@@ -907,8 +888,8 @@ public class AlignmentSelectorTest
     public void testMultiLocusTieMateTooFarStaysRandom()
     {
         List<LiftedAlignment> alignments = multiLocusSet();
-        alignments.get(0).GenomicScore = 100;
-        alignments.get(1).GenomicScore = 100;
+        alignments.set(0, alignments.get(0).withGenomicScore(100));
+        alignments.set(1, alignments.get(1).withGenomicScore(100));
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 5_000_000, "100M", false);
         AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 1, false, mate);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
@@ -973,7 +954,7 @@ public class AlignmentSelectorTest
             final int position, final int mapQuality)
     {
         LiftedAlignment alignment = new LiftedAlignment(
-                chromosome, position, "94S57M", 0, false, forwardStrand, 0);
+                chromosome, position, "94S57M", 0, false, forwardStrand, null);
         return new AlignmentSelector.RecordAlignment(recordIndex, 0, alignment, mapQuality);
     }
 

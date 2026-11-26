@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.setDefaultThreadExceptionHandler;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
@@ -61,7 +62,7 @@ public class TarsApplication
         SAMFileHeader outputHeader = buildOutputHeader(inputHeader);
 
         List<String> shardBams = new ArrayList<>();
-        List<LiftBackWorker> workers = runChunkStream(resources, outputHeader, shardBams);
+        List<LiftBackWorker> workers = runReadChunkStream(resources, outputHeader, shardBams);
 
         LiftBackStats counts = aggregate(workers);
         logLiftFailureRate(counts);
@@ -70,16 +71,14 @@ public class TarsApplication
         TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
 
         String unsortedBam = mConfig.formUnsortedBam();
-        if(!concatenateShards(shardBams, unsortedBam))
+        if(!concatenateShardBams(shardBams, unsortedBam))
         {
-            TARS_LOGGER.error("failed to concatenate liftback BAM shards");
-            System.exit(1);
+            throw new IllegalStateException("failed to concatenate liftback BAM shards");
         }
 
         if(!sortAndIndex(unsortedBam, mConfig.formOutputBam()))
         {
-            TARS_LOGGER.error("failed to sort + index lifted BAM");
-            System.exit(1);
+            throw new IllegalStateException("failed to sort + index lifted BAM");
         }
 
         cleanupIntermediates(unsortedBam, shardBams);
@@ -87,7 +86,7 @@ public class TarsApplication
         TARS_LOGGER.info("TarsApplication complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private List<LiftBackWorker> runChunkStream(
+    private List<LiftBackWorker> runReadChunkStream(
             final LiftBackResources resources, final SAMFileHeader outputHeader, final List<String> shardBams)
     {
         int workerCount = Math.max(mConfig.Threads, 1);
@@ -116,7 +115,7 @@ public class TarsApplication
 
         if(!runThreadTasks(threadTasks))
         {
-            System.exit(1);
+            throw new IllegalStateException("liftback worker threads failed");
         }
 
         return workers;
@@ -130,7 +129,7 @@ public class TarsApplication
 
         // Annotation-only rows have no contig to lift against.
         List<ContigEntry> liftEntries = contigEntries.stream()
-                .filter(entry -> entry.contigStart() > 0).collect(Collectors.toList());
+                .filter(entry -> entry.contigRegion() != null).collect(Collectors.toList());
         AlignmentSelector alignmentSelector = new AlignmentSelector(liftEntries, annotationIndex);
         validateBamAgainstSidecar(inputHeader, alignmentSelector.contigTranslator().contigNames());
 
@@ -164,11 +163,10 @@ public class TarsApplication
             return;
         }
 
-        TARS_LOGGER.error(
-                "BAM/sidecar mismatch: {} alt contig(s) in BAM @SQ are absent from sidecar {} - first few: {}",
+        throw new IllegalStateException(String.format(
+                "BAM/sidecar mismatch: %d alt contig(s) in BAM @SQ are absent from sidecar %s - first few: %s",
                 missing.size(), mConfig.ContigSidecarFile,
-                missing.stream().limit(5).collect(Collectors.joining(",")));
-        System.exit(1);
+                missing.stream().limit(5).collect(Collectors.joining(","))));
     }
 
     // strip the _tx alt contigs from @SQ so the lifted BAM carries a pure genomic dictionary
@@ -282,7 +280,7 @@ public class TarsApplication
         writer.newLine();
     }
 
-    private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
+    private boolean concatenateShardBams(final List<String> shardBams, final String unsortedBam)
     {
         BamToolName toolName = fromPath(mConfig.BamToolPath);
         TARS_LOGGER.info("concatenating {} liftback shards via {}", shardBams.size(), toolName);
@@ -336,7 +334,17 @@ public class TarsApplication
         TarsConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        TarsApplication application = new TarsApplication(configBuilder);
-        application.run();
+        setDefaultThreadExceptionHandler();
+
+        try
+        {
+            TarsApplication application = new TarsApplication(configBuilder);
+            application.run();
+        }
+        catch(RuntimeException e)
+        {
+            TARS_LOGGER.error("Runtime error", e);
+            System.exit(1);
+        }
     }
 }

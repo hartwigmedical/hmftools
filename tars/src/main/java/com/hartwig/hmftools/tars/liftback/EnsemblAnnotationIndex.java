@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+
+import org.jetbrains.annotations.Nullable;
 
 public final class EnsemblAnnotationIndex
 {
@@ -46,9 +49,11 @@ public final class EnsemblAnnotationIndex
         return mJunctions.contains(intron);
     }
 
-    public int junctionStrand(final ChrBaseRegion intron)
+    @Nullable
+    public Orientation junctionStrand(final ChrBaseRegion intron)
     {
-        return mJunctionStrands.getOrDefault(intron, 0);
+        int strand = mJunctionStrands.getOrDefault(intron, 0);
+        return strand != 0 ? Orientation.fromByte((byte) strand) : null;
     }
 
     public int junctionCount()

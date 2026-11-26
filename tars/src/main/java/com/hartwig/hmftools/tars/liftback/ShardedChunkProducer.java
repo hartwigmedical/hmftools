@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
 import com.hartwig.hmftools.common.utils.MemoryCalcs;
@@ -53,7 +51,7 @@ public class ShardedChunkProducer extends Thread
 
     private static final long PROGRESS_INTERVAL_MS = 15_000;
 
-    private final AtomicInteger mPeakMemoryMb = new AtomicInteger();
+    private int mPeakMemoryMb;
 
     // compared by reference
     public static final List<SAMRecord> END_OF_STREAM = new ArrayList<>();
@@ -86,21 +84,24 @@ public class ShardedChunkProducer extends Thread
                 completedBytes += bam.length();
             }
 
-            mPeakMemoryMb.accumulateAndGet(MemoryCalcs.calcMemoryUsage(), Math::max);
+            mPeakMemoryMb = Math.max(mPeakMemoryMb, MemoryCalcs.calcMemoryUsage());
 
             TARS_LOGGER.info(
                     "liftback read {} reads from {} input BAM(s), peak memory({}mb)",
-                    readsCounter.sum(), mInputBams.size(), mPeakMemoryMb.get());
+                    readsCounter.sum(), mInputBams.size(), mPeakMemoryMb);
 
             for(int i = 0; i < mWorkerCount; ++i)
             {
                 mQueue.put(END_OF_STREAM);
             }
         }
-        catch(Exception e)
+        catch(IOException e)
         {
-            TARS_LOGGER.error("liftback sharded producer failed: {}", e.toString());
-            System.exit(1);
+            throw new UncheckedIOException(e);
+        }
+        catch(InterruptedException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
@@ -129,13 +130,6 @@ public class ShardedChunkProducer extends Thread
             iterators.add(new ShardRecordIterator(bam, header, range));
         }
 
-        AtomicBoolean done = new AtomicBoolean(false);
-
-        Thread monitor = new Thread(
-                () -> runMonitor(iterators, completedBytes, totalBytes, readsCounter, done), "tars-progress");
-        monitor.setDaemon(true);
-        monitor.start();
-
         List<Thread> shardThreads = new ArrayList<>();
         for(ShardRecordIterator iter : iterators)
         {
@@ -146,11 +140,16 @@ public class ShardedChunkProducer extends Thread
 
         for(Thread shard : shardThreads)
         {
-            shard.join();
+            while(shard.isAlive())
+            {
+                shard.join(PROGRESS_INTERVAL_MS);
+                if(shard.isAlive())
+                {
+                    logProgress(iterators, completedBytes, totalBytes, readsCounter);
+                }
+            }
         }
 
-        done.set(true);
-        monitor.interrupt();
         closeQuietly(iterators);
     }
 
@@ -160,10 +159,9 @@ public class ShardedChunkProducer extends Thread
         {
             streamChunks(iter, mChunkTargetReads, mQueue, readsCounter);
         }
-        catch(Exception e)
+        catch(InterruptedException e)
         {
-            TARS_LOGGER.error("liftback shard reader failed: {}", e.toString());
-            System.exit(1);
+            throw new RuntimeException(e);
         }
     }
 
@@ -500,37 +498,21 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    private void runMonitor(
+    private void logProgress(
             final List<ShardRecordIterator> iterators, final long completedBytes, final long totalBytes,
-            final LongAdder readsCounter, final AtomicBoolean done)
+            final LongAdder readsCounter)
     {
-        while(!done.get())
+        long consumed = completedBytes;
+        for(ShardRecordIterator iter : iterators)
         {
-            try
-            {
-                Thread.sleep(PROGRESS_INTERVAL_MS);
-            }
-            catch(InterruptedException e)
-            {
-                return;
-            }
-            if(done.get())
-            {
-                return;
-            }
-
-            long consumed = completedBytes;
-            for(ShardRecordIterator iter : iterators)
-            {
-                consumed += iter.consumedBytes();
-            }
-
-            int percent = (int) Math.min(100, consumed * 100 / totalBytes);
-            int memoryMb = MemoryCalcs.calcMemoryUsage();
-            mPeakMemoryMb.accumulateAndGet(memoryMb, Math::max);
-
-            TARS_LOGGER.info("liftback processed {} reads ({}% of input) memory({}mb)", readsCounter.sum(), percent, memoryMb);
+            consumed += iter.consumedBytes();
         }
+
+        int percent = (int) Math.min(100, consumed * 100 / totalBytes);
+        int memoryMb = MemoryCalcs.calcMemoryUsage();
+        mPeakMemoryMb = Math.max(mPeakMemoryMb, memoryMb);
+
+        TARS_LOGGER.info("liftback processed {} reads ({}% of input) memory({}mb)", readsCounter.sum(), percent, memoryMb);
     }
 
     private static void closeQuietly(final List<ShardRecordIterator> iterators)

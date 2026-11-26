@@ -46,9 +46,9 @@ public class SpliceFastaBuilderTest
         assertEquals(1, entries.size());
 
         ContigEntry entry = entries.get(0);
-        assertEquals("1_tx", entry.contigName());
-        assertEquals(1, entry.contigStart());
-        assertEquals(8, entry.contigEnd());
+        assertEquals("1_tx", entry.contigRegion().Chromosome);
+        assertEquals(1, entry.contigRegion().start());
+        assertEquals(8, entry.contigRegion().end());
         assertEquals("T1", entry.transName());
     }
 
@@ -64,10 +64,10 @@ public class SpliceFastaBuilderTest
         assertEquals("AAAA" + "NNNNN" + "CCC", sequence);
         assertEquals(2, entries.size());
 
-        assertEquals(1, entries.get(0).contigStart());
-        assertEquals(4, entries.get(0).contigEnd());
-        assertEquals(10, entries.get(1).contigStart());
-        assertEquals(12, entries.get(1).contigEnd());
+        assertEquals(1, entries.get(0).contigRegion().start());
+        assertEquals(4, entries.get(0).contigRegion().end());
+        assertEquals(10, entries.get(1).contigRegion().start());
+        assertEquals(12, entries.get(1).contigRegion().end());
     }
 
     @Test

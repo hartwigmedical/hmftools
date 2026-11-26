@@ -101,7 +101,7 @@ public final class AlignmentLifter
         ContigEntry segment = mTranslator.findSegment(contig, pos);
 
         // findSegment returns the nearest segment for spacer positions.
-        if(pos < segment.contigStart() || pos > segment.contigEnd())
+        if(pos < segment.contigRegion().start() || pos > segment.contigRegion().end())
         {
             return;
         }
@@ -109,6 +109,6 @@ public final class AlignmentLifter
         TARS_LOGGER.debug(
                 "lift failed {}: {}:{}-{} {} - segment {} [{}-{}] exons({})",
                 role, contig, pos, readEnd, record.getCigarString(),
-                segment.transName(), segment.contigStart(), segment.contigEnd(), segment.exonSpans().size());
+                segment.transName(), segment.contigRegion().start(), segment.contigRegion().end(), segment.exonSpans().size());
     }
 }

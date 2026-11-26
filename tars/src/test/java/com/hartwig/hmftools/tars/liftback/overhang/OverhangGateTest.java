@@ -36,7 +36,7 @@ public class OverhangGateTest
 
     private static LiftedAlignment refAlt(final String chrom, final int pos, final String cigar, final boolean forwardStrand)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, forwardStrand, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, forwardStrand, null);
     }
 
     @Test
@@ -56,21 +56,21 @@ public class OverhangGateTest
                 .gate(selfAlignment(CHR_1, 1, "4S5M100N20M"), bases("A".repeat(29)));
 
         // 6M scores above the soft-clip threshold, so the junction is kept.
-        assertEquals("20M100N6M4S", supported.alignment().LiftedCigar);
+        assertEquals("20M100N6M4S", supported.alignment().liftedCigar());
 
         // 3M is below the threshold, so the N folds into the terminal soft clip.
-        assertEquals("100M51S", unsupported.alignment().LiftedCigar);
+        assertEquals("100M51S", unsupported.alignment().liftedCigar());
         assertTrue(unsupported.dropped());
 
         // Long terminal anchors are trusted without scoring.
-        assertEquals("20M100N15M4S", longAnchor.alignment().LiftedCigar);
+        assertEquals("20M100N15M4S", longAnchor.alignment().liftedCigar());
 
         // A single junction with no adjacent soft clip is bwa's call and is left alone.
-        assertEquals("20M100N4M", noSoftclip.alignment().LiftedCigar);
+        assertEquals("20M100N4M", noSoftclip.alignment().liftedCigar());
 
         // Leading collapse moves the start to the near exon and converts the overhang to soft clip.
-        assertEquals("9S20M", leading.alignment().LiftedCigar);
-        assertEquals(106, leading.alignment().LiftedPos);
+        assertEquals("9S20M", leading.alignment().liftedCigar());
+        assertEquals(106, leading.alignment().liftedPosition().Position);
         assertTrue(leading.dropped());
     }
 
@@ -87,17 +87,17 @@ public class OverhangGateTest
                 .gate(selfAlignment(CHR_1, 1, "20M50N4M60N40M"), bases("A".repeat(64)));
 
         // Positive terminal-anchor score keeps a no-softclip multi-junction alignment.
-        assertEquals("20M50N5M60N4M", positiveAnchor.alignment().LiftedCigar);
+        assertEquals("20M50N5M60N4M", positiveAnchor.alignment().liftedCigar());
 
         // If read-through is no better than the anchor, the junction is kept.
-        assertEquals("20M50N5M60N4M", readThroughNotBetter.alignment().LiftedCigar);
+        assertEquals("20M50N5M60N4M", readThroughNotBetter.alignment().liftedCigar());
 
         // If read-through scores better, only the terminal N collapses; the remaining N means the placement is kept.
-        assertEquals("20M50N9M", readThroughBetter.alignment().LiftedCigar);
+        assertEquals("20M50N9M", readThroughBetter.alignment().liftedCigar());
         assertFalse(readThroughBetter.dropped());
 
         // Once the terminal junction is kept, interior junctions behind it are not scored.
-        assertEquals("20M50N4M60N40M", terminalKept.alignment().LiftedCigar);
+        assertEquals("20M50N4M60N40M", terminalKept.alignment().liftedCigar());
     }
 
     @Test
@@ -112,8 +112,8 @@ public class OverhangGateTest
         gate.gatePlacements(selfOnly, selfRecord);
 
         // Self keeps a collapsed cigar and is never dropped.
-        assertEquals("20M12S", selfOnly.get(0).LiftedCigar);
-        assertFalse(selfOnly.get(0).Dropped);
+        assertEquals("20M12S", selfOnly.get(0).liftedCigar());
+        assertFalse(selfOnly.get(0).dropped());
 
         LiftedAlignment cleanSelf = selfAlignment(CHR_1, 100, "50M");
         LiftedAlignment collapsedAlt = refAlt(CHR_1, 300, "20M100N8M4S", true);
@@ -124,7 +124,7 @@ public class OverhangGateTest
         gate.gatePlacements(collapsedAltAlignments, collapseRecord);
 
         // A collapsed XA alt is dropped, while self above is kept.
-        assertTrue(collapsedAlt.Dropped);
+        assertTrue(collapsedAltAlignments.get(1).dropped());
 
     }
 

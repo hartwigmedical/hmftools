@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 import static com.hartwig.hmftools.tars.liftback.ShardedChunkProducer.END_OF_STREAM;
 
 import java.io.File;
@@ -49,10 +48,9 @@ public class LiftBackWorker extends Thread
                 processChunk(chunk);
             }
         }
-        catch(Exception e)
+        catch(InterruptedException e)
         {
-            TARS_LOGGER.error("liftback worker failed: {}", e.toString(), e);
-            System.exit(1);
+            throw new RuntimeException(e);
         }
         finally
         {

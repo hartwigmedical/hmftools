@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.AlignmentKey;
@@ -38,11 +39,11 @@ public final class ContigTranslator
         mSegmentsByAltContig = new HashMap<>();
         for(ContigEntry entry : entries)
         {
-            mSegmentsByAltContig.computeIfAbsent(entry.contigName(), key -> new ArrayList<>()).add(entry);
+            mSegmentsByAltContig.computeIfAbsent(entry.contigRegion().Chromosome, key -> new ArrayList<>()).add(entry);
         }
         for(List<ContigEntry> segments : mSegmentsByAltContig.values())
         {
-            segments.sort(Comparator.comparingInt(ContigEntry::contigStart));
+            segments.sort(Comparator.comparingInt(entry -> entry.contigRegion().start()));
         }
     }
 
@@ -64,7 +65,7 @@ public final class ContigTranslator
                 throw new IllegalStateException(String.format("alt contig(%s) missing from the sidecar", contig));
             }
 
-            return new LiftedAlignment(contig, pos, cigarStr, nm, false, forwardStrand, 0);
+            return new LiftedAlignment(contig, pos, cigarStr, nm, false, forwardStrand, null);
         }
 
         ContigEntry entry = findSegment(contig, pos);
@@ -77,7 +78,7 @@ public final class ContigTranslator
         String genomicCigar = new Cigar(mergeDeletionsIntoSplice(translated.genomicCigar().getCigarElements())).toString();
         return new LiftedAlignment(
                 translated.chromosome(), translated.genomicStart(), genomicCigar, nm,
-                true, forwardStrand, entry.strand());
+                true, forwardStrand, Orientation.fromByte((byte) entry.strand()));
     }
 
     public List<LiftedAlignment> liftXaAlignments(final String xaTag)
@@ -116,7 +117,7 @@ public final class ContigTranslator
         List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
         int placement = floorIndexByContigStart(segments, altPos);
         ContigEntry segment = segments.get(placement);
-        if(altPos <= segment.contigEnd())
+        if(altPos <= segment.contigRegion().end())
         {
             return segment;
         }
@@ -124,8 +125,8 @@ public final class ContigTranslator
         if(placement + 1 < segments.size())
         {
             ContigEntry next = segments.get(placement + 1);
-            int leadingOverhang = next.contigStart() - altPos;
-            int trailingOverhang = altPos - segment.contigEnd();
+            int leadingOverhang = next.contigRegion().start() - altPos;
+            int trailingOverhang = altPos - segment.contigRegion().end();
             return leadingOverhang <= trailingOverhang ? next : segment;
         }
 
@@ -142,7 +143,7 @@ public final class ContigTranslator
         while(low <= high)
         {
             int mid = (low + high) >>> 1;
-            if(segments.get(mid).contigStart() <= altPos)
+            if(segments.get(mid).contigRegion().start() <= altPos)
             {
                 floor = mid;
                 low = mid + 1;
@@ -164,8 +165,8 @@ public final class ContigTranslator
             return null;
         }
 
-        int clampedContigPos = Math.max(contigPos, contig.contigStart());
-        int localPos = clampedContigPos - contig.contigStart() + 1;
+        int clampedContigPos = Math.max(contigPos, contig.contigRegion().start());
+        int localPos = clampedContigPos - contig.contigRegion().start() + 1;
         SpanLocation start = locateStartSpan(spans, localPos);
         return walkCigarToGenome(contig, spans, start, clampedCigar);
     }
@@ -174,21 +175,21 @@ public final class ContigTranslator
     // bases to soft-clip so the read still lifts. Returns null when the overhang can't be absorbed.
     private static Cigar clampToContigBounds(final ContigEntry contig, int contigPos, Cigar cigar)
     {
-        if(contigPos < contig.contigStart())
+        if(contigPos < contig.contigRegion().start())
         {
-            int overhang = contig.contigStart() - contigPos;
+            int overhang = contig.contigRegion().start() - contigPos;
             cigar = clampLeadingReferenceToSoftClip(cigar, overhang);
             if(cigar == null)
             {
                 return null;
             }
-            contigPos = contig.contigStart();
+            contigPos = contig.contigRegion().start();
         }
 
         int readEnd = contigPos + cigar.getReferenceLength() - 1;
-        if(readEnd > contig.contigEnd())
+        if(readEnd > contig.contigRegion().end())
         {
-            int overhang = readEnd - contig.contigEnd();
+            int overhang = readEnd - contig.contigRegion().end();
             cigar = clampTrailingReferenceToSoftClip(cigar, overhang);
             if(cigar == null)
             {

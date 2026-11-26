@@ -5,6 +5,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
+
+import org.jetbrains.annotations.Nullable;
+
 public record LiftedRecord(
         int updatedMapQuality,
         // locus count as decided; deliberately NOT recomputed by later primary-only revisions
@@ -18,7 +22,6 @@ public record LiftedRecord(
 
     public LiftedRecord
     {
-        liftedAlignments = List.copyOf(liftedAlignments);
         boolean validIndex = liftedAlignments.isEmpty()
                 ? primaryIndex == NO_PRIMARY
                 : primaryIndex >= 0 && primaryIndex < liftedAlignments.size();
@@ -60,22 +63,22 @@ public record LiftedRecord(
 
     public String finalChromosome()
     {
-        return primaryAlignment().LiftedChromosome;
+        return primaryAlignment().liftedPosition().Chromosome;
     }
 
     public int finalPos()
     {
-        return primaryAlignment().LiftedPos;
+        return primaryAlignment().liftedPosition().Position;
     }
 
     public String finalCigar()
     {
-        return primaryAlignment().LiftedCigar;
+        return primaryAlignment().liftedCigar();
     }
 
     public boolean negativeStrand()
     {
-        return !primaryAlignment().ForwardStrand;
+        return !primaryAlignment().forwardStrand();
     }
 
     public boolean hasNCigar()
@@ -84,9 +87,10 @@ public record LiftedRecord(
     }
 
     // +1/-1 for a tx-contig-derived primary; 0 otherwise.
-    public int transcriptStrand()
+    @Nullable
+    public Orientation transcriptStrand()
     {
-        return primaryAlignment().TranscriptStrand;
+        return primaryAlignment().transcriptStrand();
     }
 
     public LiftedRecord withLiftedAlignments(final List<LiftedAlignment> alignments)
@@ -104,10 +108,10 @@ public record LiftedRecord(
         return new LiftedRecord(mapQuality, numLoci, notes, primaryIndex, liftedAlignments);
     }
 
-    public LiftedRecord withPrimaryTranscriptStrand(final int transcriptStrand)
+    public LiftedRecord withPrimaryAlignment(final LiftedAlignment alignment)
     {
         List<LiftedAlignment> revised = new ArrayList<>(liftedAlignments);
-        revised.set(primaryIndex, primaryAlignment().withTranscriptStrand(transcriptStrand));
+        revised.set(primaryIndex, alignment);
         return withLiftedAlignments(revised);
     }
 
@@ -121,7 +125,7 @@ public record LiftedRecord(
         for(int i = 0; i < liftedAlignments.size(); ++i)
         {
             LiftedAlignment alignment = liftedAlignments.get(i);
-            if(i == primaryIndex || alignment.Dropped || alignment.overlaps(primary))
+            if(i == primaryIndex || alignment.dropped() || alignment.overlaps(primary))
             {
                 continue;
             }

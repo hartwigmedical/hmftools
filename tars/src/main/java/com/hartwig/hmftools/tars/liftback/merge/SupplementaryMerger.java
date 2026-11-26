@@ -10,11 +10,14 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector.RecordAlignment;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -29,12 +32,13 @@ public class SupplementaryMerger
     }
 
     public record Result(
-            boolean merged, String mergedCigar, int mergedStart, List<Integer> absorbedSupplementaryIndices,
-            List<ChrBaseRegion> introducedIntrons, int chainDepth, int spliceStrand, RejectReason rejectReason)
+            boolean merged, @Nullable String mergedCigar, int mergedStart, List<Integer> absorbedSupplementaryIndices,
+            List<ChrBaseRegion> introducedIntrons, int chainDepth, @Nullable Orientation spliceStrand,
+            @Nullable RejectReason rejectReason)
     {
         public static Result noMerge(final RejectReason reason)
         {
-            return new Result(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, 0, reason);
+            return new Result(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, null, reason);
         }
     }
 
@@ -54,8 +58,6 @@ public class SupplementaryMerger
         MULTIPLE_SUPPS_IN_REACH
     }
 
-    private static final int NO_JUNCTION_POSITION = -1;
-
     private final SpliceJunctions mSpliceJunctions;
     private final SupplementaryConfig mConfig;
 
@@ -67,7 +69,8 @@ public class SupplementaryMerger
         mConfig = config;
     }
 
-    public int spliceStrand(final String chromosome, final int start, final String cigar)
+    @Nullable
+    public Orientation spliceStrand(final String chromosome, final int start, final String cigar)
     {
         return mSpliceJunctions.spliceStrand(chromosome, start, cigar);
     }
@@ -81,7 +84,7 @@ public class SupplementaryMerger
         List<Integer> absorbed = new ArrayList<>();
         List<ChrBaseRegion> introns = new ArrayList<>();
         int chainDepth = 0;
-        int spliceStrand = 0;
+        Orientation spliceStrand = null;
         boolean conflictingStrands = false;
 
         while(chainDepth < mConfig.MaxSuppMerges && !remaining.isEmpty())
@@ -113,15 +116,15 @@ public class SupplementaryMerger
             primaryCigar = merge.mergedCigar();
             absorbed.add(merge.mergedSupplementary().recordIndex());
             introns.add(merge.introducedIntron());
-            if(merge.spliceStrand() != 0)
+            if(merge.spliceStrand() != null)
             {
-                if(spliceStrand == 0 && !conflictingStrands)
+                if(spliceStrand == null && !conflictingStrands)
                 {
                     spliceStrand = merge.spliceStrand();
                 }
                 else if(spliceStrand != merge.spliceStrand())
                 {
-                    spliceStrand = 0;
+                    spliceStrand = null;
                     conflictingStrands = true;
                 }
             }
@@ -176,9 +179,11 @@ public class SupplementaryMerger
 
     private static boolean isBetterMerge(final MergeOutcome outcome, final MergeOutcome chosen)
     {
-        if(outcome.mergedSupplementary().mapQuality() != chosen.mergedSupplementary().mapQuality())
+        int mapQualityComparison = Integer.compare(
+                outcome.mergedSupplementary().mapQuality(), chosen.mergedSupplementary().mapQuality());
+        if(mapQualityComparison != 0)
         {
-            return outcome.mergedSupplementary().mapQuality() > chosen.mergedSupplementary().mapQuality();
+            return mapQualityComparison > 0;
         }
         return outcome.introducedIntron().baseLength() < chosen.introducedIntron().baseLength();
     }
@@ -188,21 +193,21 @@ public class SupplementaryMerger
             final List<CigarElement> primaryCigar, final RecordAlignment supp)
     {
         LiftedAlignment alignment = supp.alignment();
-        if(!placement.chromosome().equals(alignment.LiftedChromosome))
+        if(!placement.chromosome().equals(alignment.liftedPosition().Chromosome))
         {
             return MergeOutcome.reject(RejectReason.DIFFERENT_CHROMOSOME);
         }
 
-        if(placement.forwardStrand() != alignment.ForwardStrand)
+        if(placement.forwardStrand() != alignment.forwardStrand())
         {
             return MergeOutcome.reject(RejectReason.OPPOSITE_STRAND);
         }
 
-        List<CigarElement> suppCigar = CigarUtils.cigarElementsFromStr(alignment.LiftedCigar);
+        List<CigarElement> suppCigar = CigarUtils.cigarElementsFromStr(alignment.liftedCigar());
 
         // Keep the primary-distal block of a translated M-N-M alignment.
         Side primarySide = Side.of(primaryStart, primaryCigar);
-        int suppStart = alignment.LiftedPos;
+        int suppStart = alignment.liftedPosition().Position;
         ClampedSupp clamped = clampSuppToPrimaryBoundary(
                 suppCigar, suppStart, primaryStart, primarySide.referenceEnd());
         if(clamped != null)
@@ -294,14 +299,14 @@ public class SupplementaryMerger
         }
 
         // Annotation, motif, mate hint, then midpoint.
-        int junctionReadPosition = scanJunctionPositions(placement, up, down, upMatchedRead, primaryIsUpstream);
+        Integer junctionReadPosition = scanJunctionPositions(placement, up, down, upMatchedRead, primaryIsUpstream);
 
-        if(junctionReadPosition == NO_JUNCTION_POSITION)
+        if(junctionReadPosition == null)
         {
             junctionReadPosition = junctionPositionFromMate(placement, up, down, upMatchedRead, primaryIsUpstream);
         }
 
-        if(junctionReadPosition == NO_JUNCTION_POSITION)
+        if(junctionReadPosition == null)
         {
             if(mConfig.AnnotatedOnly)
             {
@@ -335,7 +340,8 @@ public class SupplementaryMerger
     }
 
     // Choose the highest junction tier; break ties deterministically per read.
-    private int scanJunctionPositions(
+    @Nullable
+    private Integer scanJunctionPositions(
             final Placement placement, final Side up, final Side down,
             final int upMatchedRead, final boolean primaryIsUpstream)
     {
@@ -371,7 +377,7 @@ public class SupplementaryMerger
 
         if(bestPositions.isEmpty())
         {
-            return NO_JUNCTION_POSITION;
+            return null;
         }
 
         int index = bestPositions.size() == 1 ? 0 : Math.floorMod(tieBreakSeed(placement, up), bestPositions.size());
@@ -384,7 +390,8 @@ public class SupplementaryMerger
     }
 
     // A mate hint pins the corresponding intron boundary.
-    private int junctionPositionFromMate(
+    @Nullable
+    private Integer junctionPositionFromMate(
             final Placement placement, final Side up, final Side down,
             final int upMatchedRead, final boolean primaryIsUpstream)
     {
@@ -406,7 +413,7 @@ public class SupplementaryMerger
             return readPosition;
         }
 
-        return NO_JUNCTION_POSITION;
+        return null;
     }
 
     private static List<CigarElement> buildMergedCigar(
@@ -553,19 +560,19 @@ public class SupplementaryMerger
     }
 
     private record MergeOutcome(
-            RejectReason reject, int mergedStart, List<CigarElement> mergedCigar,
-            ChrBaseRegion introducedIntron, RecordAlignment mergedSupplementary,
-            boolean rightExtend, int spliceStrand)
+            @Nullable RejectReason reject, int mergedStart, @Nullable List<CigarElement> mergedCigar,
+            @Nullable ChrBaseRegion introducedIntron, @Nullable RecordAlignment mergedSupplementary,
+            boolean rightExtend, @Nullable Orientation spliceStrand)
     {
         static MergeOutcome reject(final RejectReason reason)
         {
-            return new MergeOutcome(reason, -1, null, null, null, false, 0);
+            return new MergeOutcome(reason, -1, null, null, null, false, null);
         }
 
         static MergeOutcome success(
                 final int start, final List<CigarElement> cigar,
                 final ChrBaseRegion intron, final RecordAlignment supp,
-                final boolean rightExtend, final int spliceStrand)
+                final boolean rightExtend, @Nullable final Orientation spliceStrand)
         {
             return new MergeOutcome(null, start, cigar, intron, supp, rightExtend, spliceStrand);
         }

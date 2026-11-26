@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -35,14 +34,12 @@ public class SpliceFastaConfig
 
         if(OutputDir == null)
         {
-            TARS_LOGGER.error("missing config: outputDir");
-            System.exit(1);
+            throw new IllegalStateException("missing config: outputDir");
         }
 
         if(!checkCreateOutputDir(OutputDir))
         {
-            TARS_LOGGER.error("failed to create output directory: {}", OutputDir);
-            System.exit(1);
+            throw new IllegalStateException(String.format("failed to create output directory: %s", OutputDir));
         }
     }
 

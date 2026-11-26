@@ -6,8 +6,11 @@ import java.nio.charset.StandardCharsets;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -44,10 +47,11 @@ public class SpliceJunctions
         return motifTier(donor, acceptor);
     }
 
-    public int strand(final ChrBaseRegion intron)
+    @Nullable
+    public Orientation strand(final ChrBaseRegion intron)
     {
-        int annotatedStrand = mEnsemblAnnotationIndex.junctionStrand(intron);
-        if(annotatedStrand != 0)
+        Orientation annotatedStrand = mEnsemblAnnotationIndex.junctionStrand(intron);
+        if(annotatedStrand != null)
         {
             return annotatedStrand;
         }
@@ -58,19 +62,20 @@ public class SpliceJunctions
     }
 
     // 0 unless every N gap in the cigar agrees on a strand
-    public int spliceStrand(final String chromosome, final int start, final String cigar)
+    @Nullable
+    public Orientation spliceStrand(final String chromosome, final int start, final String cigar)
     {
         int referencePosition = start;
-        int strand = 0;
+        Orientation strand = null;
         for(CigarElement element : CigarUtils.cigarElementsFromStr(cigar))
         {
             if(element.getOperator() == CigarOperator.N)
             {
-                int intronStrand = strand(new ChrBaseRegion(
+                Orientation intronStrand = strand(new ChrBaseRegion(
                         chromosome, referencePosition, referencePosition + element.getLength() - 1));
-                if(intronStrand == 0 || strand != 0 && strand != intronStrand)
+                if(intronStrand == null || strand != null && strand != intronStrand)
                 {
-                    return 0;
+                    return null;
                 }
                 strand = intronStrand;
             }
@@ -82,7 +87,8 @@ public class SpliceJunctions
         return strand;
     }
 
-    static int motifStrand(final byte[] donorBases, final byte[] acceptorBases)
+    @Nullable
+    static Orientation motifStrand(final byte[] donorBases, final byte[] acceptorBases)
     {
         String donor = upperCase(donorBases);
         String acceptor = upperCase(acceptorBases);
@@ -90,15 +96,15 @@ public class SpliceJunctions
                 || donor.equals("GC") && acceptor.equals("AG")
                 || donor.equals("AT") && acceptor.equals("AC"))
         {
-            return 1;
+            return Orientation.FORWARD;
         }
         if(donor.equals("CT") && acceptor.equals("AC")
                 || donor.equals("CT") && acceptor.equals("GC")
                 || donor.equals("GT") && acceptor.equals("AT"))
         {
-            return -1;
+            return Orientation.REVERSE;
         }
-        return 0;
+        return null;
     }
 
     // Donor/acceptor 2-base flanks: GT-AG canonical (~99% of sites), GC-AG and AT-AC semi-canonical. The strand is

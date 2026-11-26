@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
@@ -32,6 +34,9 @@ public class SpliceFastaBuilder
     private final SpliceFastaConfig mConfig;
     private final EnsemblDataCache mEnsemblDataCache;
 
+    private int mGenesProcessed;
+    private int mSkippedSingleExon;
+
     public SpliceFastaBuilder(final ConfigBuilder configBuilder)
     {
         mConfig = new SpliceFastaConfig(configBuilder);
@@ -45,15 +50,12 @@ public class SpliceFastaBuilder
         RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(mConfig.RefGenomeFile);
         if(refGenome == null)
         {
-            TARS_LOGGER.error("failed to load ref genome: {}", mConfig.RefGenomeFile);
-            System.exit(1);
+            throw new IllegalStateException(String.format("failed to load ref genome: %s", mConfig.RefGenomeFile));
         }
 
         TARS_LOGGER.info("loading ensembl cache from {}", mConfig.EnsemblDataDir);
         mEnsemblDataCache.setRequiredData(true, false, false, false); // exons only
         mEnsemblDataCache.load(false);
-
-        Map<String, List<GeneData>> chrGeneMap = mEnsemblDataCache.getChrGeneDataMap();
 
         String fastaFile = mConfig.formFilename(TRANSCRIPT_CONTIGS_FILE_ID);
         String mappingsFile = mConfig.formFilename(CONTIG_MAPPINGS_FILE_ID);
@@ -62,83 +64,90 @@ public class SpliceFastaBuilder
 
         List<ContigEntry> contigEntries = new ArrayList<>();
 
-        int genesProcessed = 0;
         int contigsWritten = 0;
-        int skippedSingleExon = 0;
 
         try(BufferedWriter fastaWriter = createBufferedWriter(fastaFile))
         {
-            for(Map.Entry<String, List<GeneData>> chrEntry : chrGeneMap.entrySet())
+            for(Map.Entry<String, List<GeneData>> chrEntry : mEnsemblDataCache.getChrGeneDataMap().entrySet())
             {
-                String chromosome = chrEntry.getKey();
-                List<TranscriptContigResult> chromosomeTranscripts = new ArrayList<>();
+                List<TranscriptContigResult> chromosomeTranscripts = buildChromosomeTranscripts(
+                        builder, chrEntry.getValue(), contigEntries);
 
-                for(GeneData gene : chrEntry.getValue())
+                if(!chromosomeTranscripts.isEmpty())
                 {
-                    ++genesProcessed;
-
-                    List<TranscriptData> transcripts = mEnsemblDataCache.getTranscripts(gene.GeneId);
-                    if(transcripts == null || transcripts.isEmpty())
-                    {
-                        TARS_LOGGER.error("ensembl cache returned no transcripts for gene {}", gene.GeneId);
-                        System.exit(1);
-                    }
-
-                    for(TranscriptData transcript : transcripts)
-                    {
-                        // single-exon transcripts have no junctions, so no contig; record the exon as an annotation-only
-                        // row so the liftback exon index covers the full ensembl cache
-                        if(transcript.exons().size() < 2)
-                        {
-                            ++skippedSingleExon;
-                            contigEntries.add(ContigEntry.annotationOnly(
-                                    gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, gene.Strand,
-                                    TranscriptContigBuilder.sortedExonSpans(transcript)));
-                            continue;
-                        }
-
-                        TranscriptContigResult result = builder.build(gene, transcript);
-
-                        // an all-N sequence cannot be aligned to, so no contig; keep its exons as annotation only
-                        if(result.sequence().chars().allMatch(c -> c == 'N' || c == 'n'))
-                        {
-                            contigEntries.add(ContigEntry.annotationOnly(
-                                    gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, gene.Strand,
-                                    result.exonSpans()));
-                            continue;
-                        }
-
-                        chromosomeTranscripts.add(result);
-                    }
-
-                    if(genesProcessed % 1000 == 0)
-                    {
-                        TARS_LOGGER.debug("processed {} genes", genesProcessed);
-                    }
+                    String altContig = chrEntry.getKey() + ALT_CONTIG_SUFFIX;
+                    String sequence = packChromosomeContig(altContig, chromosomeTranscripts, contigEntries, SPACER_LENGTH);
+                    writeFastaContig(fastaWriter, altContig, sequence);
+                    contigsWritten += chromosomeTranscripts.size();
                 }
-
-                if(chromosomeTranscripts.isEmpty())
-                    continue;
-
-                String altContig = chromosome + ALT_CONTIG_SUFFIX;
-                String sequence = packChromosomeContig(altContig, chromosomeTranscripts, contigEntries, SPACER_LENGTH);
-                writeFastaContig(fastaWriter, altContig, sequence);
-                contigsWritten += chromosomeTranscripts.size();
             }
         }
         catch(IOException e)
         {
-            TARS_LOGGER.error("failed to write transcript contigs FASTA: {}", e.toString());
-            System.exit(1);
+            throw new UncheckedIOException("failed to write transcript contigs FASTA", e);
         }
 
         TARS_LOGGER.info(
                 "wrote {} transcript contigs to {} (skipped {} single-exon)",
-                contigsWritten, fastaFile, skippedSingleExon);
+                contigsWritten, fastaFile, mSkippedSingleExon);
 
         ContigSidecar.write(mappingsFile, contigEntries);
 
         TARS_LOGGER.info("SpliceFastaBuilder complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private List<TranscriptContigResult> buildChromosomeTranscripts(
+            final TranscriptContigBuilder builder, final List<GeneData> genes, final List<ContigEntry> contigEntries)
+    {
+        List<TranscriptContigResult> chromosomeTranscripts = new ArrayList<>();
+
+        for(GeneData gene : genes)
+        {
+            ++mGenesProcessed;
+
+            List<TranscriptData> transcripts = mEnsemblDataCache.getTranscripts(gene.GeneId);
+            if(transcripts == null || transcripts.isEmpty())
+            {
+                throw new IllegalStateException(String.format(
+                        "ensembl cache returned no transcripts for gene %s", gene.GeneId));
+            }
+
+            for(TranscriptData transcript : transcripts)
+            {
+                // single-exon transcripts have no junctions, so no contig; record the exon as an annotation-only
+                // row so the liftback exon index covers the full ensembl cache
+                if(transcript.exons().size() < 2)
+                {
+                    ++mSkippedSingleExon;
+                    contigEntries.add(ContigEntry.annotationOnly(
+                            gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, gene.Strand,
+                            TranscriptContigBuilder.sortedExonSpans(transcript)));
+                }
+                else
+                {
+                    TranscriptContigResult result = builder.build(gene, transcript);
+
+                    // an all-N sequence cannot be aligned to, so no contig; keep its exons as annotation only
+                    if(result.sequence().chars().allMatch(c -> c == 'N' || c == 'n'))
+                    {
+                        contigEntries.add(ContigEntry.annotationOnly(
+                                gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, gene.Strand,
+                                result.exonSpans()));
+                    }
+                    else
+                    {
+                        chromosomeTranscripts.add(result);
+                    }
+                }
+            }
+
+            if(mGenesProcessed % 1000 == 0)
+            {
+                TARS_LOGGER.debug("processed {} genes", mGenesProcessed);
+            }
+        }
+
+        return chromosomeTranscripts;
     }
 
     static String packChromosomeContig(
@@ -160,7 +169,7 @@ public class SpliceFastaBuilder
             int contigEnd = sequence.length();
 
             entries.add(new ContigEntry(
-                    altContig, contigStart, contigEnd,
+                    new ChrBaseRegion(altContig, contigStart, contigEnd),
                     transcript.geneId(), transcript.geneName(), transcript.transName(), transcript.chromosome(),
                     transcript.strand(), transcript.exonSpans()));
         }
@@ -183,7 +192,15 @@ public class SpliceFastaBuilder
 
         configBuilder.checkAndParseCommandLine(args);
 
-        SpliceFastaBuilder builder = new SpliceFastaBuilder(configBuilder);
-        builder.run();
+        try
+        {
+            SpliceFastaBuilder builder = new SpliceFastaBuilder(configBuilder);
+            builder.run();
+        }
+        catch(RuntimeException e)
+        {
+            TARS_LOGGER.error("Runtime error", e);
+            System.exit(1);
+        }
     }
 }

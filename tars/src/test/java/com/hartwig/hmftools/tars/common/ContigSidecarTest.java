@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Test;
 
@@ -28,10 +29,10 @@ public class ContigSidecarTest
 
         List<ContigEntry> entries = List.of(
                 new ContigEntry(
-                        "chr1_tx", 1, 200, "ENSG0000001", "GENEA", "ENST0000001", CHR_1, 1,
+                        new ChrBaseRegion("chr1_tx", 1, 200), "ENSG0000001", "GENEA", "ENST0000001", CHR_1, 1,
                         List.of(new BaseRegion(100, 199), new BaseRegion(300, 399))),
                 new ContigEntry(
-                        "chr2_tx", 1, 51, "ENSG0000002", "GENEB", "ENST0000002", CHR_2, -1,
+                        new ChrBaseRegion("chr2_tx", 1, 51), "ENSG0000002", "GENEB", "ENST0000002", CHR_2, -1,
                         List.of(new BaseRegion(1000, 1050))));
 
         ContigSidecar.write(tempFile.getAbsolutePath(), entries);
@@ -41,9 +42,9 @@ public class ContigSidecarTest
         assertEquals(2, readBack.size());
 
         ContigEntry first = readBack.get(0);
-        assertEquals("chr1_tx", first.contigName());
-        assertEquals(1, first.contigStart());
-        assertEquals(200, first.contigEnd());
+        assertEquals("chr1_tx", first.contigRegion().Chromosome);
+        assertEquals(1, first.contigRegion().start());
+        assertEquals(200, first.contigRegion().end());
         assertEquals("ENSG0000001", first.geneId());
         assertEquals("GENEA", first.geneName());
         assertEquals("ENST0000001", first.transName());
@@ -54,9 +55,9 @@ public class ContigSidecarTest
         assertEquals(new BaseRegion(300, 399), first.exonSpans().get(1));
 
         ContigEntry second = readBack.get(1);
-        assertEquals("chr2_tx", second.contigName());
-        assertEquals(1, second.contigStart());
-        assertEquals(51, second.contigEnd());
+        assertEquals("chr2_tx", second.contigRegion().Chromosome);
+        assertEquals(1, second.contigRegion().start());
+        assertEquals(51, second.contigRegion().end());
         assertEquals("ENST0000002", second.transName());
         assertEquals(-1, second.strand());
         assertEquals(1, second.exonSpans().size());

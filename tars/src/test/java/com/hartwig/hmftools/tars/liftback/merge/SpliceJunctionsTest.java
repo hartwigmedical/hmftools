@@ -5,9 +5,11 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refGenome;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
@@ -42,9 +44,9 @@ public class SpliceJunctionsTest
     @Test
     public void testMotifStrandFollowsTheOrientedMotif()
     {
-        assertEquals(1, SpliceJunctions.motifStrand(bases("GT"), bases("AG")));
-        assertEquals(-1, SpliceJunctions.motifStrand(bases("CT"), bases("AC")));
-        assertEquals(0, SpliceJunctions.motifStrand(bases("AA"), bases("GG")));
+        assertEquals(Orientation.FORWARD, SpliceJunctions.motifStrand(bases("GT"), bases("AG")));
+        assertEquals(Orientation.REVERSE, SpliceJunctions.motifStrand(bases("CT"), bases("AC")));
+        assertNull(SpliceJunctions.motifStrand(bases("AA"), bases("GG")));
     }
 
     @Test
@@ -52,13 +54,13 @@ public class SpliceJunctionsTest
     {
         SpliceJunctions spliceJunctions = new SpliceJunctions(reverseStrandTranscript(), refGenome(CHR_1, "A".repeat(500)));
 
-        assertEquals(-1, spliceJunctions.spliceStrand(CHR_1, 150, "50M100N50M"));
+        assertEquals(Orientation.REVERSE, spliceJunctions.spliceStrand(CHR_1, 150, "50M100N50M"));
 
         // no N gap, so no junction to take a strand from
-        assertEquals(0, spliceJunctions.spliceStrand(CHR_1, 150, "100M"));
+        assertNull(spliceJunctions.spliceStrand(CHR_1, 150, "100M"));
 
         // an N gap that is not an annotated junction, with no ref bases to fall back on
-        assertEquals(0, spliceJunctions.spliceStrand(CHR_1, 150, "50M150N50M"));
+        assertNull(spliceJunctions.spliceStrand(CHR_1, 150, "50M150N50M"));
     }
 
     private static EnsemblAnnotationIndex reverseStrandTranscript()

@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -64,7 +65,7 @@ public class SupplementaryMergerTest
             final String cigar, final int mapQuality)
     {
         return new RecordAlignment(
-                index, 0, new LiftedAlignment(chrom, start, cigar, 0, false, forward, 0), mapQuality);
+                index, 0, new LiftedAlignment(chrom, start, cigar, 0, false, forward, null), mapQuality);
     }
 
     private SupplementaryMerger defaultMerger(final Set<ChrBaseRegion> annotated)
@@ -115,7 +116,7 @@ public class SupplementaryMergerTest
         SupplementaryMerger annotatedMerger = new SupplementaryMerger(
                 annotation, mRefGenome, TarsTestFixtures.supplementaryConfig());
 
-        assertEquals(-1, annotatedMerger.spliceStrand(CHR1, 150, "50M100N50M"));
+        assertEquals(Orientation.REVERSE, annotatedMerger.spliceStrand(CHR1, 150, "50M100N50M"));
     }
 
     @Test

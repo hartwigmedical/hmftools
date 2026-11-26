@@ -35,7 +35,7 @@ public class GenomicAlignmentScorerTest
 
     private static LiftedAlignment refAlt(final String chrom, final int pos, final String cigar, final boolean forwardStrand)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, forwardStrand, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, forwardStrand, null);
     }
 
     @Test
@@ -52,17 +52,17 @@ public class GenomicAlignmentScorerTest
         byte[] forward = bases("A".repeat(50));
         record.setReadBases(forward);
 
-        scorer.scorePlacements(alignments, record);
+        List<LiftedAlignment> scored = scorer.scorePlacements(alignments, record);
 
         byte[] reverseComplement = Arrays.copyOf(forward, forward.length);
         SequenceUtil.reverseComplement(reverseComplement);
 
-        assertEquals(50, self.GenomicScore);
+        assertEquals(50, scored.get(0).genomicScore().intValue());
         assertEquals(
                 GenomicAlignmentScorer.genomicAlignmentScore(genome.asRefGenome(), CHR_1, 2000, cigarFromStr("50M"), reverseComplement),
-                oppositeStrandAlt.GenomicScore);
+                scored.get(1).genomicScore().intValue());
         assertTrue(GenomicAlignmentScorer.genomicAlignmentScore(genome.asRefGenome(), CHR_1, 2000, cigarFromStr("50M"), forward)
-                < oppositeStrandAlt.GenomicScore);
+                < scored.get(1).genomicScore());
     }
 
     @Test
@@ -76,10 +76,10 @@ public class GenomicAlignmentScorerTest
         record.setReadBases(bases("A".repeat(50)));
         record.setAttribute("SA", CHR_1 + ",2000,+,50M,0,0;");
 
-        scorer.scorePlacements(alignments, record);
+        List<LiftedAlignment> scored = scorer.scorePlacements(alignments, record);
 
-        assertEquals(50, alignments.get(0).GenomicScore);
-        assertEquals(50, alignments.get(1).GenomicScore);
+        assertEquals(50, scored.get(0).genomicScore().intValue());
+        assertEquals(50, scored.get(1).genomicScore().intValue());
     }
 
     @Test
@@ -168,13 +168,17 @@ public class GenomicAlignmentScorerTest
     {
         TestGenome genome = new TestGenome().with(CHR_1, 5000, 'A');
 
-        assertEquals(5, GenomicAlignmentScorer.genomicAlignmentScore(
-                genome.asRefGenome(), CHR_1, 1, cigarFromStr("10M"), bases("AAAACAAAAA")));
-        assertEquals(3, GenomicAlignmentScorer.genomicAlignmentScore(
-                genome.asRefGenome(), CHR_1, 1, cigarFromStr("5M2D5M"), bases("AAAAAAAAAA")));
-        assertEquals(10, GenomicAlignmentScorer.genomicAlignmentScore(
-                genome.asRefGenome(), CHR_1, 1, cigarFromStr("5M100N5M"), bases("AAAAAAAAAA")));
-        assertEquals(7, GenomicAlignmentScorer.genomicAlignmentScore(
-                genome.asRefGenome(), CHR_1, 1, cigarFromStr("3S7M"), bases("AAAAAAAAAA")));
+        assertEquals(
+                5, GenomicAlignmentScorer.genomicAlignmentScore(
+                        genome.asRefGenome(), CHR_1, 1, cigarFromStr("10M"), bases("AAAACAAAAA")));
+        assertEquals(
+                3, GenomicAlignmentScorer.genomicAlignmentScore(
+                        genome.asRefGenome(), CHR_1, 1, cigarFromStr("5M2D5M"), bases("AAAAAAAAAA")));
+        assertEquals(
+                10, GenomicAlignmentScorer.genomicAlignmentScore(
+                        genome.asRefGenome(), CHR_1, 1, cigarFromStr("5M100N5M"), bases("AAAAAAAAAA")));
+        assertEquals(
+                7, GenomicAlignmentScorer.genomicAlignmentScore(
+                        genome.asRefGenome(), CHR_1, 1, cigarFromStr("3S7M"), bases("AAAAAAAAAA")));
     }
 }

@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
@@ -237,7 +238,7 @@ public class ContigTranslatorTest
     {
         // contig 1..50 -> chr1 100..149, contig 51..100 -> chr1 200..249; implied intron 150..199.
         ContigEntry twoExon = new ContigEntry(
-                "ensG_X_T", 1, 100, "G", "X", "T", CHR_1, 1,
+                new ChrBaseRegion("ensG_X_T", 1, 100), "G", "X", "T", CHR_1, 1,
                 List.of(new BaseRegion(100, 149), new BaseRegion(200, 249)));
 
         // fills exon1 exactly: no spurious trailing N
@@ -261,11 +262,11 @@ public class ContigTranslatorTest
                 TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",-201,30M,2;");
 
         assertEquals(2, alignments.size());
-        assertEquals(150, alignments.get(0).LiftedPos);
-        assertEquals("50M", alignments.get(0).LiftedCigar);
-        assertTrue(alignments.get(0).ForwardStrand);
-        assertEquals(500, alignments.get(1).LiftedPos);
-        assertFalse(alignments.get(1).ForwardStrand);
+        assertEquals(150, alignments.get(0).liftedPosition().Position);
+        assertEquals("50M", alignments.get(0).liftedCigar());
+        assertTrue(alignments.get(0).forwardStrand());
+        assertEquals(500, alignments.get(1).liftedPosition().Position);
+        assertFalse(alignments.get(1).forwardStrand());
     }
 
     @Test
@@ -273,7 +274,7 @@ public class ContigTranslatorTest
     {
         // adjacent spans imply no intron, so no 0-length N element is emitted
         ContigEntry contiguous = new ContigEntry(
-                "ensG_X_T", 1, 100, "G", "X", "T", CHR_1, 1,
+                new ChrBaseRegion("ensG_X_T", 1, 100), "G", "X", "T", CHR_1, 1,
                 List.of(new BaseRegion(100, 149), new BaseRegion(150, 199)));
 
         ContigTranslateResult result = ContigTranslator.translate(contiguous, 1, cigarFromStr("100M"));

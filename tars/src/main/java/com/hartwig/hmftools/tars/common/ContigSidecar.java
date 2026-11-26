@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 public final class ContigSidecar
 {
-    public enum Column
+    enum Column
     {
         ContigName,
         ContigStart,
@@ -33,9 +34,10 @@ public final class ContigSidecar
         try(DelimFileWriter<ContigEntry> writer = new DelimFileWriter<>(
                 filename, Column.values(), (entry, row) ->
         {
-            row.set(Column.ContigName, entry.contigName());
-            row.set(Column.ContigStart, String.valueOf(entry.contigStart()));
-            row.set(Column.ContigEnd, String.valueOf(entry.contigEnd()));
+            ChrBaseRegion contigRegion = entry.contigRegion();
+            row.set(Column.ContigName, contigRegion != null ? contigRegion.Chromosome : "");
+            row.set(Column.ContigStart, contigRegion != null ? contigRegion.start() : 0);
+            row.set(Column.ContigEnd, contigRegion != null ? contigRegion.end() : 0);
             row.set(Column.GeneId, entry.geneId());
             row.set(Column.GeneName, entry.geneName());
             row.set(Column.TransName, entry.transName());
@@ -61,10 +63,11 @@ public final class ContigSidecar
         {
             for(DelimFileReader.Row row : reader)
             {
+                String contigName = row.get(Column.ContigName);
+                ChrBaseRegion contigRegion = contigName.isEmpty() ? null : new ChrBaseRegion(
+                        contigName, Integer.parseInt(row.get(Column.ContigStart)), Integer.parseInt(row.get(Column.ContigEnd)));
                 entries.add(new ContigEntry(
-                        row.get(Column.ContigName),
-                        Integer.parseInt(row.get(Column.ContigStart)),
-                        Integer.parseInt(row.get(Column.ContigEnd)),
+                        contigRegion,
                         row.get(Column.GeneId),
                         row.get(Column.GeneName),
                         row.get(Column.TransName),

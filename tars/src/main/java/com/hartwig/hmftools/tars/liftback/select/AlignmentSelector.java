@@ -93,22 +93,23 @@ public final class AlignmentSelector
         int inputMapQuality = record.getMappingQuality();
         LiftedAlignment effectivePrimary = selection.alignment();
 
-        dropUnselectedMerges(allAlignments, effectivePrimary);
-        List<LiftedAlignment> keptAlignments = collectKeptAlignments(allAlignments);
+        List<LiftedAlignment> alignments = dropUnselectedMerges(allAlignments, effectivePrimary);
+        List<LiftedAlignment> keptAlignments = collectKeptAlignments(alignments);
         tracePlacements(record, keptAlignments, effectivePrimary);
 
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
         boolean hiddenTie = inputMapQuality == 0 && hasHiddenTie(record);
-        boolean inAnnotatedExon = mEnsemblAnnotationIndex.containsExon(effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos);
+        boolean inAnnotatedExon = mEnsemblAnnotationIndex.containsExon(
+                effectivePrimary.liftedPosition().Chromosome, effectivePrimary.liftedPosition().Position);
         boolean randomTie = selection.reason().equals("random");
         int updatedMapQuality = decidePrimaryMapQuality(
-                inputMapQuality, numLoci, hiddenTie, effectivePrimary.FromTxContig, inAnnotatedExon, randomTie);
+                inputMapQuality, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, randomTie);
         String note = selection.reason();
 
         if(effectivePrimary.hasSupplementaryMerge())
         {
-            updatedMapQuality = Math.max(updatedMapQuality, effectivePrimary.MergedSupplementaryMapQuality);
+            updatedMapQuality = Math.max(updatedMapQuality, effectivePrimary.mergedSupplementaryMapQuality());
             if(numLoci == 1)
             {
                 updatedMapQuality = CONFIDENT_MAP_QUALITY;
@@ -120,25 +121,31 @@ public final class AlignmentSelector
         {
             TARS_LOGGER.trace(
                     "placement selection {}: primary -> {}:{} {} ({})",
-                    record.getReadName(), effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos,
-                    effectivePrimary.LiftedCigar, selection.reason());
+                    record.getReadName(), effectivePrimary.liftedPosition().Chromosome, effectivePrimary.liftedPosition().Position,
+                    effectivePrimary.liftedCigar(), selection.reason());
         }
 
         traceScoreRegression(record, keptAlignments, effectivePrimary, selection.reason());
 
-        return new LiftedRecord(updatedMapQuality, numLoci, note, selection.alignmentIndex(), allAlignments);
+        return new LiftedRecord(updatedMapQuality, numLoci, note, selection.alignmentIndex(), alignments);
     }
 
-    private static void dropUnselectedMerges(
+    private static List<LiftedAlignment> dropUnselectedMerges(
             final List<LiftedAlignment> alignments, final LiftedAlignment selected)
     {
+        List<LiftedAlignment> revised = new ArrayList<>(alignments.size());
         for(LiftedAlignment alignment : alignments)
         {
             if(alignment != selected && alignment.hasSupplementaryMerge())
             {
-                alignment.Dropped = true;
+                revised.add(alignment.withDropped());
+            }
+            else
+            {
+                revised.add(alignment);
             }
         }
+        return revised;
     }
 
     private static List<LiftedAlignment> collectKeptAlignments(final List<LiftedAlignment> alignments)
@@ -146,7 +153,7 @@ public final class AlignmentSelector
         List<LiftedAlignment> kept = new ArrayList<>(alignments.size());
         for(LiftedAlignment alignment : alignments)
         {
-            if(!alignment.Dropped)
+            if(!alignment.dropped())
             {
                 kept.add(alignment);
             }
@@ -167,8 +174,8 @@ public final class AlignmentSelector
             TARS_LOGGER.trace(
                     "placement {}: mapQuality={} {}:{} {} score={} fromTx={} chosen={}",
                     record.getReadName(), record.getMappingQuality(),
-                    alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
-                    alignment.GenomicScore, alignment.FromTxContig, alignment == selected);
+                    alignment.liftedPosition().Chromosome, alignment.liftedPosition().Position, alignment.liftedCigar(),
+                    alignment.genomicScore(), alignment.fromTxContig(), alignment == selected);
         }
     }
 
@@ -176,7 +183,7 @@ public final class AlignmentSelector
             final SAMRecord record, final List<LiftedAlignment> alignments,
             final LiftedAlignment selected, final String reason)
     {
-        if(!TARS_LOGGER.isTraceEnabled())
+        if(!TARS_LOGGER.isTraceEnabled() || selected.genomicScore() == null)
         {
             return;
         }
@@ -184,7 +191,7 @@ public final class AlignmentSelector
         LiftedAlignment bestScored = selected;
         for(LiftedAlignment alignment : alignments)
         {
-            if(alignment.GenomicScore > bestScored.GenomicScore)
+            if(alignment.genomicScore() > bestScored.genomicScore())
             {
                 bestScored = alignment;
             }
@@ -196,10 +203,10 @@ public final class AlignmentSelector
                     "score regression {}: inputMapQuality={} reason={} selected {}:{} {} aligned={} score={}"
                             + " over {}:{} {} aligned={} score={}",
                     record.getReadName(), record.getMappingQuality(), reason,
-                    selected.LiftedChromosome, selected.LiftedPos, selected.LiftedCigar,
-                    alignedBaseCount(selected.LiftedCigar), selected.GenomicScore,
-                    bestScored.LiftedChromosome, bestScored.LiftedPos, bestScored.LiftedCigar,
-                    alignedBaseCount(bestScored.LiftedCigar), bestScored.GenomicScore);
+                    selected.liftedPosition().Chromosome, selected.liftedPosition().Position, selected.liftedCigar(),
+                    alignedBaseCount(selected.liftedCigar()), selected.genomicScore(),
+                    bestScored.liftedPosition().Chromosome, bestScored.liftedPosition().Position, bestScored.liftedCigar(),
+                    alignedBaseCount(bestScored.liftedCigar()), bestScored.genomicScore());
         }
     }
 
@@ -260,8 +267,8 @@ public final class AlignmentSelector
     private static int countDistinctLoci(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
     {
         Map<String, List<int[]>> distinctSpans = new HashMap<>();
-        distinctSpans.computeIfAbsent(primary.LiftedChromosome, k -> new ArrayList<>())
-                .add(new int[] { primary.LiftedPos, primary.alignedEnd() });
+        distinctSpans.computeIfAbsent(primary.liftedPosition().Chromosome, k -> new ArrayList<>())
+                .add(new int[] { primary.liftedPosition().Position, primary.alignedEnd() });
 
         for(LiftedAlignment alignment : alignments)
         {
@@ -269,8 +276,8 @@ public final class AlignmentSelector
             {
                 continue;
             }
-            distinctSpans.computeIfAbsent(alignment.LiftedChromosome, k -> new ArrayList<>())
-                    .add(new int[] { alignment.LiftedPos, alignment.alignedEnd() });
+            distinctSpans.computeIfAbsent(alignment.liftedPosition().Chromosome, k -> new ArrayList<>())
+                    .add(new int[] { alignment.liftedPosition().Position, alignment.alignedEnd() });
         }
 
         int loci = 0;
@@ -327,7 +334,7 @@ public final class AlignmentSelector
 
         for(LiftedAlignment alignment : alignments)
         {
-            if(alignment.Dropped)
+            if(alignment.dropped())
             {
                 continue;
             }
@@ -338,9 +345,9 @@ public final class AlignmentSelector
             }
 
             loci.add(alignment.key().locus());
-            distinctCigars.add(alignment.LiftedCigar);
+            distinctCigars.add(alignment.liftedCigar());
 
-            if(alignment.FromTxContig)
+            if(alignment.fromTxContig())
             {
                 hasTx = true;
             }
@@ -427,8 +434,9 @@ public final class AlignmentSelector
         Set<AlignmentKey> seen = new HashSet<>();
         for(LiftedAlignment alignment : mate.alignments())
         {
-            boolean passesScoreFloor = alignment.GenomicScore >= PRIMARY_AS_UNMAP_THRESHOLD;
-            if(!alignment.Dropped && passesScoreFloor && seen.add(alignment.key()))
+            Integer genomicScore = alignment.genomicScore();
+            boolean passesScoreFloor = genomicScore != null && genomicScore >= PRIMARY_AS_UNMAP_THRESHOLD;
+            if(!alignment.dropped() && passesScoreFloor && seen.add(alignment.key()))
             {
                 placements.add(alignment);
             }
@@ -440,7 +448,7 @@ public final class AlignmentSelector
 
         for(LiftedAlignment alignment : mate.alignments())
         {
-            if(!alignment.Dropped && seen.add(alignment.key()))
+            if(!alignment.dropped() && seen.add(alignment.key()))
             {
                 placements.add(alignment);
             }
@@ -479,28 +487,28 @@ public final class AlignmentSelector
     private static long pairScore(
             final AlignmentPair pair, final boolean fixedFirst, final boolean fixedSecond)
     {
-        long score = fixedFirst ? 0 : pair.first().GenomicScore;
-        return score + (fixedSecond ? 0 : pair.second().GenomicScore);
+        long score = fixedFirst ? 0 : pair.first().genomicScore();
+        return score + (fixedSecond ? 0 : pair.second().genomicScore());
     }
 
     private static PairPriority matePairPriority(
             final LiftedAlignment first, final LiftedAlignment second)
     {
-        int firstBreakend = first.ForwardStrand ? first.alignedEnd() : first.LiftedPos;
-        int secondBreakend = second.ForwardStrand ? second.alignedEnd() : second.LiftedPos;
-        Orientation firstOrientation = first.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
-        Orientation secondOrientation = second.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
+        int firstBreakend = first.forwardStrand() ? first.alignedEnd() : first.liftedPosition().Position;
+        int secondBreakend = second.forwardStrand() ? second.alignedEnd() : second.liftedPosition().Position;
+        Orientation firstOrientation = first.forwardStrand() ? Orientation.FORWARD : Orientation.REVERSE;
+        Orientation secondOrientation = second.forwardStrand() ? Orientation.FORWARD : Orientation.REVERSE;
 
         long separation = first.alignedBlockDistance(second);
-        if(first.LiftedChromosome.equals(second.LiftedChromosome)
+        if(first.liftedPosition().Chromosome.equals(second.liftedPosition().Chromosome)
                 && separation <= LOCAL_PAIR_MAX_SEPARATION)
         {
             return new PairPriority(PairCategory.LOCAL, separation);
         }
 
         return pairPriority(
-                first.LiftedChromosome, firstBreakend, firstOrientation,
-                second.LiftedChromosome, secondBreakend, secondOrientation,
+                first.liftedPosition().Chromosome, firstBreakend, firstOrientation,
+                second.liftedPosition().Chromosome, secondBreakend, secondOrientation,
                 separation);
     }
 
@@ -589,8 +597,8 @@ public final class AlignmentSelector
     {
         LiftedAlignment alignment = supplementary.alignment();
         return new SupplementaryKey(
-                supplementary.recordIndex(), alignment.LiftedChromosome, alignment.ForwardStrand,
-                alignment.LiftedPos, alignment.LiftedCigar, supplementary.mapQuality()).hashCode();
+                supplementary.recordIndex(), alignment.liftedPosition().Chromosome, alignment.forwardStrand(),
+                alignment.liftedPosition().Position, alignment.liftedCigar(), supplementary.mapQuality()).hashCode();
     }
 
     private static PairPriority supplementaryPriority(
@@ -599,12 +607,12 @@ public final class AlignmentSelector
             final RecordAlignment supplementary)
     {
         LiftedAlignment alignment = supplementary.alignment();
-        if(!primaryChromosome.equals(alignment.LiftedChromosome))
+        if(!primaryChromosome.equals(alignment.liftedPosition().Chromosome))
         {
             return FALLBACK_PRIORITY;
         }
 
-        List<CigarElement> supplementaryCigar = CigarUtils.cigarElementsFromStr(alignment.LiftedCigar);
+        List<CigarElement> supplementaryCigar = CigarUtils.cigarElementsFromStr(alignment.liftedCigar());
         int primaryLeadingClip = CigarUtils.leftSoftClipLength(primaryCigar);
         int supplementaryLeadingClip = CigarUtils.leftSoftClipLength(supplementaryCigar);
         if(primaryLeadingClip == supplementaryLeadingClip)
@@ -615,17 +623,17 @@ public final class AlignmentSelector
         boolean primaryLinksEnd = primaryLeadingClip < supplementaryLeadingClip;
         boolean supplementaryLinksEnd = !primaryLinksEnd;
         int primaryEnd = primaryStart + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
-        int supplementaryEnd = alignment.LiftedPos + CigarUtils.cigarAlignedLength(supplementaryCigar) - 1;
+        int supplementaryEnd = alignment.liftedPosition().Position + CigarUtils.cigarAlignedLength(supplementaryCigar) - 1;
 
         return pairPriority(
                 primaryChromosome,
                 breakendPosition(primaryStart, primaryEnd, primaryForwardStrand, primaryLinksEnd),
                 breakendOrientation(primaryForwardStrand, primaryLinksEnd),
-                alignment.LiftedChromosome,
+                alignment.liftedPosition().Chromosome,
                 breakendPosition(
-                        alignment.LiftedPos, supplementaryEnd,
-                        alignment.ForwardStrand, supplementaryLinksEnd),
-                breakendOrientation(alignment.ForwardStrand, supplementaryLinksEnd));
+                        alignment.liftedPosition().Position, supplementaryEnd,
+                        alignment.forwardStrand(), supplementaryLinksEnd),
+                breakendOrientation(alignment.forwardStrand(), supplementaryLinksEnd));
     }
 
     public record RecordAlignment(
@@ -737,7 +745,7 @@ public final class AlignmentSelector
         int topScore = Integer.MIN_VALUE;
         for(LiftedAlignment alignment : placements)
         {
-            topScore = Math.max(topScore, alignment.GenomicScore);
+            topScore = Math.max(topScore, alignment.genomicScore());
         }
 
         // Do not weight a placement by the number of sources that produced it.
@@ -745,7 +753,7 @@ public final class AlignmentSelector
         Set<AlignmentKey> topKeys = new HashSet<>();
         for(LiftedAlignment alignment : placements)
         {
-            if(alignment.GenomicScore == topScore && topKeys.add(alignment.key()))
+            if(alignment.genomicScore() == topScore && topKeys.add(alignment.key()))
             {
                 top.add(alignment);
             }
@@ -824,7 +832,7 @@ public final class AlignmentSelector
         }
         throw new IllegalStateException(String.format(
                 "alignment(%s:%d %s) missing from its placement list",
-                target.LiftedChromosome, target.LiftedPos, target.LiftedCigar));
+                target.liftedPosition().Chromosome, target.liftedPosition().Position, target.liftedCigar()));
     }
 
     private static List<LiftedAlignment> closestMateSubset(final List<LiftedAlignment> top, final LiftedRecord mate)
@@ -860,7 +868,7 @@ public final class AlignmentSelector
         int closestDistance = Integer.MAX_VALUE;
         for(LiftedAlignment mateAlignment : mate.liftedAlignments())
         {
-            if(!mateAlignment.Dropped)
+            if(!mateAlignment.dropped())
             {
                 closestDistance = Math.min(closestDistance, alignment.alignedBlockDistance(mateAlignment));
             }

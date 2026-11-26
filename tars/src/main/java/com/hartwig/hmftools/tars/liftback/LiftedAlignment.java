@@ -7,105 +7,105 @@ import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public class LiftedAlignment
+public record LiftedAlignment(
+        BasePosition liftedPosition,
+        String liftedCigar,
+        int numMismatches,
+        boolean fromTxContig,
+        boolean forwardStrand,
+        // +1 forward / -1 reverse for tx-contig alignments; 0 when no transcript strand is known.
+        @Nullable Orientation transcriptStrand,
+        List<Integer> mergedSupplementaryIndices,
+        List<ChrBaseRegion> mergedSupplementaryIntrons,
+        int mergedSupplementaryMapQuality,
+        List<BaseRegion> alignedBlocks,
+        // set when an overhang collapse made this alt a duplicate placement; excluded from the XA tag.
+        boolean dropped,
+        @Nullable Integer genomicScore)
 {
-    public final String LiftedChromosome;
-    public final int LiftedPos;
-    public final String LiftedCigar;
-    public final int NumMismatches;
-    public final boolean FromTxContig;
-    public final boolean ForwardStrand;
-    // +1 forward / -1 reverse for tx-contig alignments; 0 when no transcript strand is known.
-    public final int TranscriptStrand;
-    public final List<Integer> MergedSupplementaryIndices;
-    public final List<ChrBaseRegion> MergedSupplementaryIntrons;
-    public final int MergedSupplementaryMapQuality;
-    private final List<BaseRegion> mAlignedBlocks;
-
-    // set when an overhang collapse made this alt a duplicate placement; excluded from the XA tag.
-    public boolean Dropped = false;
-
-    // Integer.MIN_VALUE = not computed
-    public int GenomicScore = Integer.MIN_VALUE;
+    public LiftedAlignment
+    {
+        mergedSupplementaryIndices = List.copyOf(mergedSupplementaryIndices);
+        mergedSupplementaryIntrons = List.copyOf(mergedSupplementaryIntrons);
+    }
 
     public LiftedAlignment(
             final String liftedChromosome, final int liftedPos, final String liftedCigar, final int numMismatches,
-            final boolean fromTxContig, final boolean forwardStrand, final int transcriptStrand)
+            final boolean fromTxContig, final boolean forwardStrand, @Nullable final Orientation transcriptStrand)
     {
         this(
-                liftedChromosome, liftedPos, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
-                Collections.emptyList(), Collections.emptyList(), -1);
-    }
-
-    private LiftedAlignment(
-            final String liftedChromosome, final int liftedPos, final String liftedCigar, final int numMismatches,
-            final boolean fromTxContig, final boolean forwardStrand, final int transcriptStrand,
-            final List<Integer> mergedSupplementaryIndices, final List<ChrBaseRegion> mergedSupplementaryIntrons,
-            final int mergedSupplementaryMapQuality)
-    {
-        LiftedChromosome = liftedChromosome;
-        LiftedPos = liftedPos;
-        LiftedCigar = liftedCigar;
-        NumMismatches = numMismatches;
-        FromTxContig = fromTxContig;
-        ForwardStrand = forwardStrand;
-        TranscriptStrand = transcriptStrand;
-        MergedSupplementaryIndices = List.copyOf(mergedSupplementaryIndices);
-        MergedSupplementaryIntrons = List.copyOf(mergedSupplementaryIntrons);
-        MergedSupplementaryMapQuality = mergedSupplementaryMapQuality;
-        mAlignedBlocks = alignedBlocks(liftedPos, liftedCigar);
+                new BasePosition(liftedChromosome, liftedPos), liftedCigar, numMismatches, fromTxContig, forwardStrand,
+                transcriptStrand, Collections.emptyList(), Collections.emptyList(), -1,
+                alignedBlocks(liftedPos, liftedCigar), false, null);
     }
 
     // GenomicScore is left uncomputed: it described the previous cigar
     public LiftedAlignment withLiftedCigar(final int liftedPos, final String liftedCigar)
     {
-        LiftedAlignment revised = new LiftedAlignment(
-                LiftedChromosome, liftedPos, liftedCigar, NumMismatches,
-                FromTxContig, ForwardStrand, TranscriptStrand,
-                MergedSupplementaryIndices, MergedSupplementaryIntrons, MergedSupplementaryMapQuality);
-        revised.Dropped = Dropped;
-        return revised;
+        return new LiftedAlignment(
+                new BasePosition(liftedPosition.Chromosome, liftedPos), liftedCigar, numMismatches,
+                fromTxContig, forwardStrand, transcriptStrand,
+                mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality,
+                alignedBlocks(liftedPos, liftedCigar), dropped, null);
     }
 
     public LiftedAlignment withSupplementaryMerge(
             final int liftedPos, final String liftedCigar, final List<Integer> mergedSupplementaryIndices,
             final List<ChrBaseRegion> mergedSupplementaryIntrons, final int mergedSupplementaryMapQuality,
-            final int spliceStrand)
+            @Nullable final Orientation spliceStrand)
     {
-        int mergedTranscriptStrand = TranscriptStrand != 0 ? TranscriptStrand : spliceStrand;
+        Orientation mergedTranscriptStrand = transcriptStrand != null ? transcriptStrand : spliceStrand;
         return new LiftedAlignment(
-                LiftedChromosome, liftedPos, liftedCigar, NumMismatches,
-                FromTxContig, ForwardStrand, mergedTranscriptStrand,
-                mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality);
+                new BasePosition(liftedPosition.Chromosome, liftedPos), liftedCigar, numMismatches,
+                fromTxContig, forwardStrand, mergedTranscriptStrand,
+                mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality,
+                alignedBlocks(liftedPos, liftedCigar), false, null);
     }
 
-    public LiftedAlignment withTranscriptStrand(final int transcriptStrand)
+    public LiftedAlignment withTranscriptStrand(final Orientation transcriptStrand)
     {
-        LiftedAlignment revised = new LiftedAlignment(
-                LiftedChromosome, LiftedPos, LiftedCigar, NumMismatches,
-                FromTxContig, ForwardStrand, transcriptStrand,
-                MergedSupplementaryIndices, MergedSupplementaryIntrons, MergedSupplementaryMapQuality);
-        revised.Dropped = Dropped;
-        revised.GenomicScore = GenomicScore;
-        return revised;
+        return new LiftedAlignment(
+                liftedPosition, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
+                mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality,
+                alignedBlocks, dropped, genomicScore);
+    }
+
+    public LiftedAlignment withDropped()
+    {
+        return new LiftedAlignment(
+                liftedPosition, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
+                mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality,
+                alignedBlocks, true, genomicScore);
+    }
+
+    public LiftedAlignment withGenomicScore(final int genomicScore)
+    {
+        return new LiftedAlignment(
+                liftedPosition, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
+                mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality,
+                alignedBlocks, dropped, genomicScore);
     }
 
     public boolean hasSupplementaryMerge()
     {
-        return !MergedSupplementaryIndices.isEmpty();
+        return !mergedSupplementaryIndices.isEmpty();
     }
 
     // bwa XA entry "chrom,<sign>pos,cigar,NM;", the position sign carrying the strand.
     public String toXaEntry()
     {
-        return LiftedChromosome + ',' + (ForwardStrand ? '+' : '-') + LiftedPos + ','
-                + LiftedCigar + ',' + NumMismatches + ';';
+        return liftedPosition.Chromosome + ',' + (forwardStrand ? '+' : '-') + liftedPosition.Position + ','
+                + liftedCigar + ',' + numMismatches + ';';
     }
 
     public AlignmentKey key()
@@ -115,22 +115,22 @@ public class LiftedAlignment
 
     public int alignedEnd()
     {
-        return LiftedPos + CigarUtils.calcCigarAlignedLength(LiftedCigar) - 1;
+        return liftedPosition.Position + CigarUtils.calcCigarAlignedLength(liftedCigar) - 1;
     }
 
     // Minimum genomic gap between aligned reference blocks. N operations split blocks because they are RNA introns,
     // not aligned sequence; treating the outer CIGAR span as one interval would make a mate inside an intron distance 0.
     public int alignedBlockDistance(final LiftedAlignment other)
     {
-        if(!LiftedChromosome.equals(other.LiftedChromosome))
+        if(!liftedPosition.Chromosome.equals(other.liftedPosition.Chromosome))
         {
             return Integer.MAX_VALUE;
         }
 
         int closest = Integer.MAX_VALUE;
-        for(BaseRegion block : mAlignedBlocks)
+        for(BaseRegion block : alignedBlocks)
         {
-            for(BaseRegion otherBlock : other.mAlignedBlocks)
+            for(BaseRegion otherBlock : other.alignedBlocks)
             {
                 int distance;
                 if(block.start() > otherBlock.end())
@@ -184,27 +184,27 @@ public class LiftedAlignment
         {
             blocks.add(new BaseRegion(blockStart, blockEnd));
         }
-        return List.copyOf(blocks);
+        return blocks;
     }
 
     // Same-locus test shared by the locus count and the XA build: the two must agree. False against a null other, so an
     // absent primary collapses nothing.
     public boolean overlaps(final LiftedAlignment other)
     {
-        if(!LiftedChromosome.equals(other.LiftedChromosome))
+        if(!liftedPosition.Chromosome.equals(other.liftedPosition.Chromosome))
         {
             return false;
         }
-        return positionsOverlap(LiftedPos, alignedEnd(), other.LiftedPos, other.alignedEnd());
+        return positionsOverlap(liftedPosition.Position, alignedEnd(), other.liftedPosition.Position, other.alignedEnd());
     }
 
     public boolean cigarHasN()
     {
-        return LiftedCigar.indexOf('N') >= 0;
+        return liftedCigar.indexOf('N') >= 0;
     }
 
     public boolean cigarHasSoftClip()
     {
-        return LiftedCigar.indexOf('S') >= 0;
+        return liftedCigar.indexOf('S') >= 0;
     }
 }

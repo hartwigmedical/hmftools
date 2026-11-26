@@ -26,7 +26,6 @@ import com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.LiftBackStats;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.LiftedRecord;
-import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -36,16 +35,13 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class BamRecordEmitter
 {
-    private final ContigTranslator mContigTranslator;
     private final RefGenomeInterface mRefGenome;
     private final ExcludedRegions mExcludedRegions;
     private final LiftBackStats mStats;
 
     public BamRecordEmitter(
-            final ContigTranslator contigTranslator, final RefGenomeInterface refGenome,
-            final ExcludedRegions excludedRegions, final LiftBackStats stats)
+            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions, final LiftBackStats stats)
     {
-        mContigTranslator = contigTranslator;
         mRefGenome = refGenome;
         mExcludedRegions = excludedRegions;
         mStats = stats;
@@ -138,18 +134,16 @@ public final class BamRecordEmitter
         }
 
         int alignmentScore = getRequiredSamTag(record, ALIGNMENT_SCORE_ATTRIBUTE, SAMRecord::getIntegerAttribute);
-        if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
+        if(result.primaryAlignment().genomicScore() != null)
         {
-            alignmentScore = result.primaryAlignment().GenomicScore;
+            alignmentScore = result.primaryAlignment().genomicScore();
         }
         if(alignmentScore < SUPP_AS_DROP_THRESHOLD)
         {
             return false;
         }
 
-        return !excludes(result)
-                && SaTagRewriter.hasLiftableAlignment(
-                getRequiredSamTag(record, SUPPLEMENTARY_ATTRIBUTE, SAMRecord::getStringAttribute), mContigTranslator);
+        return !excludes(result);
     }
 
     private static void writeRecord(
@@ -185,7 +179,7 @@ public final class BamRecordEmitter
         }
 
         LiftedAlignment finalAlignment = result.primaryAlignment();
-        boolean clearStaleAlignmentScore = finalAlignment.GenomicScore == Integer.MIN_VALUE
+        boolean clearStaleAlignmentScore = finalAlignment.genomicScore() == null
                 && GenomicAlignmentScorer.requiresRescore(record, result);
         Cigar liftedCigar = TarsCigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
         if(result.negativeStrand() != record.getReadNegativeStrandFlag())
@@ -210,18 +204,18 @@ public final class BamRecordEmitter
         record.setReadNegativeStrandFlag(result.negativeStrand());
         record.setMappingQuality(result.updatedMapQuality());
         record.setAttribute(XA_ATTRIBUTE, result.xaTag());
-        if(finalAlignment.GenomicScore != Integer.MIN_VALUE)
+        if(finalAlignment.genomicScore() != null)
         {
-            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, finalAlignment.GenomicScore);
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, finalAlignment.genomicScore());
         }
         else if(clearStaleAlignmentScore)
         {
             record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, null);
         }
         record.setAttribute(XS_ATTRIBUTE, null);
-        if(result.hasNCigar() && result.transcriptStrand() != 0)
+        if(result.hasNCigar() && result.transcriptStrand() != null)
         {
-            record.setAttribute(XS_ATTRIBUTE, result.transcriptStrand() > 0 ? Character.valueOf('+') : Character.valueOf('-'));
+            record.setAttribute(XS_ATTRIBUTE, result.transcriptStrand().asChar());
         }
     }
 
@@ -233,7 +227,7 @@ public final class BamRecordEmitter
     public static boolean exceedsMappingCap(final SAMRecord record, final LiftedRecord result)
     {
         return record.getMappingQuality() == 0 && result.numXaAlts() == 0 && result.hasPlacement()
-                && !result.primaryAlignment().FromTxContig;
+                && !result.primaryAlignment().fromTxContig();
     }
 
     public boolean excludes(final LiftedRecord result)

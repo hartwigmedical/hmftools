@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
@@ -83,7 +84,7 @@ public final class TarsTestFixtures
     public static ContigEntry threeExonContig()
     {
         return new ContigEntry(
-                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, GENOMIC_CHR, 1,
+                new ChrBaseRegion(TX_CONTIG, 1, 250), GENE_ID, GENE_NAME, TRANS_NAME, GENOMIC_CHR, 1,
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
@@ -304,14 +305,14 @@ public final class TarsTestFixtures
 
     public static LiftedAlignment selfAlignment(final String chrom, final int pos, final String cigar)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, null);
     }
 
     // Single-placement lifted record - the shape a mate is read as.
     public static LiftedRecord liftedRecordAt(
             final String chromosome, final int pos, final String cigar, final boolean negativeStrand)
     {
-        LiftedAlignment alignment = new LiftedAlignment(chromosome, pos, cigar, 0, false, !negativeStrand, 0);
+        LiftedAlignment alignment = new LiftedAlignment(chromosome, pos, cigar, 0, false, !negativeStrand, null);
         return recordBuilder().alignments(List.of(alignment)).build();
     }
 
@@ -337,7 +338,8 @@ public final class TarsTestFixtures
 
         if(AlignmentSelector.usesGenomicScore(alignments.liftedAlignments(), record.getMappingQuality()))
         {
-            new GenomicAlignmentScorer(refGenome).scorePlacements(alignments.liftedAlignments(), record);
+            alignments = alignments.withLiftedAlignments(
+                    new GenomicAlignmentScorer(refGenome).scorePlacements(alignments.liftedAlignments(), record));
         }
 
         AlignmentSelector.Selection selection = selector.choosePrimaryAlignment(record, alignments.liftedAlignments(), null);

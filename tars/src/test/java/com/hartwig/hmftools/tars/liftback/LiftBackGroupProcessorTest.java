@@ -349,19 +349,6 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void testOrphanedSupplementaryIsDropped()
-    {
-        // the supp's only SA entry is an out-of-range tx position, so the SA rewrite yields null and the supp is dropped
-        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
-        SAMRecord supp = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",9999,+,30M,0,0;");
-
-        List<SAMRecord> emitted = process(List.of(primary, supp));
-
-        assertEquals(1, emitted.size());
-        assertFalse(emitted.get(0).getSupplementaryAlignmentFlag());
-    }
-
-    @Test
     public void testSupplementaryWhoseOwnPlacementCannotBeLiftedIsDropped()
     {
         SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");

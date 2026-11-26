@@ -5,7 +5,8 @@ public record AlignmentKey(String chromosome, int position, String cigar, boolea
     public static AlignmentKey from(final LiftedAlignment alignment)
     {
         return new AlignmentKey(
-                alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar, alignment.ForwardStrand);
+                alignment.liftedPosition().Chromosome, alignment.liftedPosition().Position, alignment.liftedCigar(),
+                alignment.forwardStrand());
     }
 
     public Locus locus()

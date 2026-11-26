@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -12,37 +11,6 @@ import htsjdk.samtools.SAMRecord;
 // first, so an entry cannot drift from the record that is emitted.
 public final class SaTagRewriter
 {
-    // Admission check only: a supplementary with no liftable SA partner is orphaned. The emitted SA is rebuilt from the
-    // final name group, not from these pre-lift coordinates.
-    static boolean hasLiftableAlignment(final String saTag, final ContigTranslator translator)
-    {
-        List<SupplementaryReadData> alignments;
-        try
-        {
-            alignments = SupplementaryReadData.extractAlignments(saTag);
-        }
-        catch(RuntimeException e)
-        {
-            alignments = null;
-        }
-
-        if(alignments == null)
-        {
-            throw new IllegalStateException(String.format("malformed SA(%s)", saTag));
-        }
-
-        for(SupplementaryReadData alignment : alignments)
-        {
-            if(translator.liftAlignment(
-                    alignment.Chromosome, alignment.Position, alignment.Cigar,
-                    alignment.NM, alignment.isForwardOrient()) != null)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     static String buildForRecord(
             final List<SAMRecord> records, final boolean[] willEmit, final SAMRecord primary, final int recordIndex)
     {

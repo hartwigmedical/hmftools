@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.AlignmentKey;
 import com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer;
@@ -57,14 +58,14 @@ public final class SupplementaryAlignmentResolver
 
         for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
         {
-            if(alignment.Dropped)
+            if(alignment.dropped())
             {
                 continue;
             }
 
             SupplementaryMerger.Result result = mMerger.merge(new SupplementaryMerger.Placement(
-                    alignment.LiftedChromosome, alignment.ForwardStrand, primary.getReadLength(),
-                    alignment.LiftedPos, alignment.LiftedCigar, supplementaries,
+                    alignment.liftedPosition().Chromosome, alignment.forwardStrand(), primary.getReadLength(),
+                    alignment.liftedPosition().Position, alignment.liftedCigar(), supplementaries,
                     primary.getReadBases(), mateHintIntrons));
             ++mStats.SupplementaryMergeAttempts;
             if(!result.merged())
@@ -152,7 +153,7 @@ public final class SupplementaryAlignmentResolver
 
         LiftedAlignment primary = primaryResult.primaryAlignment();
         List<AlignmentSelector.RecordAlignment> selected = AlignmentSelector.selectSupplementaryAlignments(
-                primary.LiftedChromosome, primary.ForwardStrand, primary.LiftedPos, primary.LiftedCigar,
+                primary.liftedPosition().Chromosome, primary.forwardStrand(), primary.liftedPosition().Position, primary.liftedCigar(),
                 records.get(0).getReadBases(), placements);
 
         List<LiftedRecord> revised = null;
@@ -171,9 +172,10 @@ public final class SupplementaryAlignmentResolver
                 continue;
             }
 
-            LiftedRecord selectedRecord = lifted.withPrimaryIndex(alignmentIndex);
-            int score = mAlignmentScorer.scoreRecord(selectedRecord.primaryAlignment(), records.get(recordIndex));
-            selectedRecord.primaryAlignment().GenomicScore = score;
+            LiftedAlignment selectedAlignment = lifted.liftedAlignments().get(alignmentIndex);
+            int score = mAlignmentScorer.scoreRecord(selectedAlignment, records.get(recordIndex));
+            LiftedRecord selectedRecord = lifted.withPrimaryIndex(alignmentIndex)
+                    .withPrimaryAlignment(selectedAlignment.withGenomicScore(score));
 
             if(revised == null)
             {
@@ -201,7 +203,7 @@ public final class SupplementaryAlignmentResolver
             for(int alignmentIndex = 0; alignmentIndex < lifted.liftedAlignments().size(); ++alignmentIndex)
             {
                 LiftedAlignment alignment = lifted.liftedAlignments().get(alignmentIndex);
-                if(alignment.Dropped)
+                if(alignment.dropped())
                 {
                     continue;
                 }
@@ -219,20 +221,20 @@ public final class SupplementaryAlignmentResolver
         for(int i = 0; i < liftedRecords.size(); ++i)
         {
             LiftedRecord lifted = liftedRecords.get(i);
-            if(!lifted.hasPlacement() || !lifted.hasNCigar() || lifted.transcriptStrand() != 0)
+            if(!lifted.hasPlacement() || !lifted.hasNCigar() || lifted.transcriptStrand() != null)
             {
                 continue;
             }
 
-            int strand = mMerger.spliceStrand(
+            Orientation strand = mMerger.spliceStrand(
                     lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
-            if(strand != 0)
+            if(strand != null)
             {
                 if(annotated == null)
                 {
                     annotated = new ArrayList<>(liftedRecords);
                 }
-                annotated.set(i, lifted.withPrimaryTranscriptStrand(strand));
+                annotated.set(i, lifted.withPrimaryAlignment(lifted.primaryAlignment().withTranscriptStrand(strand)));
             }
         }
         return annotated != null ? List.copyOf(annotated) : liftedRecords;
@@ -245,7 +247,7 @@ public final class SupplementaryAlignmentResolver
             return Set.of();
         }
 
-        return Set.copyOf(primaryResult.primaryAlignment().MergedSupplementaryIndices);
+        return Set.copyOf(primaryResult.primaryAlignment().mergedSupplementaryIndices());
     }
 
     private static boolean hasSupplementaryMerge(final LiftedRecord primaryResult)
@@ -257,11 +259,6 @@ public final class SupplementaryAlignmentResolver
     public record Resolution(
             List<LiftedRecord> liftedRecords, Set<Integer> absorbedSupplementaries)
     {
-        public Resolution
-        {
-            liftedRecords = List.copyOf(liftedRecords);
-            absorbedSupplementaries = Set.copyOf(absorbedSupplementaries);
-        }
     }
 
     private record SupportedAlignmentKey(

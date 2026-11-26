@@ -3,11 +3,12 @@ package com.hartwig.hmftools.tars.common;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import org.jetbrains.annotations.Nullable;
 
 public record ContigEntry(
-        String contigName,
-        int contigStart,
-        int contigEnd,
+        @Nullable ChrBaseRegion contigRegion,
         String geneId,
         String geneName,
         String transName,
@@ -21,6 +22,6 @@ public record ContigEntry(
             final String geneId, final String geneName, final String transName, final String chromosome,
             final int strand, final List<BaseRegion> exonSpans)
     {
-        return new ContigEntry("", 0, 0, geneId, geneName, transName, chromosome, strand, exonSpans);
+        return new ContigEntry(null, geneId, geneName, transName, chromosome, strand, exonSpans);
     }
 }

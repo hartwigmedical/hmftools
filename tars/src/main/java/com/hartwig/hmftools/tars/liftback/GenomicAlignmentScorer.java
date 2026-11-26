@@ -36,53 +36,63 @@ public class GenomicAlignmentScorer
         mRefGenome = refGenome;
     }
 
-    public void scorePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
+    public List<LiftedAlignment> scorePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
     {
         if(alignments.size() < 2)
         {
-            return;
+            return alignments;
         }
 
-        ReadBases readBases = ReadBases.of(record);
+        ReadBases readBases = new ReadBases(record.getReadBases());
 
+        List<LiftedAlignment> scored = new ArrayList<>(alignments.size());
         for(LiftedAlignment alignment : alignments)
         {
-            if(alignment.Dropped)
+            if(alignment.dropped())
             {
-                continue;
+                scored.add(alignment);
             }
-
-            alignment.GenomicScore = scoreAlignment(alignment, record, readBases);
+            else
+            {
+                scored.add(alignment.withGenomicScore(scoreAlignment(alignment, record, readBases)));
+            }
         }
+        return scored;
     }
 
     public int scoreRecord(final LiftedAlignment alignment, final SAMRecord record)
     {
-        return scoreAlignment(alignment, record, ReadBases.of(record));
+        return scoreAlignment(alignment, record, new ReadBases(record.getReadBases()));
     }
 
     private int scoreAlignment(final LiftedAlignment alignment, final SAMRecord record, final ReadBases readBases)
     {
-        byte[] alignmentBases = readBases.forAlignment(alignment);
-        Cigar cigar = CigarUtils.cigarFromStr(alignment.LiftedCigar);
+        byte[] alignmentBases = alignment.forwardStrand() != record.getReadNegativeStrandFlag()
+                ? readBases.getBases() : readBases.getReverseComplement();
+        Cigar cigar = CigarUtils.cigarFromStr(alignment.liftedCigar());
 
-        int chromosomeLength = mRefGenome.getChromosomeLength(alignment.LiftedChromosome);
-        int alignedEnd = alignment.LiftedPos + cigar.getReferenceLength() - 1;
-        if(alignment.LiftedPos < 1 || alignedEnd > chromosomeLength)
+        int chromosomeLength = mRefGenome.getChromosomeLength(alignment.liftedPosition().Chromosome);
+        int alignedEnd = alignment.liftedPosition().Position + cigar.getReferenceLength() - 1;
+        if(alignment.liftedPosition().Position < 1 || alignedEnd > chromosomeLength)
         {
-            throw new IllegalStateException(format("read(%s) alignment(%s:%d %s) outside chromosomeLength(%d)",
-                    readToString(record), alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
+            throw new IllegalStateException(format(
+                    "read(%s) alignment(%s:%d %s) outside chromosomeLength(%d)",
+                    readToString(record), alignment.liftedPosition().Chromosome, alignment.liftedPosition().Position,
+                    alignment.liftedCigar(),
                     chromosomeLength));
         }
 
         if(cigar.getReadLength() > alignmentBases.length)
         {
-            throw new IllegalStateException(format("read(%s) alignment(%s:%d %s) cigarReadLength(%d) exceeds readLength(%d)",
-                    readToString(record), alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
+            throw new IllegalStateException(format(
+                    "read(%s) alignment(%s:%d %s) cigarReadLength(%d) exceeds readLength(%d)",
+                    readToString(record), alignment.liftedPosition().Chromosome, alignment.liftedPosition().Position,
+                    alignment.liftedCigar(),
                     cigar.getReadLength(), alignmentBases.length));
         }
 
-        return genomicAlignmentScore(mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, cigar, alignmentBases);
+        return genomicAlignmentScore(
+                mRefGenome, alignment.liftedPosition().Chromosome, alignment.liftedPosition().Position, cigar, alignmentBases);
     }
 
     // An intron-only lift preserves BWA's scoring operations: the transcript contig contains the same exonic bases and
@@ -90,7 +100,7 @@ public class GenomicAlignmentScorer
     public static boolean requiresRescore(final SAMRecord record, final LiftedAlignment alignment)
     {
         List<CigarElement> liftedOps = new ArrayList<>();
-        for(CigarElement element : TextCigarCodec.decode(alignment.LiftedCigar).getCigarElements())
+        for(CigarElement element : TextCigarCodec.decode(alignment.liftedCigar()).getCigarElements())
         {
             if(element.getOperator() != CigarOperator.N)
             {
@@ -99,7 +109,7 @@ public class GenomicAlignmentScorer
         }
 
         List<CigarElement> inputOps = new ArrayList<>(record.getCigar().getCigarElements());
-        if(record.getReadNegativeStrandFlag() == alignment.ForwardStrand)
+        if(record.getReadNegativeStrandFlag() == alignment.forwardStrand())
         {
             Collections.reverse(inputOps);
         }

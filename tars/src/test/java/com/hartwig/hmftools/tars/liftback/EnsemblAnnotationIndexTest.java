@@ -4,12 +4,14 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
@@ -104,7 +106,7 @@ public class EnsemblAnnotationIndexTest
         assertTrue(annotationIndex.containsJunction(new ChrBaseRegion("chr1", 1100, 1499)));
         assertTrue(annotationIndex.containsJunction(new ChrBaseRegion("chr1", 1600, 1999)));
         assertTrue(annotationIndex.containsJunction(new ChrBaseRegion("chr1", 1100, 1699)));
-        assertEquals(1, annotationIndex.junctionStrand(new ChrBaseRegion("chr1", 1100, 1499)));
+        assertEquals(Orientation.FORWARD, annotationIndex.junctionStrand(new ChrBaseRegion("chr1", 1100, 1499)));
     }
 
     @Test
@@ -115,7 +117,7 @@ public class EnsemblAnnotationIndexTest
 
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromContigEntries(List.of(forward, reverse));
 
-        assertEquals(0, annotationIndex.junctionStrand(new ChrBaseRegion("chr2", 200, 299)));
+        assertNull(annotationIndex.junctionStrand(new ChrBaseRegion("chr2", 200, 299)));
     }
 
     @Test

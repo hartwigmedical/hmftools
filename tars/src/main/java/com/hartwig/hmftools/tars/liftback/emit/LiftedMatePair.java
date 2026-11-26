@@ -8,39 +8,27 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
 // Scoped to a single name group, so the pair is two slots rather than a keyed cache.
-public class LiftedMatePair
+public record LiftedMatePair(@Nullable LiftedRecord firstInPair, @Nullable LiftedRecord secondInPair)
 {
-    private LiftedRecord mFirstInPair;
-    private LiftedRecord mSecondInPair;
-
-    public void recordPrimary(final boolean firstOfPair, final LiftedRecord liftedRecord)
-    {
-        if(firstOfPair)
-        {
-            mFirstInPair = liftedRecord;
-        }
-        else
-        {
-            mSecondInPair = liftedRecord;
-        }
-    }
-
     // null until the mate has been lifted: /1 is decided before /2 exists, so it sees no mate.
+    @Nullable
     public LiftedRecord mateOf(final boolean firstOfPair)
     {
-        return firstOfPair ? mSecondInPair : mFirstInPair;
+        return firstOfPair ? secondInPair : firstInPair;
     }
 
     public void unmapRead(final SAMRecord record)
     {
-        LiftedRecord mate = record.getReadPairedFlag() ? mateOf(firstInPair(record)) : null;
+        LiftedRecord mate = record.getReadPairedFlag() ? mateOf(SamRecordUtils.firstInPair(record)) : null;
         String originalChromosome = record.getReferenceName();
         int originalPosition = record.getAlignmentStart();
 
@@ -89,7 +77,7 @@ public class LiftedMatePair
             return;
         }
 
-        LiftedRecord mate = mateOf(firstInPair(record));
+        LiftedRecord mate = mateOf(SamRecordUtils.firstInPair(record));
         if(mate == null)
         {
             throw new IllegalStateException(String.format("read %s: paired read has no mate in its group", record.getReadName()));

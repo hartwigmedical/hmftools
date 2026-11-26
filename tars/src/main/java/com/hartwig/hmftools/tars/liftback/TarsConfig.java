@@ -16,11 +16,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.tars.common.TarsConstants.FILE_ID;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
-import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,9 +32,6 @@ import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
 
 public class TarsConfig
 {
-    // output file id, e.g. <sample>.tars.bam (mirrors Redux's FILE_ID)
-    private static final String FILE_ID = "tars";
-
     public static final String INPUT_BAM = "input_bam";
     public static final String INPUT_BAM_DESC =
             "Input BAM aligned against ref + transcript-contig FASTA, separated by ',' if multiple";
@@ -83,14 +80,13 @@ public class TarsConfig
 
         if(OutputDir == null || BamToolPath == null)
         {
-            TARS_LOGGER.error("missing config: outputDir({}) bamTool({})", OutputDir != null, BamToolPath != null);
-            System.exit(1);
+            throw new IllegalStateException(String.format(
+                    "missing config: outputDir(%s) bamTool(%s)", OutputDir != null, BamToolPath != null));
         }
 
         if(!checkCreateOutputDir(OutputDir))
         {
-            TARS_LOGGER.error("failed to create output directory: {}", OutputDir);
-            System.exit(1);
+            throw new IllegalStateException(String.format("failed to create output directory: %s", OutputDir));
         }
     }
 

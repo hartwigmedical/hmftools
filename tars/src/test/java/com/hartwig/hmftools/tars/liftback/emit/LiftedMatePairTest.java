@@ -32,9 +32,7 @@ public class LiftedMatePairTest
     {
         LiftedRecord firstInfo = info(100);
         LiftedRecord secondInfo = info(300);
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(true, firstInfo);
-        pair.recordPrimary(false, secondInfo);
+        LiftedMatePair pair = new LiftedMatePair(firstInfo, secondInfo);
 
         assertSame(secondInfo, pair.mateOf(true));
     }
@@ -44,28 +42,16 @@ public class LiftedMatePairTest
     {
         LiftedRecord firstInfo = info(100);
         LiftedRecord secondInfo = info(300);
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(true, firstInfo);
-        pair.recordPrimary(false, secondInfo);
+        LiftedMatePair pair = new LiftedMatePair(firstInfo, secondInfo);
 
         assertSame(firstInfo, pair.mateOf(false));
-    }
-
-    @Test
-    public void testNullBeforeAnythingRecorded()
-    {
-        LiftedMatePair pair = new LiftedMatePair();
-
-        assertNull(pair.mateOf(true));
-        assertNull(pair.mateOf(false));
     }
 
     @Test
     public void testNullWhenMateNotYetRecorded()
     {
         LiftedRecord firstInfo = info(100);
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(true, firstInfo);
+        LiftedMatePair pair = new LiftedMatePair(firstInfo, null);
 
         assertNull(pair.mateOf(true));
         assertSame(firstInfo, pair.mateOf(false));
@@ -74,9 +60,8 @@ public class LiftedMatePairTest
     @Test
     public void testPatchSamePairSameChromSetsTlenAndMateFields()
     {
-        LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r2Info = liftedRecordAt("1", 400, "100M", true);
-        pair.recordPrimary(false, r2Info);
+        LiftedMatePair pair = new LiftedMatePair(null, r2Info);
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         pair.patchMateFields(r1);
@@ -93,9 +78,8 @@ public class LiftedMatePairTest
     @Test
     public void testMateCigarWrittenAsLiftedNCigar()
     {
-        LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r2Info = liftedRecordAt("1", 400, "20M500N30M", true);
-        pair.recordPrimary(false, r2Info);
+        LiftedMatePair pair = new LiftedMatePair(null, r2Info);
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         r1.setAttribute(MATE_CIGAR_ATTRIBUTE, "50M"); // stale pre-lift MC
@@ -107,8 +91,7 @@ public class LiftedMatePairTest
     @Test
     public void testMateCigarClearedWhenMateUnmapped()
     {
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(false, LiftedRecord.unmapped(""));
+        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped(""));
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         r1.setAttribute(MATE_CIGAR_ATTRIBUTE, "50M");
@@ -120,9 +103,8 @@ public class LiftedMatePairTest
     @Test
     public void testPatchRightmostReadGetsNegativeTlen()
     {
-        LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r1Info = liftedRecordAt("1", 100, "50M", false);
-        pair.recordPrimary(true, r1Info);
+        LiftedMatePair pair = new LiftedMatePair(r1Info, null);
 
         SAMRecord r2 = TarsTestFixtures.pairedRecord("read1", false, "1", 400, "50M", true);
         pair.patchMateFields(r2);
@@ -134,9 +116,8 @@ public class LiftedMatePairTest
     @Test
     public void testPatchDifferentChromsZeroesTlenAndClearsProperPair()
     {
-        LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r2Info = liftedRecordAt("2", 400, "50M", true);
-        pair.recordPrimary(false, r2Info);
+        LiftedMatePair pair = new LiftedMatePair(null, r2Info);
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         r1.setProperPairFlag(true);
@@ -151,8 +132,7 @@ public class LiftedMatePairTest
     @Test
     public void testPatchWithUnmappedMate()
     {
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(false, LiftedRecord.unmapped(""));
+        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped(""));
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         r1.setProperPairFlag(true);
@@ -170,8 +150,7 @@ public class LiftedMatePairTest
     public void testUnmappedReadWithMappedMateParkedAtMateLocus()
     {
         // An unmapped read is parked at its mapped mate's coordinates so the pair stays together in a coord-sorted BAM.
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(false, liftedRecordAt("1", 400, "50M", true));
+        LiftedMatePair pair = new LiftedMatePair(null, liftedRecordAt("1", 400, "50M", true));
 
         SAMRecord r1 = TarsTestFixtures.pairedUnmappedRecord("read1", true);
         pair.patchMateFields(r1);
@@ -188,8 +167,7 @@ public class LiftedMatePairTest
     @Test
     public void testNewlyUnmappedReadUsesReduxFieldsAtLiftedMateLocus()
     {
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(false, liftedRecordAt("1", 400, "50M", true));
+        LiftedMatePair pair = new LiftedMatePair(null, liftedRecordAt("1", 400, "50M", true));
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", true);
         r1.setProperPairFlag(true);
@@ -214,8 +192,7 @@ public class LiftedMatePairTest
     @Test
     public void testBothMatesUnmappedClearsOwnCoordinates()
     {
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(false, LiftedRecord.unmapped(""));
+        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped(""));
 
         SAMRecord r1 = TarsTestFixtures.pairedUnmappedRecord("read1", true);
         r1.setReferenceName("1");          // stale pre-lift placement from bwa
@@ -230,7 +207,7 @@ public class LiftedMatePairTest
     @Test
     public void testPatchUnpairedRecordIsNoOp()
     {
-        LiftedMatePair pair = new LiftedMatePair();
+        LiftedMatePair pair = new LiftedMatePair(null, null);
         SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read1");
         record.setReadPairedFlag(false);
@@ -244,9 +221,8 @@ public class LiftedMatePairTest
     @Test
     public void testPatchSuppRecordPatchedFromMatePrimary()
     {
-        LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r2Info = liftedRecordAt("1", 400, "50M", true);
-        pair.recordPrimary(false, r2Info);
+        LiftedMatePair pair = new LiftedMatePair(null, r2Info);
 
         SAMRecord r1Supp = TarsTestFixtures.pairedRecord("read1", true, "1", 200, "30M20S", false);
         r1Supp.setSupplementaryAlignmentFlag(true);
@@ -261,8 +237,7 @@ public class LiftedMatePairTest
     public void testPatchOverlappingPairSignFromFivePrime()
     {
         // Overlapping pair at same start: forward 5' (100) < reverse 5' (199), so forward read gets positive TLEN.
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(false, liftedRecordAt("1", 100, "100M", true));
+        LiftedMatePair pair = new LiftedMatePair(null, liftedRecordAt("1", 100, "100M", true));
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         pair.patchMateFields(r1);
@@ -274,8 +249,7 @@ public class LiftedMatePairTest
     public void testPatchOverlappingPairSecondOfPairForwardIsPositive()
     {
         // Regression: second-of-pair is the forward mate; TLEN sign must follow 5'-end position, not pair order.
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(true, liftedRecordAt("1", 100, "39S112M", true));
+        LiftedMatePair pair = new LiftedMatePair(liftedRecordAt("1", 100, "39S112M", true), null);
 
         SAMRecord r2 = TarsTestFixtures.pairedRecord("read1", false, "1", 100, "117M34S", false);
         pair.patchMateFields(r2);
@@ -289,6 +263,6 @@ public class LiftedMatePairTest
     {
         SAMRecord record = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
 
-        assertThrows(IllegalStateException.class, () -> new LiftedMatePair().patchMateFields(record));
+        assertThrows(IllegalStateException.class, () -> new LiftedMatePair(null, null).patchMateFields(record));
     }
 }

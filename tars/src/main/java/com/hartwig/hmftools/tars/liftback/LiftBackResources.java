@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
-
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.merge.SupplementaryMerger;
@@ -33,7 +30,11 @@ public final class LiftBackResources
 
     public LiftBackGroupProcessor createProcessor()
     {
-        RefGenomeInterface refGenome = openRefGenome();
+        RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(mRefGenomeFile);
+        if(refGenome == null)
+        {
+            throw new IllegalStateException(String.format("failed to load ref genome: %s", mRefGenomeFile));
+        }
 
         return new LiftBackGroupProcessor(
                 mAlignmentSelector,
@@ -42,18 +43,5 @@ public final class LiftBackResources
                 new GenomicAlignmentScorer(refGenome),
                 refGenome,
                 mExcludedRegions);
-    }
-
-    private RefGenomeInterface openRefGenome()
-    {
-        RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(mRefGenomeFile);
-
-        if(refGenome == null)
-        {
-            TARS_LOGGER.error("failed to load ref genome: {}", mRefGenomeFile);
-            System.exit(1);
-        }
-
-        return refGenome;
     }
 }

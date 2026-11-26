@@ -2,38 +2,25 @@ package com.hartwig.hmftools.tars.liftback;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
-import htsjdk.samtools.SAMRecord;
-
 // Built per record on one worker thread, so the lazily filled reverse complement needs no synchronisation.
 public final class ReadBases
 {
-    private final byte[] mForward;
-    private final boolean mRecordForward;
-    private byte[] mReverse;
+    private final byte[] mBases;
+    private byte[] mReverseComplement;
 
-    private ReadBases(final byte[] forward, final boolean recordForward)
+    public ReadBases(final byte[] bases)
     {
-        mForward = forward;
-        mRecordForward = recordForward;
+        mBases = bases;
     }
 
-    // null when the record carries no sequence, which leaves nothing to score or gate against
-    public static ReadBases of(final SAMRecord record)
-    {
-        return new ReadBases(record.getReadBases(), !record.getReadNegativeStrandFlag());
-    }
+    public byte[] getBases() { return mBases; }
 
-    public byte[] forAlignment(final LiftedAlignment alignment)
+    public byte[] getReverseComplement()
     {
-        if(alignment.ForwardStrand == mRecordForward)
+        if(mReverseComplement == null)
         {
-            return mForward;
+            mReverseComplement = Nucleotides.reverseComplementBases(mBases);
         }
-
-        if(mReverse == null)
-        {
-            mReverse = Nucleotides.reverseComplementBases(mForward);
-        }
-        return mReverse;
+        return mReverseComplement;
     }
 }

@@ -1,20 +1,13 @@
 package com.hartwig.hmftools.tars.liftback.emit;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-
-import com.hartwig.hmftools.tars.liftback.translate.ContigTranslator;
 
 import org.junit.Test;
 
@@ -22,15 +15,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class SaTagRewriterTest
 {
-    @Test
-    public void testSupplementaryAdmissionRequiresALiftableSaAlignment()
-    {
-        ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
-
-        assertTrue(SaTagRewriter.hasLiftableAlignment(TX_CONTIG + ",1,+,50M,60,2;", translator));
-        assertFalse(SaTagRewriter.hasLiftableAlignment(TX_CONTIG + ",9999,+,50M,60,2;", translator));
-    }
-
     @Test
     public void testPrimarySaUsesFinalEmittedSupplementaryFields()
     {
@@ -75,16 +59,5 @@ public class SaTagRewriterTest
         SAMRecord dropped = supplementaryRecord(CHR_1, 250, "30M20S", "stale");
 
         assertNull(SaTagRewriter.buildForRecord(List.of(primary, dropped), new boolean[] { true, false }, primary, 0));
-    }
-
-    @Test
-    public void testMalformedSaIsRejected()
-    {
-        ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
-
-        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment("", translator));
-        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment(TX_CONTIG + ",1,+;", translator));
-        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment("bad", translator));
-        assertThrows(IllegalStateException.class, () -> SaTagRewriter.hasLiftableAlignment("chr1,x,+,50M,60,0;", translator));
     }
 }
