@@ -779,8 +779,8 @@ public class LiftBackGroupProcessorTest
         assertEquals("151M", emittedSupp.getCigarString());
         assertEquals(Integer.valueOf(0), emittedPrimary.getIntegerAttribute("NM"));
         assertEquals(Integer.valueOf(0), emittedSupp.getIntegerAttribute("NM"));
-        assertEquals(CHR_1 + ",1001,+,151M,60,0;", emittedPrimary.getStringAttribute("SA"));
-        assertEquals(CHR_1 + ",5000,+,50M101S,60,0;", emittedSupp.getStringAttribute("SA"));
+        assertEquals(CHR_1 + ",1001,+,151M,60,0", emittedPrimary.getStringAttribute("SA"));
+        assertEquals(CHR_1 + ",5000,+,50M101S,60,0", emittedSupp.getStringAttribute("SA"));
     }
 
     @Test
@@ -802,13 +802,13 @@ public class LiftBackGroupProcessorTest
         SAMRecord emittedSupp1 = emitted.get(1);
         SAMRecord emittedSupp2 = emitted.get(2);
         assertEquals(
-                CHR_1 + ",300,-,50S50M50S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
+                CHR_1 + ",300,-,50S50M50S,60,0;" + CHR_1 + ",500,-,100S50M,40,0",
                 emittedPrimary.getStringAttribute("SA"));
         assertEquals(
-                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
+                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",500,-,100S50M,40,0",
                 emittedSupp1.getStringAttribute("SA"));
         assertEquals(
-                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",300,-,50S50M50S,60,0;",
+                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",300,-,50S50M50S,60,0",
                 emittedSupp2.getStringAttribute("SA"));
     }
 

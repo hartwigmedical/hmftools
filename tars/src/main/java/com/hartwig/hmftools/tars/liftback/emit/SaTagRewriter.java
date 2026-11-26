@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.tars.liftback.emit;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
-import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
-
+import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -51,7 +48,7 @@ public final class SaTagRewriter
     {
         SAMRecord target = records.get(recordIndex);
         boolean targetIsSupplementary = target.getSupplementaryAlignmentFlag();
-        StringBuilder saTag = new StringBuilder();
+        List<SupplementaryReadData> alignments = new ArrayList<>();
 
         for(int i = 0; i < records.size(); ++i)
         {
@@ -66,18 +63,10 @@ public final class SaTagRewriter
                     : alignment.getSupplementaryAlignmentFlag();
             if(include)
             {
-                saTag.append(asSaEntry(alignment));
+                alignments.add(SupplementaryReadData.createSupplementaryReadDataForRecord(alignment));
             }
         }
 
-        return saTag.length() > 0 ? saTag.toString() : null;
-    }
-
-    private static String asSaEntry(final SAMRecord record)
-    {
-        return record.getReferenceName() + ',' + record.getAlignmentStart()
-                + ',' + (record.getReadNegativeStrandFlag() ? SUPP_NEG_STRAND : SUPP_POS_STRAND)
-                + ',' + record.getCigarString() + ',' + record.getMappingQuality()
-                + ',' + record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE) + ';';
+        return alignments.isEmpty() ? null : SupplementaryReadData.alignmentsToSamTag(alignments);
     }
 }

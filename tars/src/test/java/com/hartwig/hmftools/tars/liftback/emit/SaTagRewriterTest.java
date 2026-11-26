@@ -43,7 +43,7 @@ public class SaTagRewriterTest
         String saTag = SaTagRewriter.buildForRecord(
                 List.of(primary, supp), new boolean[] { true, true }, primary, 0);
 
-        assertEquals(CHR_1 + ",250,-,30M20S,42,3;", saTag);
+        assertEquals(CHR_1 + ",250,-,30M20S,42,3", saTag);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class SaTagRewriterTest
                 records, new boolean[] { true, true, true, false }, primary, 1);
 
         assertEquals(
-                CHR_1 + ",100,+,50M,55,1;" + CHR_1 + ",400,-,20S30M,41,4;",
+                CHR_1 + ",100,+,50M,55,1;" + CHR_1 + ",400,-,20S30M,41,4",
                 saTag);
     }
 
