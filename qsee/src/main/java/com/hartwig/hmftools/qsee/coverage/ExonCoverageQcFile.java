@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.lod;
+package com.hartwig.hmftools.qsee.coverage;
 
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.depthRangeFieldName;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
@@ -16,13 +16,12 @@ import com.hartwig.hmftools.qsee.QseeConfig;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 
-public class GeneLodFile
+public class ExonCoverageQcFile
 {
     private static final String COL_GENE_NAME = "GeneName";
     private static final String COL_EXON_RANK = "ExonRank";
     private static final String COL_MEDIAN_DEPTH = "MedianDepth";
-    private static final String COL_SAMPLE_VAF_LOD = "SampleVafLod";
-    private static final String COL_TUMOR_VAF_LOD = "TumorVafLod";
+    private static final String COL_LOD_VAF = "LodVaf";
     private static final String COL_VARIANT_DETECTABILITY_STATUS = "VariantDetectabilityStatus";
 
     public static String generateFilename(QseeConfig config)
@@ -31,16 +30,16 @@ public class GeneLodFile
                 config.getSampleIds(SampleType.TUMOR).get(0) :
                 MULTISAMPLE_SAMPLE_ID;
 
-        return QseeFileCommon.generateFilename(config.OutputDir, sampleId, "gene_lod", config.OutputId, "tsv.gz");
+        return QseeFileCommon.generateFilename(config.OutputDir, sampleId, "exon_coverage_qc", config.OutputId, "tsv.gz");
     }
 
-    public static void write(String filename, List<GeneLod> geneLods, boolean writeLodDetails)
+    public static void write(String filename, List<ExonCoverageQc> coverageQcPerExon, boolean writeLodDetails)
     {
-        QC_LOGGER.info("Writing gene limit of detection to: {}", filename);
+        QC_LOGGER.info("Writing exon coverage QC to: {}", filename);
 
         // All exons share the same depth ranges
-        List<DepthRange> depthRanges = writeLodDetails && !geneLods.isEmpty()
-                ? List.copyOf(geneLods.get(0).depthCounts().keySet())
+        List<DepthRange> depthRanges = writeLodDetails && !coverageQcPerExon.isEmpty()
+                ? List.copyOf(coverageQcPerExon.get(0).depthCounts().keySet())
                 : List.of();
 
         List<String> columns = new ArrayList<>(List.of(
@@ -49,27 +48,25 @@ public class GeneLodFile
                 COL_GENE_NAME,
                 COL_EXON_RANK,
                 COL_MEDIAN_DEPTH,
-                COL_SAMPLE_VAF_LOD,
-                COL_TUMOR_VAF_LOD,
+                COL_LOD_VAF,
                 COL_VARIANT_DETECTABILITY_STATUS
         ));
 
         depthRanges.forEach(depthRange -> columns.add(depthRangeFieldName(depthRange)));
 
-        DelimFileWriter.write(filename, columns, geneLods, (geneLod, row) -> {
-            row.set(COL_SAMPLE_ID, geneLod.sampleId());
-            row.set(COL_SAMPLE_TYPE, geneLod.sampleType().name());
-            row.set(COL_GENE_NAME, geneLod.geneName());
-            row.set(COL_EXON_RANK, geneLod.exonRank());
-            row.set(COL_MEDIAN_DEPTH, geneLod.medianDepth(), DECIMAL_FORMAT);
-            row.set(COL_SAMPLE_VAF_LOD, geneLod.sampleVafLod(), DECIMAL_FORMAT);
-            row.set(COL_TUMOR_VAF_LOD, geneLod.tumorVafLod(), DECIMAL_FORMAT);
+        DelimFileWriter.write(filename, columns, coverageQcPerExon, (exonCoverageQc, row) -> {
+            row.set(COL_SAMPLE_ID, exonCoverageQc.sampleId());
+            row.set(COL_SAMPLE_TYPE, exonCoverageQc.sampleType().name());
+            row.set(COL_GENE_NAME, exonCoverageQc.geneName());
+            row.set(COL_EXON_RANK, exonCoverageQc.exonRank());
+            row.set(COL_MEDIAN_DEPTH, exonCoverageQc.medianDepth(), DECIMAL_FORMAT);
+            row.set(COL_LOD_VAF, exonCoverageQc.lodVaf(), DECIMAL_FORMAT);
 
-            row.set(COL_VARIANT_DETECTABILITY_STATUS, geneLod.variantDetectabilityStatus().name());
+            row.set(COL_VARIANT_DETECTABILITY_STATUS, exonCoverageQc.variantDetectabilityStatus().name());
 
             for(DepthRange depthRange : depthRanges)
             {
-                row.set(depthRangeFieldName(depthRange), geneLod.depthCounts().get(depthRange));
+                row.set(depthRangeFieldName(depthRange), exonCoverageQc.depthCounts().get(depthRange));
             }
         });
     }

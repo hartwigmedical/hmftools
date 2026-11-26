@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeatu
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.DUAL_STRAND_READS;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.DUPLICATE_READS;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.LOW_BASE_QUAL;
+import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.LOW_COVERAGE_EXONS;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.MAPPED_PROPORTION;
 import static com.hartwig.hmftools.qsee.feature.category.table.SummaryTableFeature.MEAN_COVERAGE;
@@ -22,9 +23,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.metrics.ExonDepth;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.qsee.QseeConfig;
+import com.hartwig.hmftools.qsee.common.ReportableGenes;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.coverage.ExonCoverageQc;
 import com.hartwig.hmftools.qsee.feature.CategoryPrep;
 import com.hartwig.hmftools.qsee.feature.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.feature.Feature;
@@ -37,6 +41,7 @@ import com.hartwig.hmftools.qsee.status.QcThreshold;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SummaryTableBamMetricsPrep implements CategoryPrep
 {
@@ -49,9 +54,12 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
     public SourceTool sourceTool() { return SOURCE_TOOL; }
     public PrepCategory category() { return PrepCategory.SUMMARY_TABLE_BAM_METRICS; }
 
-    private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary,
-            SampleType sampleType, ThresholdRegistry qcThresholds)
-    {
+    private static void putFeatures(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            BamMetricSummary bamMetricSummary,
+            SampleType sampleType,
+            ThresholdRegistry qcThresholds
+    ){
         if(bamMetricSummary == null)
             return;
 
@@ -72,9 +80,12 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage,
-            SampleType sampleType, ThresholdRegistry qcThresholds)
-    {
+    static void putFeatures(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            BamMetricCoverage bamMetricCoverage,
+            SampleType sampleType,
+            ThresholdRegistry qcThresholds
+    ){
         if(bamMetricCoverage == null)
             return;
 
@@ -112,9 +123,12 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
         }
     }
 
-    private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamFlagStats bamFlagStats,
-            SampleType sampleType, ThresholdRegistry qcThresholds)
-    {
+    private static void putFeatures(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            BamFlagStats bamFlagStats,
+            SampleType sampleType,
+            ThresholdRegistry qcThresholds
+    ){
         if(bamFlagStats == null)
             return;
 
@@ -125,16 +139,45 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
         putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion(), qcStatus);
     }
 
+    private static void putFeatures(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            @Nullable List<ExonCoverageQc> coverageQcPerExon,
+            SampleType sampleType,
+            ThresholdRegistry qcThresholds
+    ){
+        if(coverageQcPerExon == null)
+            return;
+
+        putFeature(featuresMap, LOW_COVERAGE_EXONS, ExonCoverageQc.calcLowCoverageExonProportion(coverageQcPerExon),
+                qcThresholds.getThreshold(sampleType, LOW_COVERAGE_EXONS, QcStatusType.WARN));
+    }
+
     @VisibleForTesting
-    static List<Feature> createFeatures(BamMetricsData bamMetricsData, SampleType sampleType, ThresholdRegistry qcThresholds)
-    {
+    static List<Feature> createFeatures(
+            BamMetricsData bamMetricsData,
+            @Nullable List<ExonCoverageQc> coverageQcPerExon,
+            SampleType sampleType,
+            ThresholdRegistry qcThresholds
+    ){
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
         putFeatures(featuresMap, bamMetricsData.bamMetricSummary(), sampleType, qcThresholds);
         putFeatures(featuresMap, bamMetricsData.bamMetricCoverage(), sampleType, qcThresholds);
         putFeatures(featuresMap, bamMetricsData.bamFlagStats(), sampleType, qcThresholds);
+        putFeatures(featuresMap, coverageQcPerExon, sampleType, qcThresholds);
 
         return featuresMap.values().stream().toList();
+    }
+
+    @Nullable
+    private List<ExonCoverageQc> calcCoverageQcPerExon(String sampleId, SampleType sampleType, @Nullable List<ExonDepth> exonDepths)
+    {
+        if(exonDepths == null)
+            return null;
+
+        List<String> reportableGenes = ReportableGenes.forSampleType(mConfig.DriverGenes, sampleType);
+
+        return ExonCoverageQc.fromExonDepths(sampleId, sampleType, exonDepths, mConfig.ExcludedExons, reportableGenes, mConfig.QcThresholds, mConfig.LodMinAltReads);
     }
 
     @Override
@@ -148,7 +191,9 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
                     mConfig.AllowMissingInput, this, sampleType, bamMetricsData.formMissingInputsString());
         }
 
-        List<Feature> features = createFeatures(bamMetricsData, sampleType, mConfig.QcThresholds);
+        List<ExonCoverageQc> coverageQcPerExon = calcCoverageQcPerExon(sampleId, sampleType, bamMetricsData.exonDepths());
+
+        List<Feature> features = createFeatures(bamMetricsData, coverageQcPerExon, sampleType, mConfig.QcThresholds);
 
         return features;
     }

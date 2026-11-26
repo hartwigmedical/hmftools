@@ -34,6 +34,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG_DESC;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+import static com.hartwig.hmftools.qsee.coverage.ExonExclusions.EXON_EXCLUSIONS_FILE_CFG;
+import static com.hartwig.hmftools.qsee.coverage.ExonExclusions.EXON_EXCLUSIONS_FILE_CFG_DESC;
+import static com.hartwig.hmftools.qsee.coverage.LimitOfDetectionCalcs.DEFAULT_LOD_MIN_ALT_READS;
 import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG_DESC;
 
@@ -50,6 +53,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.coverage.ExonExclusions;
 import com.hartwig.hmftools.qsee.feature.category.PrepCategory;
 import com.hartwig.hmftools.qsee.status.ThresholdOverridesFile;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
@@ -74,12 +78,15 @@ public class QseeConfig
     public final String CohortPercentilesFile;
     public final String ThresholdsFile;
     public final ThresholdRegistry QcThresholds;
+    public final ExonExclusions ExcludedExons;
 
     public final SequencingType SequencingTech;
     public final List<PrepCategory> Categories;
     public final boolean TargetedMode;
     public final boolean AllowMissingInput;
     public final boolean SkipPlot;
+
+    public final int LodMinAltReads;
 
     public final boolean WriteLodDetails;
 
@@ -103,8 +110,11 @@ public class QseeConfig
     public static final String SKIP_PLOT = "skip_plot";
     public static final String SKIP_PLOT_DESC = "Write output files only, without plotting";
 
+    public static final String LOD_MIN_ALT_READS = "lod_min_alt_reads";
+    public static final String LOD_MIN_ALT_READS_DESC = "Assumed min alt read support needed to detect a variant, used to model MVLH and LoD VAF";
+
     public static final String WRITE_LOD_DETAILS = "write_lod_details";
-    public static final String WRITE_LOD_DETAILS_DESC = "Write exon depth distribution columns to gene LoD file";
+    public static final String WRITE_LOD_DETAILS_DESC = "Write exon depth distribution columns to exon variant LoD file";
 
     public QseeConfig(final ConfigBuilder configBuilder)
     {
@@ -132,10 +142,16 @@ public class QseeConfig
                 ? ThresholdRegistry.createDefault(TargetedMode)
                 : ThresholdOverridesFile.read(ThresholdsFile, TargetedMode);
 
+        ExcludedExons = configBuilder.hasValue(EXON_EXCLUSIONS_FILE_CFG)
+                ? ExonExclusions.read(configBuilder.getValue(EXON_EXCLUSIONS_FILE_CFG))
+                : ExonExclusions.empty();
+
         SequencingTech = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
         SkipPlot = configBuilder.hasFlag(SKIP_PLOT);
+
+        LodMinAltReads = configBuilder.getInteger(LOD_MIN_ALT_READS);
 
         WriteLodDetails = configBuilder.hasFlag(WRITE_LOD_DETAILS);
 
@@ -166,6 +182,7 @@ public class QseeConfig
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(THRESHOLD_OVERRIDES_FILE_CFG, false, THRESHOLD_OVERRIDES_FILE_CFG_DESC);
+        configBuilder.addPath(EXON_EXCLUSIONS_FILE_CFG, false, EXON_EXCLUSIONS_FILE_CFG_DESC);
 
         configBuilder.addConfigItem(SEQUENCING_TYPE_CFG, false, SequencingType.ILLUMINA.toString());
         configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);
@@ -173,6 +190,7 @@ public class QseeConfig
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
         configBuilder.addFlag(SKIP_PLOT, SKIP_PLOT_DESC);
 
+        configBuilder.addInteger(LOD_MIN_ALT_READS, LOD_MIN_ALT_READS_DESC, DEFAULT_LOD_MIN_ALT_READS);
         configBuilder.addFlag(WRITE_LOD_DETAILS, WRITE_LOD_DETAILS_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);

@@ -19,6 +19,7 @@ Metrics not meeting warn/fail QC thresholds are flagged.
   * [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon)
 * [Advanced usage](#advanced-usage)
   * [Generating cohort percentiles](#generating-cohort-percentiles)
+  * [Generating the exon exclusions file](#generating-the-exon-exclusions-file)
   * [Input files in separate directories](#input-files-in-separate-directories)
   * [Threshold overrides](#threshold-overrides)
 * [All arguments](#all-arguments)
@@ -36,7 +37,6 @@ Qsee accepts the below pipeline files as input:
   - `.bam_metric.coverage.tsv`: tumor (mandatory), normal
   - `.bam_metric.flag_counts.tsv`: tumor (mandatory), normal
   - `.bam_metric.frag_length.tsv`: tumor, normal
-  - `.bam_metric.gene_coverage.tsv`: tumor, normal
   - `.bam_metric.exon_coverage.tsv`: tumor, normal
 - [**COBALT**](https://github.com/hartwigmedical/hmftools/tree/master/cobalt)
   - `.cobalt.gc.median.tsv`: tumor, normal
@@ -77,7 +77,7 @@ java -jar qsee.jar \
 
 This will generate the following files:
 - `TUMOR_ID.qsee.status.tsv.gz`: QC status (PASS/WARN/FAIL) per sample and per feature with a QC threshold defined
-- `TUMOR_ID.qsee.gene_lod.tsv.gz`: Variant limit of detection per exon in reportable driver genes (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
+- `TUMOR_ID.qsee.exon_coverage_qc.tsv.gz`: Coverage QC (median depth, variant limit of detection and detectability status) per exon in reportable driver genes (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
 - `TUMOR_ID.qsee.vis.data.tsv.gz`: Visualisation raw data
 - `TUMOR_ID.qsee.vis.report.{png,pdf}`: Visualisation comparing samples to an existing cohort, and highlighting samples not meeting QC thresholds (see [**example**](#visualisation))
 
@@ -205,18 +205,20 @@ A read group with duplicate reads is collapsed into a consensus read with one of
 
 ## Variant detection metrics
 
-Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per gene or exon depth distributions 
+Qsee estimates how reliably variants can be detected in reportable driver genes, based on the per exon depth distributions 
 (number of bases per depth range) from [BamTools](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#gene-panel-coverage). 
-A variant is reliably detected if it is supported by >=3 alt reads.
+
+"Reliably detected" is defined as >= 3 alt read support by default. This threshold can be increased with arg `-lod_min_alt_reads` if you 
+expect higher sequencing error rates (e.g. in FFPE samples). Lowering the threshold from the default is not recommended.
 
 ### Missed variant likelihood
 
-Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele is supported by <=2 alt reads, i.e. not reliably 
-detected. MVLH is first calculated per depth range:
+Missed variant likelihood (MVLH) is the probability that a clonal variant on 1 allele cannot be reliably detected. MVLH is first 
+calculated per depth range:
 
 ```
 theoreticalSampleVaf = purity / alleles
-mvlhForDepth = binomialCDF(x = 2, n = depth, p = theoreticalSampleVaf)
+mvlhForDepth = binomialCDF(x = lod_min_alt_reads - 1, n = depth, p = theoreticalSampleVaf)
 ```
 
 where `depth` is the depth range midpoint, and `alleles` is 1 for sex chromosomes in male samples and 2 otherwise. Tumor samples use the 
@@ -228,19 +230,34 @@ Then, the final MVLH is the mean across depth ranges, weighted by base count:
 mvlh = weightedMean(values = mvlhForDepths, weights = baseCountsForDepths)
 ```
 
+Gene depth distributions are the sum of the exon depth distributions, excluding exons in the
+[exon exclusions file](#limit-of-detection-of-variants-per-exon). Genes with all exons excluded have no MVLH.
+
 ### Limit of detection of variants per exon
 
-Qsee computes the minimum *tumor VAF* (i.e. tumor purity normalised sample VAF) at which a variant is reliably detected >=95% of the time
-given the exon's depth distribution.
+Qsee computes the minimum sample VAF at which a variant is reliably detected >=95% of the time given the exon's depth distribution.
 
-This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%, then divide by tumor purity to get
-`theoreticalTumorVaf`. The resulting value is shown in the `TumorVafLod` column, with the `SampleVafLod` column showing the value
-before purity normalisation.
+This is the inverse calculation of MVLH: find the `theoreticalSampleVaf` where MVLH is 5%. The result (`LodVaf`) is floored at 0.01 to avoid
+overly optimistic estimates - lower VAFs likely fall below the noise floor where variants are more likely artifacts (e.g. sequencing errors).
 
-Assuming a diploid genome, exons are marked in `VariantDetectabilityStatus` with:
-- `PASS` when `TumorVafLod` <= 0.5 (clonal homozygous and heterozygous variants can be reliably detected)
-- `WARN_HET_UNRELIABLE` when `TumorVafLod` < 1.0 (only clonal homozygous variants can be reliably detected)
-- `FAIL` when `TumorVafLod` >= 1.0 (clonal variants cannot be reliably detected or no coverage due to homozygous deletion)
+Exons are marked in `VariantDetectabilityStatus` with:
+- `WARN` when `LodVaf` fails its threshold (`EXON_VARIANT_LOD` threshold `LOD_VAF`)
+- `PASS` otherwise
+- `EXCLUDED` when the exon is listed in the exon exclusions file (e.g. exons known to have systematically poor mappability due to repetitive
+  sequences)
+
+The proportion of `WARN` exons (excluding `EXCLUDED` exons) is shown in the summary table as "Low coverage exons".
+
+The exon exclusions file can be provided to arg `exon_exclusions_file` and has the below format (one row per exon). Excluded exons
+are also left out of the [missed variant likelihood](#missed-variant-likelihood) calculation. This file can be generated from a cohort
+(see [Generating the exon exclusions file](#generating-the-exon-exclusions-file)):
+
+```
+GeneName  ExonRank
+GENE_A    1
+GENE_A    2
+GENE_B    3
+```
 
 ## Advanced usage
 
@@ -265,9 +282,32 @@ Other optional arguments:
 - `-allow_missing_input`: If provided, Qsee will not fail if input files are missing This is useful if e.g. only some BamMetrics files are
   available due to running an older pipeline version
 
+### Generating the exon exclusions file
+
+The [exon exclusions file](#limit-of-detection-of-variants-per-exon) can be generated from a cohort by running:
+
+```
+java -cp qsee.jar com.hartwig.hmftools.qsee.coverage.ExonExclusionsFileBuilder \
+-sample_id_file sample_ids.txt \
+-sample_data_dir inputs/ \
+-driver_gene_panel DriverGenePanel.38.tsv \
+-output_dir output/
+```
+
+where `sample_data_dir` contains the `*.bam_metric.exon_coverage.tsv` files for multiple tumor samples.
+
+This writes:
+- `multisample.qsee.exon_coverage_qc.tsv.gz`: Per sample/exon `LodVaf` values used to derive the exclusions
+- `qsee.exon_exclusions.tsv`: Exon exclusions file
+
+By default, exons are excluded if `LodVaf` >= 0.07 (`-min_low_coverage_lod_vaf`) in >= 0.3 of tumor samples 
+(`-min_low_coverage_cohort_fraction`). These defaults are for ~100x tumor WGS. For panels, consider decreasing `-min_low_coverage_lod_vaf` 
+since higher depths enable a lower limit of detection of variants.
+
 ### Input files in separate directories
 
-For [Multi-sample mode](#multi-sample-mode) or [Generating cohort percentiles](#generating-cohort-percentiles), 
+For [Multi-sample mode](#multi-sample-mode), [Generating cohort percentiles](#generating-cohort-percentiles) or 
+[Generating the exon exclusions file](#generating-the-exon-exclusions-file), 
 if input files are located in different tool directories, tool dir args can be used to provide those paths:
 
 ```
@@ -332,6 +372,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 **Resource files**
 - `-driver_gene_panel`: Path to driver gene panel
 - `-cohort_percentiles_file`: Path to cohort percentiles file (see [Generating cohort percentiles](#generating-cohort-percentiles))
+- `-exon_exclusions_file`: Path to exon exclusions file (see [Limit of detection of variants per exon](#limit-of-detection-of-variants-per-exon))
 
 **Other options**
 - `-allow_missing_input`: If provided, Qsee will not fail if input files are missing
@@ -339,6 +380,7 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
 - `-sequencing_type`: Can be `ILLUMINA`, `SBX` or `ULTIMA`. Only used to determine base qual bins in BaseQualRecalibrationPrep
 - `-skip_categories`: A comma separated list of categories to skip prep for. Valid options: BASE_QUAL_RECALIBRATION, COVERAGE_DISTRIBUTION, DISCORDANT_FRAG_FREQ, DUPLICATE_FREQ, FRAG_LENGTH_DISTRIBUTION, GC_BIAS, MISSED_GENE_VARIANT, MS_INDEL_ERROR
 - `-skip_plot`: Write the output files (vis data, QC status) only, without plotting
+- `-lod_min_alt_reads`: Assumed min alt read support needed to detect a variant, used to model MVLH and LoD VAF (default: 3)
 - `-write_cohort_features`: If provided, write the raw feature values when calculating cohort percentiles. 
 - `-threads`: Number of threads to use for parallel processing (one sample per thread)
 - `-log_level`: Log level (default: `INFO`). See [log4j docs](https://logging.apache.org/log4j/2.x/manual/customloglevels.html) for valid values

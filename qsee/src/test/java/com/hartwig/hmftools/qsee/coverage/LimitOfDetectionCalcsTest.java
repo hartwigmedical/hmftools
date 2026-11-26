@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.lod;
+package com.hartwig.hmftools.qsee.coverage;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 public class LimitOfDetectionCalcsTest
 {
     @Test
-    public void canCalcSampleVafLod()
+    public void canCalcLodVaf()
     {
         double actualVaf;
         double expectedVaf;
@@ -21,7 +21,7 @@ public class LimitOfDetectionCalcsTest
                 new DepthRange(100, 100), 90
         );
 
-        actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(depthCounts);
+        actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(depthCounts, LimitOfDetectionCalcs.DEFAULT_LOD_MIN_ALT_READS);
         expectedVaf = 0.132;
         assertEquals(expectedVaf, actualVaf, 1e-3);
 
@@ -31,8 +31,17 @@ public class LimitOfDetectionCalcsTest
                 new DepthRange(100, 100), 90
         );
 
-        actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(lowDepthCounts);
+        actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(lowDepthCounts, LimitOfDetectionCalcs.DEFAULT_LOD_MIN_ALT_READS);
         expectedVaf = 1.0;
+        assertEquals(expectedVaf, actualVaf, 0);
+
+        // Depth high enough to give LoD VAF below lower bound
+        Map<DepthRange,Integer> highDepthCounts = Map.of(
+                new DepthRange(1000, 1000), 100
+        );
+
+        actualVaf = LimitOfDetectionCalcs.calcMinSampleVafToDetectVariant(highDepthCounts, LimitOfDetectionCalcs.DEFAULT_LOD_MIN_ALT_READS);
+        expectedVaf = LimitOfDetectionCalcs.LOD_VAF_LOWER_BOUND;
         assertEquals(expectedVaf, actualVaf, 0);
     }
 }
