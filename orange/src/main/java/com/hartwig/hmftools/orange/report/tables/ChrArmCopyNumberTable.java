@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_WIDTH;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.convertWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CHR;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.scaleTableWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,10 +31,10 @@ import com.hartwig.hmftools.orange.report.DocumentContext;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.util.Strings;
-
 public final class ChrArmCopyNumberTable
 {
+    private static final String COL_ARM = "Arm";
+
     public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<PurpleChrArmCopyNumber> chrArmCopyNumbers, final ReportResources reportResources)
             throws IOException
@@ -45,37 +44,55 @@ public final class ChrArmCopyNumberTable
             return createEmptyTable(docCtx, title, width, reportResources);
         }
 
-        Cells cells = new Cells(reportResources);
+        List<TableHeaderData> headers = Lists.newArrayList();
 
-        List<Integer> widths = Lists.newArrayList();
-        List<String> headers = Lists.newArrayList();
+        headers.add(new TableHeaderData(COL_CHR, 0, false));
+        headers.add(new TableHeaderData(COL_ARM, 0, false));
+        headers.add(new TableHeaderData(COL_TYPE, 0, false));
+        headers.add(new TableHeaderData(COL_CN, 0, false));
+        headers.add(new TableHeaderData(COL_REL_CN, 0, false));
+        headers.add(new TableHeaderData(COL_DRIVER, 0, false));
 
-        addEntry(widths, headers, 1, COL_CHR);
-        addEntry(widths, headers, 1, "Arm");
-        addEntry(widths, headers, 1, COL_TYPE);
-        addEntry(widths, headers, 1, COL_CN);
-        addEntry(widths, headers, 1, COL_REL_CN);
-        addEntry(widths, headers, 1, COL_DRIVER);
-        addEntry(widths, headers, 3, Strings.EMPTY); // to space things out
-
-        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
-        float[] pcts = toPercentages(intToFloatArray(widths));
+        List<List<String>> tableRowData = Lists.newArrayList();
+        List<Boolean> shadeVariantData = Lists.newArrayList();
 
         for(PurpleChrArmCopyNumber chrArmCopyNumber : sort(chrArmCopyNumbers))
         {
-            List<String> rowCells = Lists.newArrayList();
+            List<String> rowData = Lists.newArrayList();
 
-            rowCells.add(cells.createContent(chrArmCopyNumber.chromosome()));
-            rowCells.add(cells.createContent(chrArmCopyNumber.arm()));
-            rowCells.add(cells.createContent(chrArmCopyNumber.type()));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(chrArmCopyNumber.copyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(chrArmCopyNumber.relativeCopyNumber())));
-            rowCells.add(cells.createContent(chrArmCopyNumber.driverInterpretation().toString()));
-            rowCells.add(cells.createContent(Strings.EMPTY));
+            tableRowData.add(rowData);
 
-            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+            rowData.add(chrArmCopyNumber.chromosome());
+            rowData.add(chrArmCopyNumber.arm());
+            rowData.add(chrArmCopyNumber.type());
+            rowData.add(formatSingleDigitDecimal(chrArmCopyNumber.copyNumber()));
+            rowData.add(formatSingleDigitDecimal(chrArmCopyNumber.relativeCopyNumber()));
+            rowData.add(chrArmCopyNumber.driverInterpretation().toString());
 
-            if(chrArmCopyNumber.driverInterpretation() == DriverInterpretation.LOW)
+            boolean isCandidate = chrArmCopyNumber.driverInterpretation() == DriverInterpretation.LOW;
+            shadeVariantData.add(isCandidate);
+        }
+
+        int tableWidth = MAX_TABLE_WIDTH - 100;
+        scaleTableWidths(headers, tableRowData, tableWidth, reportResources);
+
+        int columnCount = headers.size();
+        String[] columnTexts = new String[columnCount];
+        float[] columnWidths = new float[columnCount];
+        float[] columnPercentages = new float[columnCount];
+
+        convertWidths(headers, columnTexts, columnWidths, columnPercentages);
+
+        BaseTable table = createStandardTable(docCtx, title, tableWidth, columnWidths, columnTexts, reportResources);
+
+        Cells cells = new Cells(reportResources);
+
+        for(int r = 0; r < tableRowData.size(); ++r)
+        {
+            List<String> rowData = tableRowData.get(r);
+            List<Cell<PDPage>> createdCells = cells.addRow(table, columnPercentages, rowData);
+
+            if(shadeVariantData.get(r))
             {
                 reportResources.shadeCandidateCells(createdCells);
             }

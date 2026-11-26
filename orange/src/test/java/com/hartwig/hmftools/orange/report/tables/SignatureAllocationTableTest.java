@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -19,7 +21,7 @@ public class SignatureAllocationTableTest
         SignatureAllocation allocation1 = create("Sig1", 120D);
         SignatureAllocation allocation2 = create("Sig2", 200D);
         SignatureAllocation allocation3 = create("Sig10", 100D);
-        SignatureAllocation allocation4 = create(SignatureAllocationTable.MISALLOC_SIGNATURE, 50D);
+        SignatureAllocation allocation4 = create(SIG_MISALLOCATED, 50D);
 
         List<SignatureAllocation> allocations = Lists.newArrayList(allocation2, allocation4, allocation3, allocation1);
         List<SignatureAllocation> sorted = SignatureAllocationTable.sort(allocations);

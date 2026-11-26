@@ -2,14 +2,13 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
+import static com.hartwig.hmftools.orange.report.ReportResources.MAX_TABLE_WIDTH;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.convertWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.scaleTableWidths;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,11 +25,12 @@ import com.hartwig.hmftools.orange.report.DocumentContext;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.util.Strings;
-
 public final class SignatureAllocationTable
 {
-    static final String MISALLOC_SIGNATURE = "MISALLOC";
+    private static final String COL_SIGNATURE = "Signature";
+    private static final String COL_ETIOLOGY = "Etiology";
+    private static final String COL_ALLOCATION = "Allocation";
+    private static final String COL_PERCENT = "Percent";
 
     public static BaseTable build(
             final DocumentContext docCtx, final List<SignatureAllocation> signatureAllocations, final String title, float width,
@@ -42,29 +42,55 @@ public final class SignatureAllocationTable
             return createEmptyTable(docCtx, title, width, reportResources);
         }
 
-        Cells cells = new Cells(reportResources);
+        List<TableHeaderData> headers = Lists.newArrayList();
 
-        List<Integer> widths = Lists.newArrayList();
-        List<String> headers = Lists.newArrayList();
+        headers.add(new TableHeaderData(COL_SIGNATURE, 0, false));
+        headers.add(new TableHeaderData(COL_ETIOLOGY, 0, false));
+        headers.add(new TableHeaderData(COL_ALLOCATION, 0, false));
+        headers.add(new TableHeaderData(COL_PERCENT, 0, false));
 
-        addEntry(widths, headers, 1, "Signature");
-        addEntry(widths, headers, 2, "Etiology");
-        addEntry(widths, headers, 1, "Allocation");
-        addEntry(widths, headers, 1, "Percent");
-        addEntry(widths, headers, 4, Strings.EMPTY); // to space things out
-
-        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
-        float[] pcts = toPercentages(intToFloatArray(widths));
+        List<List<String>> tableRowData = Lists.newArrayList();
 
         for(SignatureAllocation sigAllocation : sort(signatureAllocations))
         {
-            List<String> rowValues = Lists.newArrayList();
-            rowValues.add(sigAllocation.signature());
-            rowValues.add(sigAllocation.etiology());
-            rowValues.add(format("%.0f", sigAllocation.allocation()));
-            rowValues.add(formatPercentage(sigAllocation.percent()));
-            rowValues.add(Strings.EMPTY);
-            cells.addRow(table, pcts, rowValues);
+            List<String> rowData = Lists.newArrayList();
+
+            tableRowData.add(rowData);
+
+            if(sigAllocation.signature().equals(SIG_MISALLOCATED))
+            {
+                rowData.add("Mis-allocated");
+                rowData.add("");
+                rowData.add(format("%.0f", sigAllocation.allocation()));
+                rowData.add("");
+            }
+            else
+            {
+                rowData.add(sigAllocation.signature());
+                rowData.add(sigAllocation.etiology());
+                rowData.add(format("%.0f", sigAllocation.allocation()));
+                rowData.add(formatPercentage(sigAllocation.percent()));
+            }
+        }
+
+        int tableWidth = MAX_TABLE_WIDTH - 100;
+        scaleTableWidths(headers, tableRowData, tableWidth, reportResources);
+
+        int columnCount = headers.size();
+        String[] columnTexts = new String[columnCount];
+        float[] columnWidths = new float[columnCount];
+        float[] columnPercentages = new float[columnCount];
+
+        convertWidths(headers, columnTexts, columnWidths, columnPercentages);
+
+        BaseTable table = createStandardTable(docCtx, title, tableWidth, columnWidths, columnTexts, reportResources);
+
+        Cells cells = new Cells(reportResources);
+
+        for(int r = 0; r < tableRowData.size(); ++r)
+        {
+            List<String> rowData = tableRowData.get(r);
+            cells.addRow(table, columnPercentages, rowData);
         }
 
         return table;
@@ -78,20 +104,15 @@ public final class SignatureAllocationTable
             String sig1 = allocation1.signature().toLowerCase();
             String sig2 = allocation2.signature().toLowerCase();
 
-            if(sig1.equalsIgnoreCase(MISALLOC_SIGNATURE))
+            if(sig1.equalsIgnoreCase(SIG_MISALLOCATED))
             {
                 return 1;
             }
-            else if(sig2.equalsIgnoreCase(MISALLOC_SIGNATURE))
+            else if(sig2.equalsIgnoreCase(SIG_MISALLOCATED))
             {
                 return -1;
             }
 
-            if(!sig1.startsWith("sig") || !sig2.startsWith("sig"))
-            {
-                LOGGER.warn("Signatures do not start with 'sig': {} & {}", sig1, sig2);
-                return sig1.compareTo(sig2);
-            }
 
             return Double.compare(allocation2.allocation(), allocation1.allocation());
         }).collect(Collectors.toList());

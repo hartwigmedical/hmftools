@@ -76,7 +76,7 @@ public class OrangeAlgo
     private final Map<String,String> mEtiologyPerSignature;
     private final PlotManager mPlotManager;
 
-    public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
+    public static OrangeAlgo fromConfig(final OrangeConfig config)
     {
         Map<String,String> etiologyPerSignature = SnvSigUtils.loadSnvSignatureEtiologies();
 
@@ -134,6 +134,7 @@ public class OrangeAlgo
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
                 .referenceId(config.ReferenceId)
+                .rnaId(config.RnaSampleId)
                 .samplingDate(config.SamplingDate)
                 .experimentType(config.RunType)
                 .configuredPrimaryTumor(primaryTumorDoids)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.sigs;
 
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_ALLOCATION;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_PERCENT;
 
@@ -16,7 +17,7 @@ public final class SigsInterpreter
 {
     public static List<SignatureAllocation> interpret(
             List<com.hartwig.hmftools.common.sigs.SignatureAllocation> signatureAllocation,
-            final Map<String, String> etiologyPerSignature)
+            final Map<String,String> etiologyPerSignature)
     {
         if(signatureAllocation == null)
         {
@@ -39,7 +40,7 @@ public final class SigsInterpreter
         return sigAllocation.percent() < SIG_MIN_PERCENT || sigAllocation.allocation() < SIG_MIN_ALLOCATION;
     }
 
-    public static String annotateWithEtiology(
+    private static String annotateWithEtiology(
             final  com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation,
             final  Map<String,String> etiologyPerSignature)
     {
@@ -48,7 +49,7 @@ public final class SigsInterpreter
         {
             return etiologyPerSignature.get(signatureName);
         }
-        else if("MISALLOC".equals(signatureName))
+        else if(signatureName.equals(SIG_MISALLOCATED))
         {
             return "-";
         }

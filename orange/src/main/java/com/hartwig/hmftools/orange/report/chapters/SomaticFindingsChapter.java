@@ -81,11 +81,8 @@ public class SomaticFindingsChapter implements ReportChapter
         addChrArmCopyNumbers(document);
         addSpaceBetweenSubsections(document);
 
-        if(!mReport.tumorOnlyMode())
-        {
-            addSignatureAllocations(document);
-            addSpaceBetweenSubsections(document);
-        }
+        addSignatureAllocations(document);
+        addSpaceBetweenSubsections(document);
 
         addLinxPlots(document);
     }
