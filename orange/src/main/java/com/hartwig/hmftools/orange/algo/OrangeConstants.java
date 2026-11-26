@@ -9,7 +9,6 @@ public final class OrangeConstants
     // Purple
     public static final String PURPLE_ARM_CN_LOSS = "LOSS";
     public static final String PURPLE_ARM_CN_GAIN = "GAIN";
-    public static final String PURPLE_ARM_CN_DIPLOID = GermlineStatus.DIPLOID.toString();
 
     public static final String PURPLE_AMP_DEL_PARTIAL = "PARTIAL";
     public static final String PURPLE_AMP_DEL_FULL = "FULL";

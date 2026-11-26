@@ -3,8 +3,6 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_ALLOCATION;
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_PERCENT;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
@@ -61,10 +59,6 @@ public final class SignatureAllocationTable
         for(SignatureAllocation sigAllocation : sort(signatureAllocations))
         {
             List<String> rowValues = Lists.newArrayList();
-
-            if(sigAllocation.percent() < SIG_MIN_PERCENT || sigAllocation.allocation() < SIG_MIN_ALLOCATION)
-                continue;
-
             rowValues.add(sigAllocation.signature());
             rowValues.add(sigAllocation.etiology());
             rowValues.add(format("%.0f", sigAllocation.allocation()));
