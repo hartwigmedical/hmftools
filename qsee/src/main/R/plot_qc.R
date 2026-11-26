@@ -767,9 +767,11 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
    if(is.null(plot_data)){
-      plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
       return(plot_missing_data(plot_labels))
    }
+
+   ## Only the highest original base quality bin is used
+   plot_labels$title <- paste0(plot_labels$title, ", original base quality: ", plot_data$OriginalQualBin[1])
 
    plot_bqr(plot_data, x = "StandardTrinucContext", row_facet = "SampleType", plot_labels = plot_labels) &
       geom_vline(xintercept = c(4, 8, 12) + 0.5, linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour) &
