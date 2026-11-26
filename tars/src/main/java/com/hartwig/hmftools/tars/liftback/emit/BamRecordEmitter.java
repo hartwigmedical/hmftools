@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.AlignmentKey;
 import com.hartwig.hmftools.tars.liftback.ExcludedRegions;
 import com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer;
@@ -181,7 +181,7 @@ public final class BamRecordEmitter
         LiftedAlignment finalAlignment = result.primaryAlignment();
         boolean clearStaleAlignmentScore = finalAlignment.genomicScore() == null
                 && GenomicAlignmentScorer.requiresRescore(record, result);
-        Cigar liftedCigar = TarsCigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
+        Cigar liftedCigar = CigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
         if(result.negativeStrand() != record.getReadNegativeStrandFlag())
         {
             record.setReadBases(Nucleotides.reverseComplementBases(record.getReadBases()));

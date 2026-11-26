@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import com.hartwig.hmftools.tars.common.TarsCigarUtils;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFileHeader;
@@ -94,7 +94,7 @@ public class LiftBackWorker extends Thread
         }
 
         Cigar cigar = record.getCigar();
-        Cigar cleaned = TarsCigarUtils.normalize(cigar);
+        Cigar cleaned = CigarUtils.normalize(cigar);
 
         int seqLength = record.getReadLength();
 

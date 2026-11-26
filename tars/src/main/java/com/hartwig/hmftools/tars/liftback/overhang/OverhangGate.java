@@ -13,7 +13,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.ReadBases;
 
@@ -106,8 +105,8 @@ public class OverhangGate
         int intronIndex = anchorIndex + step;
         int nearIndex = intronIndex + step;
         CigarElement anchor = elements.get(anchorIndex);
-        if(!TarsCigarUtils.isMatchOrEqualOp(anchor.getOperator())
-                || !TarsCigarUtils.isMatchOrEqualOp(elements.get(nearIndex).getOperator())
+        if(!CigarUtils.isMatchOrEqualOp(anchor.getOperator())
+                || !CigarUtils.isMatchOrEqualOp(elements.get(nearIndex).getOperator())
                 || elements.get(intronIndex).getOperator() != CigarOperator.N)
         {
             return null;

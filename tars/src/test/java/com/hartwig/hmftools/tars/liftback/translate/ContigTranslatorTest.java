@@ -14,10 +14,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
-import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
 import org.junit.Test;
@@ -303,7 +303,7 @@ public class ContigTranslatorTest
     {
         // a 0-length interior element (a 0M for a zero-span exon between two introns) is dropped, then the flanking introns merge
         List<CigarElement> elements = cigarFromStr("72M102N0M2538N79M").getCigarElements();
-        Cigar result = new Cigar(TarsCigarUtils.normalize(elements));
+        Cigar result = new Cigar(CigarUtils.normalize(elements));
         assertEquals("72M2640N79M", result.toString());
     }
 

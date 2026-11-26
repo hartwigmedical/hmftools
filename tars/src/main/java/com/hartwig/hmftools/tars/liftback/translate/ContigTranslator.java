@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.tars.liftback.translate;
 
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampLeadingReferenceToSoftClip;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampTrailingReferenceToSoftClip;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.isMatchOrEqualOp;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.normalize;
+import static com.hartwig.hmftools.common.bam.CigarUtils.clampLeadingReferenceToSoftClip;
+import static com.hartwig.hmftools.common.bam.CigarUtils.clampTrailingReferenceToSoftClip;
+import static com.hartwig.hmftools.common.bam.CigarUtils.isMatchOrEqualOp;
+import static com.hartwig.hmftools.common.bam.CigarUtils.normalize;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_MERGED_DELETION_BP;
 

@@ -2,8 +2,8 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.mergeAdjacentSameOp;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.mergeAdjacentSameOp;
 import static com.hartwig.hmftools.tars.common.TarsConstants.GAP_EXTEND;
 import static com.hartwig.hmftools.tars.common.TarsConstants.GAP_OPEN;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MATCH;

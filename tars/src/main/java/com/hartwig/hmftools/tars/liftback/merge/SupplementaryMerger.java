@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.tars.liftback.merge;
 
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
+import static com.hartwig.hmftools.common.bam.CigarUtils.indelAdjacentToTerminalSoftClip;
+import static com.hartwig.hmftools.common.bam.CigarUtils.terminalMatchedRun;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,8 +13,8 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
-import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector.RecordAlignment;
+import com.hartwig.hmftools.tars.liftback.select.AlignmentSelector;
 
 import org.jetbrains.annotations.Nullable;
 
