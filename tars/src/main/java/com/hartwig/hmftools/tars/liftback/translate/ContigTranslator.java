@@ -61,18 +61,13 @@ public final class ContigTranslator
             // an unknown alt contig must not pass through as ref - that would leak _tx contig names into the BAM.
             if(contig.endsWith(ALT_CONTIG_SUFFIX))
             {
-                return null;
+                throw new IllegalStateException(String.format("alt contig(%s) missing from the sidecar", contig));
             }
 
             return new LiftedAlignment(contig, pos, cigarStr, nm, false, forwardStrand, 0);
         }
 
         ContigEntry entry = findSegment(contig, pos);
-        if(entry == null)
-        {
-            return null;
-        }
-
         ContigTranslateResult translated = translate(entry, pos, CigarUtils.cigarFromStr(cigarStr));
         if(translated == null)
         {
@@ -119,11 +114,6 @@ public final class ContigTranslator
     ContigEntry findSegment(final String altContig, final int altPos)
     {
         List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
-        if(segments == null || segments.isEmpty())
-        {
-            return null;
-        }
-
         int placement = floorIndexByContigStart(segments, altPos);
         ContigEntry segment = segments.get(placement);
         if(altPos <= segment.contigEnd())
@@ -168,11 +158,6 @@ public final class ContigTranslator
     public static ContigTranslateResult translate(final ContigEntry contig, final int contigPos, final Cigar contigCigar)
     {
         List<BaseRegion> spans = contig.exonSpans();
-        if(spans.isEmpty() || contigPos > contig.contigEnd())
-        {
-            return null;
-        }
-
         Cigar clampedCigar = clampToContigBounds(contig, contigPos, contigCigar);
         if(clampedCigar == null)
         {
@@ -258,11 +243,6 @@ public final class ContigTranslator
 
                 if(currentGenomicPos > currentSpan.end())
                 {
-                    if(currentSpanIndex + 1 >= spans.size())
-                    {
-                        return null; // read extends past last span
-                    }
-
                     BaseRegion nextSpan = spans.get(currentSpanIndex + 1);
                     int intronStart = currentSpan.end() + 1;
                     int intronEnd = nextSpan.start() - 1;

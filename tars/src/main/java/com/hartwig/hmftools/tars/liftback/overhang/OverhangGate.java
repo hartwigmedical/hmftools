@@ -95,11 +95,6 @@ public class OverhangGate
 
     private static Overhang findOverhang(final boolean leading, final String cigar, final List<CigarElement> elements)
     {
-        if(elements.size() < 3)
-        {
-            return null;
-        }
-
         int outerIndex = leading ? 0 : elements.size() - 1;
         int step = leading ? 1 : -1;
 
@@ -108,11 +103,6 @@ public class OverhangGate
         int anchorIndex = hasSoftclip ? outerIndex + step : outerIndex;
         int intronIndex = anchorIndex + step;
         int nearIndex = intronIndex + step;
-        if(nearIndex < 0 || nearIndex >= elements.size())
-        {
-            return null;
-        }
-
         CigarElement anchor = elements.get(anchorIndex);
         if(!TarsCigarUtils.isMatchOrEqualOp(anchor.getOperator())
                 || !TarsCigarUtils.isMatchOrEqualOp(elements.get(nearIndex).getOperator())
@@ -159,7 +149,7 @@ public class OverhangGate
         byte[] anchorRef = referenceBases(
                 mRefGenome, chromosome, nearEnd + overhang.intronLength() + 1,
                 nearEnd + overhang.intronLength() + overhang.anchorLength());
-        int overhangScore = anchorRef != null ? ungappedScore(anchorRead,anchorRef) : Integer.MIN_VALUE;
+        int overhangScore = ungappedScore(anchorRead, anchorRef);
         if(keepJunction(overhangScore, anchorRead, windowRef, overhang.softclipLength()))
         {
             return CollapseResult.unchanged();
@@ -198,7 +188,7 @@ public class OverhangGate
         byte[] anchorRead = Arrays.copyOfRange(
                 readBases, overhang.softclipLength(), overhang.softclipLength() + overhang.anchorLength());
         byte[] anchorRef = referenceBases(mRefGenome, chromosome, alignmentStart, alignmentStart + overhang.anchorLength() - 1);
-        int overhangScore = anchorRef != null ? ungappedScore(anchorRead,anchorRef) : Integer.MIN_VALUE;
+        int overhangScore = ungappedScore(anchorRead, anchorRef);
         if(keepJunction(overhangScore, anchorRead, windowRef, overhang.softclipLength()))
         {
             return CollapseResult.unchanged();
@@ -228,7 +218,7 @@ public class OverhangGate
             return true;
         }
         byte[] contiguousRef = Arrays.copyOfRange(windowRef, 0, anchorRead.length);
-        int altRefScore = ungappedScore(anchorRead,contiguousRef);
+        int altRefScore = ungappedScore(anchorRead, contiguousRef);
         return altRefScore <= overhangScore;
     }
 

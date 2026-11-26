@@ -758,8 +758,8 @@ public class AlignmentSelectorTest
         mate.GenomicScore = 100;
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(close, distant), false, close, false,
-                set(mate), false, mate, false, 0);
+                set(close, distant), false, close, false, true,
+                set(mate), false, mate, false, true, 0);
 
         assertSame(close, outcome.first().alignment());
         assertSame(mate, outcome.second().alignment());
@@ -776,8 +776,8 @@ public class AlignmentSelectorTest
         clipped.GenomicScore = 123;
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(spliced, clipped), false, clipped, false,
-                set(mate), false, mate, false, 0);
+                set(spliced, clipped), false, clipped, false, true,
+                set(mate), false, mate, false, true, 0);
 
         assertSame(spliced, outcome.first().alignment());
         assertSame(mate, outcome.second().alignment());
@@ -792,8 +792,8 @@ public class AlignmentSelectorTest
         LiftedAlignment mate = refReverse(CHR1, 10_000, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(deletion, duplication), false, deletion, false,
-                set(mate), false, mate, true, 0);
+                set(deletion, duplication), false, deletion, false, true,
+                set(mate), false, mate, true, false, 0);
 
         assertSame(deletion, outcome.first().alignment());
     }
@@ -806,8 +806,8 @@ public class AlignmentSelectorTest
         LiftedAlignment mate = refReverse(CHR1, 100_050, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(deletion, localPlacement), false, deletion, false,
-                set(mate), false, mate, true, 0);
+                set(deletion, localPlacement), false, deletion, false, true,
+                set(mate), false, mate, true, false, 0);
 
         assertSame(localPlacement, outcome.first().alignment());
     }
@@ -820,8 +820,8 @@ public class AlignmentSelectorTest
         LiftedAlignment mate = refReverse(CHR1, 2_000_000, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(distantDeletion, localInversion), false, distantDeletion, false,
-                set(mate), false, mate, true, 0);
+                set(distantDeletion, localInversion), false, distantDeletion, false, true,
+                set(mate), false, mate, true, false, 0);
 
         assertSame(localInversion, outcome.first().alignment());
     }
@@ -834,8 +834,8 @@ public class AlignmentSelectorTest
         LiftedAlignment mate = refReverse(CHR1, 1_000_199, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(localInversion, boundaryDeletion), false, localInversion, false,
-                set(mate), false, mate, true, 0);
+                set(localInversion, boundaryDeletion), false, localInversion, false, true,
+                set(mate), false, mate, true, false, 0);
 
         assertSame(boundaryDeletion, outcome.first().alignment());
     }
@@ -848,8 +848,8 @@ public class AlignmentSelectorTest
         LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
 
         AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
-                set(bwa, alternative), false, bwa, true,
-                set(mate), false, mate, true, 0);
+                set(bwa, alternative), false, bwa, true, false,
+                set(mate), false, mate, true, false, 0);
 
         assertSame(bwa, outcome.first().alignment());
     }
@@ -867,11 +867,11 @@ public class AlignmentSelectorTest
         secondChr2.GenomicScore = 50;
 
         AlignmentSelector.PairSelection forward = AlignmentSelector.selectPair(
-                set(firstChr1, firstChr2), false, firstChr1, false,
-                set(secondChr1, secondChr2), false, secondChr1, false, 0);
+                set(firstChr1, firstChr2), false, firstChr1, false, true,
+                set(secondChr1, secondChr2), false, secondChr1, false, true, 0);
         AlignmentSelector.PairSelection reverse = AlignmentSelector.selectPair(
-                set(secondChr1, secondChr2), false, secondChr1, false,
-                set(firstChr1, firstChr2), false, firstChr1, false, 0);
+                set(secondChr1, secondChr2), false, secondChr1, false, true,
+                set(firstChr1, firstChr2), false, firstChr1, false, true, 0);
 
         assertSame(firstChr1, forward.first().alignment());
         assertSame(secondChr1, forward.second().alignment());

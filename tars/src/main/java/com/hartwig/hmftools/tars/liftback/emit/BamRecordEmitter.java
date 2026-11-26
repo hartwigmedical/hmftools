@@ -88,11 +88,7 @@ public final class BamRecordEmitter
             }
 
             applyResultToRecord(record, result, matePair);
-            if(record.getReadUnmappedFlag() && record.getSupplementaryAlignmentFlag())
-            {
-                willEmit[i] = false;
-            }
-            else if(!record.getReadUnmappedFlag())
+            if(!record.getReadUnmappedFlag())
             {
                 refreshNmDropMd(record);
             }
@@ -194,16 +190,8 @@ public final class BamRecordEmitter
         Cigar liftedCigar = TarsCigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
         if(result.negativeStrand() != record.getReadNegativeStrandFlag())
         {
-            byte[] bases = record.getReadBases();
-            if(bases != null && bases.length > 0)
-            {
-                record.setReadBases(Nucleotides.reverseComplementBases(bases));
-            }
-            byte[] qualities = record.getBaseQualities();
-            if(qualities != null && qualities.length > 0)
-            {
-                record.setBaseQualities(reverseArray(qualities));
-            }
+            record.setReadBases(Nucleotides.reverseComplementBases(record.getReadBases()));
+            record.setBaseQualities(reverseArray(record.getBaseQualities()));
             byte[] tpValues = record.getByteArrayAttribute(ULTIMA_TP_TAG);
             if(tpValues != null)
             {

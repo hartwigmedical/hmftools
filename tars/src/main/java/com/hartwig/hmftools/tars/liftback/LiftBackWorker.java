@@ -77,10 +77,7 @@ public class LiftBackWorker extends Thread
             currentName = name;
         }
 
-        if(!group.isEmpty())
-        {
-            mProcessor.processNameGroup(group, this::write);
-        }
+        mProcessor.processNameGroup(group, this::write);
     }
 
     private void write(final SAMRecord record)

@@ -363,17 +363,6 @@ public final class AlignmentSelector
 
     static PairSelection selectPair(
             final List<LiftedAlignment> firstAlignments, final boolean firstConcordant,
-            final LiftedAlignment firstSelf, final boolean firstBwaHasPriority,
-            final List<LiftedAlignment> secondAlignments, final boolean secondConcordant,
-            final LiftedAlignment secondSelf, final boolean secondBwaHasPriority, final int seed)
-    {
-        return selectPair(
-                firstAlignments, firstConcordant, firstSelf, firstBwaHasPriority, !firstBwaHasPriority,
-                secondAlignments, secondConcordant, secondSelf, secondBwaHasPriority, !secondBwaHasPriority, seed);
-    }
-
-    static PairSelection selectPair(
-            final List<LiftedAlignment> firstAlignments, final boolean firstConcordant,
             final LiftedAlignment firstSelf, final boolean firstBwaHasPriority, final boolean firstMapQualityZero,
             final List<LiftedAlignment> secondAlignments, final boolean secondConcordant,
             final LiftedAlignment secondSelf, final boolean secondBwaHasPriority, final boolean secondMapQualityZero,
@@ -438,8 +427,7 @@ public final class AlignmentSelector
         Set<AlignmentKey> seen = new HashSet<>();
         for(LiftedAlignment alignment : mate.alignments())
         {
-            boolean passesScoreFloor = alignment.GenomicScore == Integer.MIN_VALUE
-                    || alignment.GenomicScore >= PRIMARY_AS_UNMAP_THRESHOLD;
+            boolean passesScoreFloor = alignment.GenomicScore >= PRIMARY_AS_UNMAP_THRESHOLD;
             if(!alignment.Dropped && passesScoreFloor && seen.add(alignment.key()))
             {
                 placements.add(alignment);
@@ -474,11 +462,6 @@ public final class AlignmentSelector
         long topScore = Long.MIN_VALUE;
         for(AlignmentPair pair : pairs)
         {
-            if((!fixedFirst && pair.first().GenomicScore == Integer.MIN_VALUE)
-                    || (!fixedSecond && pair.second().GenomicScore == Integer.MIN_VALUE))
-            {
-                return pairs;
-            }
             topScore = Math.max(topScore, pairScore(pair, fixedFirst, fixedSecond));
         }
 

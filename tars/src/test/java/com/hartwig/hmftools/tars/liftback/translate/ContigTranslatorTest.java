@@ -258,7 +258,7 @@ public class ContigTranslatorTest
         ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
 
         List<LiftedAlignment> alignments = translator.liftXaAlignments(
-                TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",-201,30M,2;unknown_tx,+1,10M,0;");
+                TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",-201,30M,2;");
 
         assertEquals(2, alignments.size());
         assertEquals(150, alignments.get(0).LiftedPos);
@@ -354,5 +354,13 @@ public class ContigTranslatorTest
 
         assertThrows(IllegalStateException.class, () -> translator.liftXaAlignments(""));
         assertThrows(IllegalStateException.class, () -> translator.liftXaAlignments(TX_CONTIG + ",+51,50M;"));
+    }
+
+    @Test
+    public void testUnknownAltContigIsRejected()
+    {
+        ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
+
+        assertThrows(IllegalStateException.class, () -> translator.liftAlignment("unknown_tx", 1, "10M", 0, true));
     }
 }

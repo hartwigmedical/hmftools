@@ -100,14 +100,6 @@ public final class AlignmentLifter
         String role = record.getSupplementaryAlignmentFlag() ? "supp" : "primary";
         ContigEntry segment = mTranslator.findSegment(contig, pos);
 
-        if(segment == null)
-        {
-            TARS_LOGGER.debug(
-                    "lift failed {}: {}:{}-{} {} - contig has no segments",
-                    role, contig, pos, readEnd, record.getCigarString());
-            return;
-        }
-
         // findSegment returns the nearest segment for spacer positions.
         if(pos < segment.contigStart() || pos > segment.contigEnd())
         {

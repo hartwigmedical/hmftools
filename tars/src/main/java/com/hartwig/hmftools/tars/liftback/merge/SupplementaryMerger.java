@@ -249,12 +249,6 @@ public class SupplementaryMerger
     private RejectReason anchorPairReject(
             final Placement placement, final Side up, final Side down, final int overlap, final int intronLength)
     {
-        if(CigarUtils.cigarBaseLength(up.cigar()) != placement.readLength()
-                || CigarUtils.cigarBaseLength(down.cigar()) != placement.readLength())
-        {
-            return RejectReason.COMPLEX_CIGAR_SHAPE;
-        }
-
         if(indelAdjacentToTerminalSoftClip(up.cigar(), false)
                 || indelAdjacentToTerminalSoftClip(down.cigar(), true))
         {

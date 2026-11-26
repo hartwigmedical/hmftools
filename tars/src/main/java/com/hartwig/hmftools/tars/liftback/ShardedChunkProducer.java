@@ -67,7 +67,7 @@ public class ShardedChunkProducer extends Thread
         mQueue = queue;
         mWorkerCount = workerCount;
         mChunkTargetReads = chunkTargetReads;
-        mShardCount = Math.max(1, shardCount);
+        mShardCount = shardCount;
     }
 
     @Override

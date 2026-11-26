@@ -157,7 +157,7 @@ public final class TarsCigarUtils
             break;
         }
 
-        if(remainingOverhang > 0 || tail == null || tail.isEmpty() || tail.get(0).getOperator() != CigarOperator.M)
+        if(remainingOverhang > 0 || tail.isEmpty() || tail.get(0).getOperator() != CigarOperator.M)
         {
             return null;
         }
