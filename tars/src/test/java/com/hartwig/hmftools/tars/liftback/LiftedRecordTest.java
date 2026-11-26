@@ -16,7 +16,7 @@ public class LiftedRecordTest
 {
     private static LiftedRecord resolved(final int primaryIndex, final List<LiftedAlignment> alignments)
     {
-        return new LiftedRecord(60, 1, "", primaryIndex, alignments);
+        return new LiftedRecord(60, 1, primaryIndex, alignments);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -40,7 +40,7 @@ public class LiftedRecordTest
     @Test(expected = IllegalArgumentException.class)
     public void testAlignmentsWithoutAChosenPlacementRejected()
     {
-        new LiftedRecord(0, 0, "", LiftedRecord.NO_PRIMARY, List.of(selfAlignment(CHR_1, 1000, "50M")));
+        new LiftedRecord(0, 0, LiftedRecord.NO_PRIMARY, List.of(selfAlignment(CHR_1, 1000, "50M")));
     }
 
     @Test
@@ -58,9 +58,8 @@ public class LiftedRecordTest
     @Test
     public void testUnmappedHasNoPlacement()
     {
-        LiftedRecord liftedRecord = LiftedRecord.unmapped("over_cap_unmapped");
+        LiftedRecord liftedRecord = LiftedRecord.unmapped();
 
         assertFalse(liftedRecord.hasPlacement());
-        assertEquals("over_cap_unmapped", liftedRecord.notes());
     }
 }

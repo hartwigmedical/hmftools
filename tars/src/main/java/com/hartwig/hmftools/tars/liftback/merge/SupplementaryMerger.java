@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTer
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,7 +26,7 @@ public class SupplementaryMerger
     // NOTE: generated equals/hashCode compare readBases by array identity, so do not use as a Set/Map key.
     public record Placement(
             String chromosome, boolean forwardStrand, int readLength, int primaryStart, String primaryCigar,
-            List<RecordAlignment> supplementaries, byte[] readBases, List<ChrBaseRegion> mateHintIntrons)
+            List<RecordAlignment> supplementaries, int readBasesHash, List<ChrBaseRegion> mateHintIntrons)
     {
     }
 
@@ -144,7 +143,7 @@ public class SupplementaryMerger
     {
         List<RecordAlignment> selectedSupplementaries = AlignmentSelector.selectSupplementaryAlignments(
                 placement.chromosome(), placement.forwardStrand(), primaryStart, primaryCigar,
-                placement.readBases(), supps);
+                placement.readBasesHash(), supps);
 
         MergeOutcome chosen = null;
         RejectReason lastReject = null;
@@ -386,7 +385,7 @@ public class SupplementaryMerger
 
     private static int tieBreakSeed(final Placement placement, final Side up)
     {
-        return 31 * Arrays.hashCode(placement.readBases()) + up.referenceEnd();
+        return 31 * placement.readBasesHash() + up.referenceEnd();
     }
 
     // A mate hint pins the corresponding intron boundary.

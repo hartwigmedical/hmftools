@@ -219,7 +219,7 @@ public class LiftBackGroupProcessor
         if(mEmitter.excludes(result))
         {
             ++mStats.UnmappedExcludedRegion;
-            return new UnmapDecision(LiftedRecord.unmapped("excluded_region_unmapped"), true);
+            return new UnmapDecision(LiftedRecord.unmapped(), true);
         }
         if(primary.getReadUnmappedFlag())
         {
@@ -231,7 +231,7 @@ public class LiftBackGroupProcessor
             TARS_LOGGER.trace(
                     "over-cap unmap {}:{}: inputMapQuality=0, no XA",
                     primary.getReferenceName(), primary.getAlignmentStart());
-            return new UnmapDecision(LiftedRecord.unmapped("over_cap_unmapped"), true);
+            return new UnmapDecision(LiftedRecord.unmapped(), true);
         }
 
         LiftedRecord scored = scoreFinalAlignment(primary, result);
@@ -242,7 +242,7 @@ public class LiftBackGroupProcessor
             TARS_LOGGER.trace(
                     "AS-floor unmap {}: AS={} < {}",
                     primary.getReadName(), alignmentScore, PRIMARY_AS_UNMAP_THRESHOLD);
-            return new UnmapDecision(LiftedRecord.unmapped("low_as_unmapped"), true);
+            return new UnmapDecision(LiftedRecord.unmapped(), true);
         }
         return new UnmapDecision(scored, false);
     }
@@ -254,7 +254,7 @@ public class LiftBackGroupProcessor
             return fallback;
         }
         return new LiftedRecord(
-                decided.updatedMapQuality(), 1, decided.notes(), 0, List.of(decided.primaryAlignment()));
+                decided.updatedMapQuality(), 1, 0, List.of(decided.primaryAlignment()));
     }
 
     private static List<LiftedRecord> replacePrimary(

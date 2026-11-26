@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.selfAlignment;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -96,6 +95,16 @@ public class GenomicAlignmentScorerTest
     }
 
     @Test
+    public void testZeroLengthAlignedBlockIsSkipped()
+    {
+        GenomicAlignmentScorer scorer = new GenomicAlignmentScorer(genome().asRefGenome());
+        SAMRecord record = primaryRecord(CHR_1, 100, "10M");
+        record.setReadBases(bases("A".repeat(10)));
+
+        assertEquals(10, scorer.scoreRecord(refAlt(CHR_1, 100, "5M0M5M", true), record));
+    }
+
+    @Test
     public void testCigarNeedingMoreBasesThanTheReadIsRejected()
     {
         GenomicAlignmentScorer scorer = new GenomicAlignmentScorer(genome().asRefGenome());
@@ -142,9 +151,9 @@ public class GenomicAlignmentScorerTest
         assertEquals(Map.of(CHR_1, 8), reference.chromosomeLengths());
         assertArrayEquals(bases("ACG"), GenomicAlignmentScorer.referenceBases(reference, CHR_1, 1, 3));
         assertArrayEquals(bases("GCA"), GenomicAlignmentScorer.referenceBases(reference, CHR_1, 6, 8));
-        assertNull(GenomicAlignmentScorer.referenceBases(reference, CHR_1, 0, 3));
-        assertNull(GenomicAlignmentScorer.referenceBases(reference, CHR_1, 7, 9));
-        assertNull(GenomicAlignmentScorer.referenceBases(reference, CHR_1, 4, 3));
+        assertThrows(IllegalStateException.class, () -> GenomicAlignmentScorer.referenceBases(reference, CHR_1, 0, 3));
+        assertThrows(IllegalStateException.class, () -> GenomicAlignmentScorer.referenceBases(reference, CHR_1, 7, 9));
+        assertThrows(IllegalStateException.class, () -> GenomicAlignmentScorer.referenceBases(reference, CHR_1, 4, 3));
     }
 
     @Test

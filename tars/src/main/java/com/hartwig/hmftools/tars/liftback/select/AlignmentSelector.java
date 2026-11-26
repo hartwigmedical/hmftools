@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_TH
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,7 +104,6 @@ public final class AlignmentSelector
         boolean randomTie = selection.reason().equals("random");
         int updatedMapQuality = decidePrimaryMapQuality(
                 inputMapQuality, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, randomTie);
-        String note = selection.reason();
 
         if(effectivePrimary.hasSupplementaryMerge())
         {
@@ -114,7 +112,6 @@ public final class AlignmentSelector
             {
                 updatedMapQuality = CONFIDENT_MAP_QUALITY;
             }
-            note = appendNote(note, "supplementary-resolved");
         }
 
         if(selection.alignmentIndex() != 0)
@@ -127,7 +124,7 @@ public final class AlignmentSelector
 
         traceScoreRegression(record, keptAlignments, effectivePrimary, selection.reason());
 
-        return new LiftedRecord(updatedMapQuality, numLoci, note, selection.alignmentIndex(), alignments);
+        return new LiftedRecord(updatedMapQuality, numLoci, selection.alignmentIndex(), alignments);
     }
 
     private static List<LiftedAlignment> dropUnselectedMerges(
@@ -200,27 +197,13 @@ public final class AlignmentSelector
         if(bestScored != selected)
         {
             TARS_LOGGER.trace(
-                    "score regression {}: inputMapQuality={} reason={} selected {}:{} {} aligned={} score={}"
-                            + " over {}:{} {} aligned={} score={}",
+                    "score regression {}: inputMapQuality={} reason={} selected {}:{} {} score={} over {}:{} {} score={}",
                     record.getReadName(), record.getMappingQuality(), reason,
                     selected.liftedPosition().Chromosome, selected.liftedPosition().Position, selected.liftedCigar(),
-                    alignedBaseCount(selected.liftedCigar()), selected.genomicScore(),
+                    selected.genomicScore(),
                     bestScored.liftedPosition().Chromosome, bestScored.liftedPosition().Position, bestScored.liftedCigar(),
-                    alignedBaseCount(bestScored.liftedCigar()), bestScored.genomicScore());
+                    bestScored.genomicScore());
         }
-    }
-
-    private static int alignedBaseCount(final String cigar)
-    {
-        int alignedBases = 0;
-        for(CigarElement element : CigarUtils.cigarFromStr(cigar).getCigarElements())
-        {
-            if(element.getOperator().isAlignment())
-            {
-                alignedBases += element.getLength();
-            }
-        }
-        return alignedBases;
     }
 
     public static boolean usesGenomicScore(final List<LiftedAlignment> alignments, final int inputMapQuality)
@@ -238,15 +221,6 @@ public final class AlignmentSelector
             }
         }
         return false;
-    }
-
-    private static String appendNote(final String existing, final String note)
-    {
-        if(existing.isEmpty())
-        {
-            return note;
-        }
-        return existing + ";" + note;
     }
 
     public LiftedRecord liftSupplementaryAlignment(final SAMRecord record, final OverhangGate overhangGate)
@@ -539,17 +513,17 @@ public final class AlignmentSelector
 
     public static List<RecordAlignment> selectSupplementaryAlignments(
             final String primaryChromosome, final boolean primaryForwardStrand,
-            final int primaryStart, final String primaryCigar, final byte[] readBases,
+            final int primaryStart, final String primaryCigar, final int readBasesHash,
             final List<RecordAlignment> supplementaries)
     {
         return selectSupplementaryAlignments(
                 primaryChromosome, primaryForwardStrand, primaryStart,
-                CigarUtils.cigarElementsFromStr(primaryCigar), readBases, supplementaries);
+                CigarUtils.cigarElementsFromStr(primaryCigar), readBasesHash, supplementaries);
     }
 
     public static List<RecordAlignment> selectSupplementaryAlignments(
             final String primaryChromosome, final boolean primaryForwardStrand,
-            final int primaryStart, final List<CigarElement> primaryCigar, final byte[] readBases,
+            final int primaryStart, final List<CigarElement> primaryCigar, final int readBasesHash,
             final List<RecordAlignment> supplementaries)
     {
         Map<Integer, RecordAlignment> selected = new LinkedHashMap<>();
@@ -564,7 +538,7 @@ public final class AlignmentSelector
             else if(current.mapQuality() == 0
                     && compareSupplementaryAlignments(
                     primaryChromosome, primaryForwardStrand, primaryStart, primaryCigar,
-                    readBases, candidate, current) < 0)
+                    readBasesHash, candidate, current) < 0)
             {
                 selected.put(candidate.recordIndex(), candidate);
             }
@@ -575,7 +549,7 @@ public final class AlignmentSelector
 
     private static int compareSupplementaryAlignments(
             final String primaryChromosome, final boolean primaryForwardStrand,
-            final int primaryStart, final List<CigarElement> primaryCigar, final byte[] readBases,
+            final int primaryStart, final List<CigarElement> primaryCigar, final int readBasesHash,
             final RecordAlignment candidate, final RecordAlignment current)
     {
         PairPriority candidatePriority = supplementaryPriority(
@@ -589,7 +563,7 @@ public final class AlignmentSelector
             return priorityComparison;
         }
 
-        int readHash = 31 * Arrays.hashCode(readBases);
+        int readHash = 31 * readBasesHash;
         return Integer.compareUnsigned(readHash + supplementaryHash(candidate), readHash + supplementaryHash(current));
     }
 

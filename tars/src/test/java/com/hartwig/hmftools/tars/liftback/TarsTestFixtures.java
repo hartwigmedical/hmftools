@@ -321,7 +321,7 @@ public final class TarsTestFixtures
     {
         if(record.getReadUnmappedFlag())
         {
-            return LiftedRecord.unmapped("");
+            return LiftedRecord.unmapped();
         }
 
         OverhangGate overhangGate = new OverhangGate(refGenome);
@@ -356,7 +356,6 @@ public final class TarsTestFixtures
     {
         private int mUpdatedMapQuality = 60;
         private int mNumLoci = 1;
-        private String mNotes = "";
         private int mPrimaryIndex = 0;
         private List<LiftedAlignment> mAlignments = List.of();
 
@@ -369,12 +368,6 @@ public final class TarsTestFixtures
         public RecordBuilder numLoci(final int value)
         {
             mNumLoci = value;
-            return this;
-        }
-
-        public RecordBuilder notes(final String value)
-        {
-            mNotes = value;
             return this;
         }
 
@@ -392,7 +385,7 @@ public final class TarsTestFixtures
 
         public LiftedRecord build()
         {
-            return new LiftedRecord(mUpdatedMapQuality, mNumLoci, mNotes, mPrimaryIndex, mAlignments);
+            return new LiftedRecord(mUpdatedMapQuality, mNumLoci, mPrimaryIndex, mAlignments);
         }
     }
 }

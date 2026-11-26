@@ -36,13 +36,13 @@ public final class AlignmentLifter
     {
         if(record.getReadUnmappedFlag())
         {
-            return LiftedRecord.unmapped("");
+            return LiftedRecord.unmapped();
         }
 
         LiftedAlignment self = liftSelf(record);
         if(self == null)
         {
-            return LiftedRecord.unmapped("primary_translate_failed");
+            return LiftedRecord.unmapped();
         }
 
         List<LiftedAlignment> alternatives =
@@ -52,7 +52,7 @@ public final class AlignmentLifter
         alignments.addAll(alternatives);
         overhangGate.gatePlacements(alignments, record);
 
-        return new LiftedRecord(record.getMappingQuality(), 0, "", 0, alignments);
+        return new LiftedRecord(record.getMappingQuality(), 0, 0, alignments);
     }
 
     public LiftedRecord liftSupplementary(final SAMRecord record, final OverhangGate overhangGate)
@@ -60,7 +60,7 @@ public final class AlignmentLifter
         LiftedAlignment self = liftSelf(record);
         if(self == null)
         {
-            return LiftedRecord.unmapped("supp_translate_failed");
+            return LiftedRecord.unmapped();
         }
 
         List<LiftedAlignment> alignments = new ArrayList<>();
@@ -76,7 +76,7 @@ public final class AlignmentLifter
         }
         overhangGate.gatePlacements(alignments, record);
 
-        return new LiftedRecord(record.getMappingQuality(), 1, "", 0, alignments);
+        return new LiftedRecord(record.getMappingQuality(), 1, 0, alignments);
     }
 
     private LiftedAlignment liftSelf(final SAMRecord record)

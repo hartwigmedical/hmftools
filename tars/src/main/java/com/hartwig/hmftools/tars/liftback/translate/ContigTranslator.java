@@ -159,45 +159,33 @@ public final class ContigTranslator
     public static ContigTranslateResult translate(final ContigEntry contig, final int contigPos, final Cigar contigCigar)
     {
         List<BaseRegion> spans = contig.exonSpans();
-        Cigar clampedCigar = clampToContigBounds(contig, contigPos, contigCigar);
-        if(clampedCigar == null)
+        int clampedContigPos = contigPos;
+        Cigar clampedCigar = contigCigar;
+
+        if(contigPos < contig.contigRegion().start())
         {
-            return null;
+            clampedCigar = clampLeadingReferenceToSoftClip(contigCigar, contig.contigRegion().start() - contigPos);
+            if(clampedCigar == null)
+            {
+                return null;
+            }
+
+            clampedContigPos = contigPos + contigCigar.getReferenceLength() - clampedCigar.getReferenceLength();
         }
 
-        int clampedContigPos = Math.max(contigPos, contig.contigRegion().start());
+        int readEnd = clampedContigPos + clampedCigar.getReferenceLength() - 1;
+        if(readEnd > contig.contigRegion().end())
+        {
+            clampedCigar = clampTrailingReferenceToSoftClip(clampedCigar, readEnd - contig.contigRegion().end());
+            if(clampedCigar == null)
+            {
+                return null;
+            }
+        }
+
         int localPos = clampedContigPos - contig.contigRegion().start() + 1;
         SpanLocation start = locateStartSpan(spans, localPos);
         return walkCigarToGenome(contig, spans, start, clampedCigar);
-    }
-
-    // bwa-mem2 can anchor into the alt-contig spacer-N region on either side; convert the overhanging M
-    // bases to soft-clip so the read still lifts. Returns null when the overhang can't be absorbed.
-    private static Cigar clampToContigBounds(final ContigEntry contig, int contigPos, Cigar cigar)
-    {
-        if(contigPos < contig.contigRegion().start())
-        {
-            int overhang = contig.contigRegion().start() - contigPos;
-            cigar = clampLeadingReferenceToSoftClip(cigar, overhang);
-            if(cigar == null)
-            {
-                return null;
-            }
-            contigPos = contig.contigRegion().start();
-        }
-
-        int readEnd = contigPos + cigar.getReferenceLength() - 1;
-        if(readEnd > contig.contigRegion().end())
-        {
-            int overhang = readEnd - contig.contigRegion().end();
-            cigar = clampTrailingReferenceToSoftClip(cigar, overhang);
-            if(cigar == null)
-            {
-                return null;
-            }
-        }
-
-        return cigar;
     }
 
     // localPos is a 1-based offset into the concatenated exons.

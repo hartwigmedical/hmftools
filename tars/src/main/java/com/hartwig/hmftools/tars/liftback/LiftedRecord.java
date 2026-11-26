@@ -13,7 +13,6 @@ public record LiftedRecord(
         int updatedMapQuality,
         // locus count as decided; deliberately NOT recomputed by later primary-only revisions
         int numLoci,
-        String notes,
         // index of the chosen placement in liftedAlignments; 0 is the aligner's own primary, so anything else is a swap
         int primaryIndex,
         List<LiftedAlignment> liftedAlignments)
@@ -33,9 +32,9 @@ public record LiftedRecord(
         }
     }
 
-    public static LiftedRecord unmapped(final String note)
+    public static LiftedRecord unmapped()
     {
-        return new LiftedRecord(0, 0, note, NO_PRIMARY, List.of());
+        return new LiftedRecord(0, 0, NO_PRIMARY, List.of());
     }
 
     // dropped alts included
@@ -95,17 +94,17 @@ public record LiftedRecord(
 
     public LiftedRecord withLiftedAlignments(final List<LiftedAlignment> alignments)
     {
-        return new LiftedRecord(updatedMapQuality, numLoci, notes, primaryIndex, alignments);
+        return new LiftedRecord(updatedMapQuality, numLoci, primaryIndex, alignments);
     }
 
     public LiftedRecord withPrimaryIndex(final int newPrimaryIndex)
     {
-        return new LiftedRecord(updatedMapQuality, numLoci, notes, newPrimaryIndex, liftedAlignments);
+        return new LiftedRecord(updatedMapQuality, numLoci, newPrimaryIndex, liftedAlignments);
     }
 
     public LiftedRecord withMapQuality(final int mapQuality)
     {
-        return new LiftedRecord(mapQuality, numLoci, notes, primaryIndex, liftedAlignments);
+        return new LiftedRecord(mapQuality, numLoci, primaryIndex, liftedAlignments);
     }
 
     public LiftedRecord withPrimaryAlignment(final LiftedAlignment alignment)

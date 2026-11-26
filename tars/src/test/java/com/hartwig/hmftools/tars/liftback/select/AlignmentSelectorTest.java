@@ -312,7 +312,6 @@ public class AlignmentSelectorTest
         LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertFalse(result.hasPlacement());
-        assertTrue(result.notes().contains("supp_translate_failed"));
         assertTrue(result.liftedAlignments().isEmpty());
     }
 
@@ -325,7 +324,6 @@ public class AlignmentSelectorTest
         LiftedRecord result = resolve(selector, record, EMPTY_REF_GENOME);
 
         assertFalse(result.hasPlacement());
-        assertTrue(result.notes().contains("primary_translate_failed"));
     }
 
     @Test
@@ -962,7 +960,7 @@ public class AlignmentSelectorTest
             final AlignmentSelector.RecordAlignment... alignments)
     {
         return AlignmentSelector.selectSupplementaryAlignments(
-                CHR1, true, 1001, "94M57S", null, List.of(alignments));
+                CHR1, true, 1001, "94M57S", 0, List.of(alignments));
     }
 
     @Test

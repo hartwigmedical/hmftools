@@ -155,6 +155,26 @@ public class ContigTranslatorTest
     }
 
     @Test
+    public void testDeletionAtLeadingEdgeMovesTheStart()
+    {
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -2, cigarFromStr("3M1D60M"));
+
+        assertNotNull(result);
+        assertEquals(101, result.genomicStart());
+        assertEquals("3S60M", result.genomicCigar().toString());
+    }
+
+    @Test
+    public void testInsertionAtTrailingEdgeJoinsTheSoftClip()
+    {
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 211, cigarFromStr("40M2I3M"));
+
+        assertNotNull(result);
+        assertEquals(510, result.genomicStart());
+        assertEquals("40M5S", result.genomicCigar().toString());
+    }
+
+    @Test
     public void testLeadingOverhangAbsorbedAcrossDeletion()
     {
         // 11 bases before contigStart with only 7M leading: the 4D supplies the remaining 4 reference bases, so the
@@ -188,14 +208,6 @@ public class ContigTranslatorTest
         assertNotNull(result);
         assertEquals(510, result.genomicStart());
         assertEquals("40M4S", result.genomicCigar().toString());
-    }
-
-    @Test
-    public void testLeadingOverhangEndingOnDeletionReturnsNull()
-    {
-        // the overhang is absorbed exactly by 3M, leaving a deletion at the clip boundary. Dropping it would start the
-        // alignment past contigStart, so the lift is declined rather than misplaced.
-        assertNull(ContigTranslator.translate(threeExonContig(), -2, cigarFromStr("3M1D80M")));
     }
 
     @Test

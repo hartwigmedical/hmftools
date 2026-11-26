@@ -140,11 +140,12 @@ public class OverhangGate
 
         int window = overhang.window();
         int nearEnd = alignmentStart + CigarUtils.cigarAlignedLength(elements.subList(0, overhang.intronIndex())) - 1;
-        byte[] windowRef = referenceBases(mRefGenome, chromosome, nearEnd + 1, nearEnd + window);
-        if(windowRef == null)
+        if(nearEnd + window > mRefGenome.getChromosomeLength(chromosome))
         {
             return CollapseResult.unchanged();
         }
+
+        byte[] windowRef = referenceBases(mRefGenome, chromosome, nearEnd + 1, nearEnd + window);
 
         int windowStart = readBases.length - window;
         byte[] anchorRead = Arrays.copyOfRange(readBases, windowStart, windowStart + overhang.anchorLength());
@@ -181,11 +182,12 @@ public class OverhangGate
 
         int window = overhang.window();
         int nearStart = alignmentStart + overhang.anchorLength() + overhang.intronLength();
-        byte[] windowRef = referenceBases(mRefGenome, chromosome, nearStart - window, nearStart - 1);
-        if(windowRef == null)
+        if(nearStart - window < 1)
         {
             return CollapseResult.unchanged();
         }
+
+        byte[] windowRef = referenceBases(mRefGenome, chromosome, nearStart - window, nearStart - 1);
 
         byte[] anchorRead = Arrays.copyOfRange(
                 readBases, overhang.softclipLength(), overhang.softclipLength() + overhang.anchorLength());

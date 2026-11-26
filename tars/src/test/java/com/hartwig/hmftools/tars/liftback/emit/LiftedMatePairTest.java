@@ -91,7 +91,7 @@ public class LiftedMatePairTest
     @Test
     public void testMateCigarClearedWhenMateUnmapped()
     {
-        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped(""));
+        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped());
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         r1.setAttribute(MATE_CIGAR_ATTRIBUTE, "50M");
@@ -132,7 +132,7 @@ public class LiftedMatePairTest
     @Test
     public void testPatchWithUnmappedMate()
     {
-        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped(""));
+        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped());
 
         SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", false);
         r1.setProperPairFlag(true);
@@ -192,7 +192,7 @@ public class LiftedMatePairTest
     @Test
     public void testBothMatesUnmappedClearsOwnCoordinates()
     {
-        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped(""));
+        LiftedMatePair pair = new LiftedMatePair(null, LiftedRecord.unmapped());
 
         SAMRecord r1 = TarsTestFixtures.pairedUnmappedRecord("read1", true);
         r1.setReferenceName("1");          // stale pre-lift placement from bwa

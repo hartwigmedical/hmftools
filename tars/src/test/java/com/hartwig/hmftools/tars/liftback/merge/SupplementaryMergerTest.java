@@ -57,7 +57,7 @@ public class SupplementaryMergerTest
         return new Placement(
                 chrom, forward, readLen, primStart, primCigar,
                 supps.length == 0 ? Collections.emptyList() : Arrays.asList(supps),
-                bases("A".repeat(readLen)), Collections.emptyList());
+                Arrays.hashCode(bases("A".repeat(readLen))), Collections.emptyList());
     }
 
     private static RecordAlignment supp(
@@ -372,7 +372,7 @@ public class SupplementaryMergerTest
         RecordAlignment left = supp(1, CHR1, true, 500, "5M146S", 60);
         Placement cand = new Placement(
                 CHR1, true, READ_LEN, 1001, "5S90M56S",
-                Arrays.asList(right, left), bases("A".repeat(READ_LEN)), Collections.emptyList());
+                Arrays.asList(right, left), Arrays.hashCode(bases("A".repeat(READ_LEN))), Collections.emptyList());
 
         Result result = defaultMerger(annotated()).merge(cand);
 
@@ -809,7 +809,7 @@ public class SupplementaryMergerTest
         Placement withHint = new Placement(
                 CHR1, true, 151, 1001, "94M57S",
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
-                null, Arrays.asList(hint));
+                0, Arrays.asList(hint));
         Result resHinted = defaultMerger(annotated()).merge(withHint);
         assertTrue(resHinted.merged());
         assertEquals(1093, resHinted.introducedIntrons().get(0).start());
@@ -824,7 +824,7 @@ public class SupplementaryMergerTest
         Placement cand = new Placement(
                 CHR1, true, 151, 1001, "94M57S",
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
-                null, Arrays.asList(hint));
+                0, Arrays.asList(hint));
 
         Result result = defaultMerger(annotated(annotatedJunc)).merge(cand);
 
@@ -846,7 +846,7 @@ public class SupplementaryMergerTest
         Placement withHint = new Placement(
                 CHR1, true, 151, 1498, "92S59M",
                 Arrays.asList(supp(0, CHR1, true, 1001, "94M57S", 60)),
-                null, Arrays.asList(hint));
+                0, Arrays.asList(hint));
         Result resHinted = defaultMerger(annotated()).merge(withHint);
         assertTrue(resHinted.merged());
         assertEquals(1497, resHinted.introducedIntrons().get(0).end());
@@ -861,7 +861,7 @@ public class SupplementaryMergerTest
         Placement cand = new Placement(
                 CHR1, true, 151, 1001, "94M57S",
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
-                null, Arrays.asList(hint));
+                0, Arrays.asList(hint));
 
         Result result = defaultMerger(annotated()).merge(cand);
 

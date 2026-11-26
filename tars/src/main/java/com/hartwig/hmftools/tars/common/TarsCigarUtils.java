@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jetbrains.annotations.Nullable;
+
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 
 import htsjdk.samtools.Cigar;
@@ -103,6 +105,7 @@ public final class TarsCigarUtils
         return previous == CigarOperator.I || previous == CigarOperator.D;
     }
 
+    @Nullable
     public static Cigar clampLeadingReferenceToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> elements = cigar.getCigarElements();
@@ -157,7 +160,21 @@ public final class TarsCigarUtils
             break;
         }
 
-        if(remainingOverhang > 0 || tail.isEmpty() || tail.get(0).getOperator() != CigarOperator.M)
+        if(remainingOverhang > 0)
+        {
+            return null;
+        }
+
+        while(!tail.isEmpty() && (tail.get(0).getOperator() == CigarOperator.I || tail.get(0).getOperator() == CigarOperator.D))
+        {
+            CigarElement edgeIndel = tail.remove(0);
+            if(edgeIndel.getOperator() == CigarOperator.I)
+            {
+                clippedReadBases += edgeIndel.getLength();
+            }
+        }
+
+        if(tail.isEmpty() || tail.get(0).getOperator() != CigarOperator.M)
         {
             return null;
         }
@@ -168,6 +185,7 @@ public final class TarsCigarUtils
         return new Cigar(out);
     }
 
+    @Nullable
     public static Cigar clampTrailingReferenceToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> reversed = new ArrayList<>(cigar.getCigarElements());

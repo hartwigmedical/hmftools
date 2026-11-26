@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.tars.liftback.merge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,6 +50,7 @@ public final class SupplementaryAlignmentResolver
         }
         ++mStats.MergeableSupplementaries;
 
+        int readBasesHash = Arrays.hashCode(primary.getReadBases());
         List<LiftedAlignment> expanded = new ArrayList<>(primaryAlignments.liftedAlignments());
         Set<SupportedAlignmentKey> seen = new HashSet<>();
         for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
@@ -66,7 +68,7 @@ public final class SupplementaryAlignmentResolver
             SupplementaryMerger.Result result = mMerger.merge(new SupplementaryMerger.Placement(
                     alignment.liftedPosition().Chromosome, alignment.forwardStrand(), primary.getReadLength(),
                     alignment.liftedPosition().Position, alignment.liftedCigar(), supplementaries,
-                    primary.getReadBases(), mateHintIntrons));
+                    readBasesHash, mateHintIntrons));
             ++mStats.SupplementaryMergeAttempts;
             if(!result.merged())
             {
@@ -114,7 +116,7 @@ public final class SupplementaryAlignmentResolver
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
             final Set<Integer> absorbedSupplementaries)
     {
-        List<LiftedRecord> finalised = null;
+        List<LiftedRecord> finalised = new ArrayList<>(liftedRecords);
         for(int i = 1; i < records.size(); ++i)
         {
             if(absorbedSupplementaries.contains(i))
@@ -122,18 +124,9 @@ public final class SupplementaryAlignmentResolver
                 continue;
             }
 
-            LiftedRecord lifted = liftedRecords.get(i);
-            LiftedRecord result = AlignmentSelector.finaliseSupplementary(lifted);
-            if(result != lifted)
-            {
-                if(finalised == null)
-                {
-                    finalised = new ArrayList<>(liftedRecords);
-                }
-                finalised.set(i, result);
-            }
+            finalised.set(i, AlignmentSelector.finaliseSupplementary(liftedRecords.get(i)));
         }
-        return finalised != null ? List.copyOf(finalised) : liftedRecords;
+        return finalised;
     }
 
     private List<LiftedRecord> selectRecordAlignments(
@@ -154,9 +147,9 @@ public final class SupplementaryAlignmentResolver
         LiftedAlignment primary = primaryResult.primaryAlignment();
         List<AlignmentSelector.RecordAlignment> selected = AlignmentSelector.selectSupplementaryAlignments(
                 primary.liftedPosition().Chromosome, primary.forwardStrand(), primary.liftedPosition().Position, primary.liftedCigar(),
-                records.get(0).getReadBases(), placements);
+                Arrays.hashCode(records.get(0).getReadBases()), placements);
 
-        List<LiftedRecord> revised = null;
+        List<LiftedRecord> revised = new ArrayList<>(liftedRecords);
         for(AlignmentSelector.RecordAlignment supplementary : selected)
         {
             int recordIndex = supplementary.recordIndex();
@@ -176,15 +169,10 @@ public final class SupplementaryAlignmentResolver
             int score = mAlignmentScorer.scoreRecord(selectedAlignment, records.get(recordIndex));
             LiftedRecord selectedRecord = lifted.withPrimaryIndex(alignmentIndex)
                     .withPrimaryAlignment(selectedAlignment.withGenomicScore(score));
-
-            if(revised == null)
-            {
-                revised = new ArrayList<>(liftedRecords);
-            }
             revised.set(recordIndex, selectedRecord);
         }
 
-        return revised != null ? List.copyOf(revised) : liftedRecords;
+        return revised;
     }
 
     private static List<AlignmentSelector.RecordAlignment> placements(
@@ -217,7 +205,7 @@ public final class SupplementaryAlignmentResolver
 
     private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
     {
-        List<LiftedRecord> annotated = null;
+        List<LiftedRecord> annotated = new ArrayList<>(liftedRecords);
         for(int i = 0; i < liftedRecords.size(); ++i)
         {
             LiftedRecord lifted = liftedRecords.get(i);
@@ -230,14 +218,10 @@ public final class SupplementaryAlignmentResolver
                     lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
             if(strand != null)
             {
-                if(annotated == null)
-                {
-                    annotated = new ArrayList<>(liftedRecords);
-                }
                 annotated.set(i, lifted.withPrimaryAlignment(lifted.primaryAlignment().withTranscriptStrand(strand)));
             }
         }
-        return annotated != null ? List.copyOf(annotated) : liftedRecords;
+        return annotated;
     }
 
     private static Set<Integer> absorbedSupplementaries(final LiftedRecord primaryResult)

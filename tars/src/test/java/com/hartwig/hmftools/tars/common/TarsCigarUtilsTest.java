@@ -61,7 +61,15 @@ public class TarsCigarUtilsTest
     public void testClampReturnsNullWhenOverhangCannotLeaveValidAlignedStart()
     {
         assertNull(TarsCigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("4M10S"), 6));
-        assertNull(TarsCigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("3M1D80M"), 3));
+    }
+
+    @Test
+    public void testClampAbsorbsIndelLeftAtTheNewEdge()
+    {
+        assertEquals("3S80M", TarsCigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("3M1D80M"), 3).toString());
+        assertEquals("5S80M", TarsCigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("3M2I80M"), 3).toString());
+        assertEquals("80M3S", TarsCigarUtils.clampTrailingReferenceToSoftClip(cigarFromStr("80M1D3M"), 3).toString());
+        assertEquals("80M5S", TarsCigarUtils.clampTrailingReferenceToSoftClip(cigarFromStr("80M2I3M"), 3).toString());
     }
 
 }

@@ -18,8 +18,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-import org.jetbrains.annotations.Nullable;
-
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -122,19 +120,17 @@ public class GenomicAlignmentScorer
         return lifted.primaryIndex() != 0 || requiresRescore(record, lifted.primaryAlignment());
     }
 
-    // Null unless the whole window is present, so nothing is scored against truncated bases: past a contig end
-    // RefGenomeSource lets htsjdk throw while MockRefGenome returns empty.
-    @Nullable
     public static byte[] referenceBases(
             final RefGenomeInterface refGenome, final String chromosome, final int posStart, final int posEnd)
     {
-        if(posStart < 1 || posEnd < posStart || posEnd > refGenome.getChromosomeLength(chromosome))
+        int chromosomeLength = refGenome.getChromosomeLength(chromosome);
+        if(posStart < 1 || posEnd < posStart || posEnd > chromosomeLength)
         {
-            return null;
+            throw new IllegalStateException(format(
+                    "ref bases window(%s:%d-%d) invalid for chromosomeLength(%d)", chromosome, posStart, posEnd, chromosomeLength));
         }
 
-        byte[] bases = refGenome.getBases(chromosome, posStart, posEnd);
-        return bases != null && bases.length == posEnd - posStart + 1 ? bases : null;
+        return refGenome.getBases(chromosome, posStart, posEnd);
     }
 
     public static int alignedBaseScore(final byte readBase, final byte refBase)
@@ -189,10 +185,13 @@ public class GenomicAlignmentScorer
                 case M:
                 case EQ:
                 case X:
-                    byte[] ref = referenceBases(refGenome, chromosome, refPos, refPos + length - 1);
-                    for(int i = 0; i < length; ++i)
+                    if(length > 0)
                     {
-                        totalScore += alignedBaseScore(readBases[queryPos + i], ref[i]);
+                        byte[] ref = referenceBases(refGenome, chromosome, refPos, refPos + length - 1);
+                        for(int i = 0; i < length; ++i)
+                        {
+                            totalScore += alignedBaseScore(readBases[queryPos + i], ref[i]);
+                        }
                     }
                     queryPos += length;
                     refPos += length;
