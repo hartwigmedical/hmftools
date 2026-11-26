@@ -34,7 +34,7 @@ public class SpliceFastaBuilder
 
     public SpliceFastaBuilder(final ConfigBuilder configBuilder)
     {
-        mConfig = SpliceFastaConfig.fromConfigBuilder(configBuilder);
+        mConfig = new SpliceFastaConfig(configBuilder);
         mEnsemblDataCache = new EnsemblDataCache(configBuilder);
     }
 
@@ -42,14 +42,14 @@ public class SpliceFastaBuilder
     {
         long startTimeMs = System.currentTimeMillis();
 
-        RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(mConfig.refGenomeFile());
+        RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(mConfig.RefGenomeFile);
         if(refGenome == null)
         {
-            TARS_LOGGER.error("failed to load ref genome: {}", mConfig.refGenomeFile());
+            TARS_LOGGER.error("failed to load ref genome: {}", mConfig.RefGenomeFile);
             System.exit(1);
         }
 
-        TARS_LOGGER.info("loading ensembl cache from {}", mConfig.ensemblDataDir());
+        TARS_LOGGER.info("loading ensembl cache from {}", mConfig.EnsemblDataDir);
         mEnsemblDataCache.setRequiredData(true, false, false, false); // exons only
         mEnsemblDataCache.load(false);
 
