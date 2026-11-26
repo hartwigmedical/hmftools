@@ -65,6 +65,14 @@ public record StandardTrinucleotideContext(
 
     public String mutationString()
     {
-        return String.format("%s>%s", Ref, Alt);
+        String mutation = String.format("%s>%s", Ref, Alt);
+
+        if(Ref == 'C' && Alt == 'T')
+        {
+            boolean isCpG = TrinucleotideContext.charAt(2) == 'G';
+            mutation += isCpG ? " CpG" : " other";
+        }
+
+        return mutation;
     }
 }

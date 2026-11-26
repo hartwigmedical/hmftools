@@ -31,4 +31,18 @@ public class StandardTrinucleotideContextTest
         context = StandardTrinucleotideContext.fromNucleotides('G', 'A', "TGC");
         assertEquals("G[C>T]A -", context.mutationContextString());
     }
+
+    @Test
+    public void canFormMutationString()
+    {
+        StandardTrinucleotideContext forwardCpgContext = StandardTrinucleotideContext.fromNucleotides('C', 'T', "ACG");
+        StandardTrinucleotideContext reverseCpgContext = StandardTrinucleotideContext.fromNucleotides('G', 'A', "CGT"); // reverse of ACG
+        StandardTrinucleotideContext nonCpgContext = StandardTrinucleotideContext.fromNucleotides('C', 'T', "ACA");
+        StandardTrinucleotideContext nonCtoTContext = StandardTrinucleotideContext.fromNucleotides('C', 'A', "ACG");
+
+        assertEquals("C>T CpG", forwardCpgContext.mutationString());
+        assertEquals("C>T CpG", reverseCpgContext.mutationString());
+        assertEquals("C>T other", nonCpgContext.mutationString());
+        assertEquals("C>A", nonCtoTContext.mutationString());
+    }
 }

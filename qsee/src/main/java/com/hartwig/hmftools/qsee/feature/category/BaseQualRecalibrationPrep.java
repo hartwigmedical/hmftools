@@ -68,8 +68,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         List<StandardBqrRecord> recordsStandardised = recordsFiltered.stream().map(StandardBqrRecord::from).toList();
 
         Comparator<StandardBqrRecord> comparator = Comparator.comparing((StandardBqrRecord x) -> x.ReadType())
-                .thenComparing(x -> x.StandardContext().Ref())
-                .thenComparing(x -> x.StandardContext().Alt())
+                .thenComparing(x -> x.StandardContext().mutationString())
                 .thenComparing(x -> x.StandardContext().TrinucleotideContext());
 
         List<StandardBqrRecord> recordsSorted = recordsStandardised.stream().sorted(comparator).toList();
