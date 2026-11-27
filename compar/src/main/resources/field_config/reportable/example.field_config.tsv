@@ -2,9 +2,6 @@ Category	Field	Compared	AbsoluteThreshold	PercentThreshold
 PURITY	Purity	true	0.04	none
 PURITY	Ploidy	true	0.1	none
 PURITY	Contamination	true	0.005	none
-PURITY	TmbPerMb	true	0.1	5.0%
-PURITY	MsIndelsPerMb	true	0.1	5.0%
-PURITY	Tml	true	1.0	5.0%
 PURITY	CopyNumberSegments	true	5.0	20.0%
 PURITY	UnsupportedCopyNumberSegments	true	5.0	20.0%
 PURITY	SvTmb	true	5.0	5.0%
@@ -12,10 +9,13 @@ PURITY	QcStatus	true	none	none
 PURITY	Gender	true	none	none
 PURITY	GermlineAberrations	true	none	none
 PURITY	FitMethod	true	none	none
-PURITY	MsStatus	true	none	none
-PURITY	TmbStatus	true	none	none
-PURITY	TmlStatus	true	none	none
 PURITY	TincLevel	true	0.1	none
+MUTATION_BURDEN	TmbPerMb	true	0.1	5.0%
+MUTATION_BURDEN	MsIndelsPerMb	true	0.1	5.0%
+MUTATION_BURDEN	Tml	true	1.0	5.0%
+MUTATION_BURDEN	MsStatus	true	none	none
+MUTATION_BURDEN	TmbStatus	true	none	none
+MUTATION_BURDEN	TmlStatus	true	none	none
 DRIVER	LikelihoodMethod	true	none	none
 DRIVER	Likelihood	true	0.1	none
 DRIVER	MinCopyNumber	true	0.5	15.0%

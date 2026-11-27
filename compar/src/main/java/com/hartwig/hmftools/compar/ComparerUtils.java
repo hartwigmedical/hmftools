@@ -40,6 +40,7 @@ import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer;
+import com.hartwig.hmftools.compar.purple.MutationBurdenComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.sigs.SigsComparer;
 import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
@@ -107,6 +108,9 @@ public final class ComparerUtils
         {
             case PURITY:
                 return new PurityComparer(config, categoryFieldOverrides);
+
+            case MUTATION_BURDEN:
+                return new MutationBurdenComparer(config, categoryFieldOverrides);
 
             case DRIVER:
                 return new DriverComparer(config, categoryFieldOverrides);

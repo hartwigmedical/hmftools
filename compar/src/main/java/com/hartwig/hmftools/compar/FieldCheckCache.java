@@ -233,7 +233,7 @@ public class FieldCheckCache
     public void writeFieldOverridesFile(final ComparConfig config)
     {
         CMP_LOGGER.info("write field config file");
-        List<ItemComparer> comparers = ComparerUtils.buildComparers(config, null);
+        List<ItemComparer> comparers = ComparerUtils.buildComparers(config, this);
 
         String filename = FieldConfigFile.generateFileName(config.formOutputFilePrefix());
         FieldConfigFile.write(filename, comparers);

@@ -21,8 +21,8 @@ public class MismatchFile
 {
     public static final String FLD_MISMATCH_TYPE = "MismatchType";
     public static final String FLD_CURATION_STATUS = "CurationStatus";
-    private static final String FLD_OLD_VALUES = "OldValues";
-    private static final String FLD_NEW_VALUES = "NewValues";
+    public static final String FLD_OLD_VALUES = "OldValues";
+    public static final String FLD_NEW_VALUES = "NewValues";
     public static final String FLD_DIFFERENCES = "Differences";
     public static final String FLD_OLD_SOURCE = "OldSource";
     public static final String FLD_NEW_SOURCE = "NewSource";

@@ -36,6 +36,8 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 import com.hartwig.hmftools.compar.common.field.FieldValue;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CommonUtils
 {
     public static boolean processSample(
@@ -239,13 +241,15 @@ public class CommonUtils
 
     public static List<String> findDiffs(final ItemComparer comparer, final ComparableItem oldItem, final ComparableItem newItem)
     {
+        return findDiffs(comparer.fieldsList(), oldItem.fieldValues(), newItem.fieldValues());
+    }
+
+    public static List<String> findDiffs(
+            final List<FieldInfo> fields, final Map<String,FieldValue> oldFieldValues, final Map<String,FieldValue> newFieldValues)
+    {
         List<String> diffs = Lists.newArrayList();
 
         // find and compare fields present in both items
-        List<FieldInfo> fields = comparer.fieldsList();
-        Map<String,FieldValue> oldFieldValues = oldItem.fieldValues();
-        Map<String,FieldValue> newFieldValues = newItem.fieldValues();
-
         for(FieldInfo field : fields)
         {
             if(!field.FieldCheck.IsCompared)
@@ -299,6 +303,16 @@ public class CommonUtils
     public static boolean fileExists(final String filename)
     {
         return Files.exists(new File(filename).toPath());
+    }
+
+    public static String formOutputFilePrefix(final String outputDir, final String fileName, @Nullable final String outputId)
+    {
+        String filePrefix = outputDir + fileName;
+
+        if(outputId != null)
+            filePrefix += "." + outputId;
+
+        return filePrefix;
     }
 
     public static Mismatch createMismatchFromDiffs(

@@ -54,6 +54,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.ExpectedCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -88,7 +89,7 @@ public class ComparConfig
     public final String OutputId;
     public final String CurationCacheFile;
 
-    public final List<WriteType> WriteTypes;
+    public final Set<WriteType> WriteTypes;
     public final boolean IncludeMatches;
     public final int Threads;
 
@@ -161,15 +162,11 @@ public class ComparConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
         CurationCacheFile = configBuilder.getValue(CURATION_CACHE);
 
-        WriteTypes = Lists.newArrayList();
+        WriteTypes = Sets.newHashSet(WriteType.fromConfigStr(configBuilder.getValue(WRITE_TYPES)));
 
         if(configBuilder.hasFlag(WRITE_DETAILED_FILES))
         {
             WriteTypes.add(WriteType.TYPE_SPECIFIC);
-        }
-        else
-        {
-            WriteTypes.addAll(WriteType.fromConfigStr(configBuilder.getValue(WRITE_TYPES)));
         }
 
         IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
@@ -269,12 +266,7 @@ public class ComparConfig
 
     public String formOutputFilePrefix()
     {
-        String filePrefix = OutputDir + "compar";
-
-        if(OutputId != null)
-            filePrefix += "." + OutputId;
-
-        return filePrefix;
+        return CommonUtils.formOutputFilePrefix(OutputDir, "compar", OutputId);
     }
 
     public boolean isValid() { return mIsValid; }
@@ -515,7 +507,7 @@ public class ComparConfig
         OutputId = "";
         IncludeMatches = false;
         Threads = 0;
-        WriteTypes = WriteType.DEFAULT_WRITE_TYPES;
+        WriteTypes = Sets.newHashSet(WriteType.DEFAULT_WRITE_TYPES);
 
         DriverGenes = Sets.newHashSet();
         IgnoreGenes = Collections.emptySet();

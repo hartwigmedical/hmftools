@@ -5,6 +5,7 @@ public enum MismatchType
     OLD_ONLY,
     NEW_ONLY,
     VALUE,
+    DUPLICATE_KEY,
     FULL_MATCH,
     ABSENT_FOUND,
     ABSENT_CONFIRMED,

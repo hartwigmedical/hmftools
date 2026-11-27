@@ -22,10 +22,7 @@ public class PurityData extends ComparableItem
         addDoubleValue(PurityComparer.Fields.Purity.toString(), purityContext.bestFit().purity(), fields);
         addDoubleValue(PurityComparer.Fields.Ploidy.toString(), purityContext.bestFit().ploidy(), fields);
         addDoubleValue(PurityComparer.Fields.Contamination.toString(), purityContext.qc().contamination(), fields);
-        addDoubleValue(PurityComparer.Fields.TmbPerMb.toString(), purityContext.tumorMutationalBurdenPerMb(), fields);
-        addDoubleValue(PurityComparer.Fields.MsIndelsPerMb.toString(), purityContext.microsatelliteIndelsPerMb(), fields);
 
-        addIntValue(PurityComparer.Fields.Tml.toString(), purityContext.tumorMutationalLoad(), fields);
         addIntValue(PurityComparer.Fields.CopyNumberSegments.toString(), purityContext.qc().copyNumberSegments(), fields);
 
         addIntValue(
@@ -47,9 +44,6 @@ public class PurityData extends ComparableItem
                 fields);
 
         addStringValue(PurityComparer.Fields.FitMethod.toString(), purityContext.method().toString(), fields);
-        addStringValue(PurityComparer.Fields.MsStatus.toString(), purityContext.microsatelliteStatus().toString(), fields);
-        addStringValue(PurityComparer.Fields.TmbStatus.toString(), purityContext.tumorMutationalBurdenStatus().toString(), fields);
-        addStringValue(PurityComparer.Fields.TmlStatus.toString(), purityContext.tumorMutationalLoadStatus().toString(), fields);
 
         addDoubleValue(PurityComparer.Fields.TincLevel.toString(), purityContext.qc().tincLevel(), fields);
 
@@ -68,13 +62,10 @@ public class PurityData extends ComparableItem
                 case Purity:
                 case Ploidy:
                 case Contamination:
-                case TmbPerMb:
-                case MsIndelsPerMb:
                 case TincLevel:
                     addDoubleValue(field.toString(), Double.valueOf(expectedValue.Value), fields);
                     break;
 
-                case Tml:
                 case CopyNumberSegments:
                 case UnsupportedCopyNumberSegments:
                 case SvTmb:
@@ -85,9 +76,6 @@ public class PurityData extends ComparableItem
                 case Gender:
                 case GermlineAberrations:
                 case FitMethod:
-                case MsStatus:
-                case TmbStatus:
-                case TmlStatus:
                     addStringValue(field.toString(), expectedValue.Value, fields);
                     break;
 
