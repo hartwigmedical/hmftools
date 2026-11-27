@@ -438,15 +438,19 @@ public class OrangeAlgo
 
         plotBuilder.linxDriverPlots(linxDriverPlots);
 
-        String qSeeSourcePlot = generateQseeVisPlot(config.QSeeDirectory, config.TumorId);
-        String qSeePlot = null;
+        List<String> qSeePlots = Lists.newArrayList();
 
-        if(Files.exists(Paths.get(qSeeSourcePlot)))
+        for(int pageNumber = 1; ; ++pageNumber)
         {
-            qSeePlot = mPlotManager.processPlotFile(qSeeSourcePlot);
+            String qSeeSourcePlot = generateQseeVisPlot(config.QSeeDirectory, config.TumorId, pageNumber);
+
+            if(!Files.exists(Paths.get(qSeeSourcePlot)))
+                break;
+
+            qSeePlots.add(mPlotManager.processPlotFile(qSeeSourcePlot));
         }
 
-        plotBuilder.qSeePlot(qSeePlot);
+        plotBuilder.qSeePlots(qSeePlots);
 
         String cuppaSummaryPlot = mPlotManager.processPlotFile(
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);

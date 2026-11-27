@@ -80,7 +80,7 @@ public class ReportWriter
                 chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
             }
 
-            if(report.plots().qSeePlot() != null)
+            if(!report.plots().qSeePlots().isEmpty())
             {
                 chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
             }

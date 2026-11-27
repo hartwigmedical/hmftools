@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE
 import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_WIDTH;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -48,12 +48,23 @@ public class QualityControlChapter implements ReportChapter
     {
         document.addParagraph(name(), mReportResources.chapterTitleStyle());
 
-        if(mReport.plots().qSeePlot() == null)
+        List<String> qSeePlots = mReport.plots().qSeePlots();
+
+        if(qSeePlots.isEmpty())
         {
             document.addParagraph("Plot not available", mReportResources.tableContentStyle());
             return;
         }
 
-        document.addImage(mPlotPathResolver.resolve(mReport.plots().qSeePlot()), FULL_PAGE_IMAGE_WIDTH, FULL_PAGE_IMAGE_HEIGHT);
+        for(int i = 0; i < qSeePlots.size(); ++i)
+        {
+            if(i > 0)
+            {
+                document.newPage();
+                document.addParagraph(name(), mReportResources.chapterTitleStyle());
+            }
+
+            document.addImage(mPlotPathResolver.resolve(qSeePlots.get(i)), FULL_PAGE_IMAGE_WIDTH, FULL_PAGE_IMAGE_HEIGHT);
+        }
     }
 }

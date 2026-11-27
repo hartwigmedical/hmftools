@@ -42,6 +42,6 @@ public interface OrangePlots
     @Nullable
     String cuppaSummaryPlot();
 
-    @Nullable
-    String qSeePlot();
+    @NotNull
+    List<String> qSeePlots();
 }

@@ -16,11 +16,9 @@ public final class MiscToolFiles
         return format(".sage.%s_%s_%d_%s_%s", geneName, enforceChrPrefix(chromosome), position, ref, alt);
     }
 
-    public static String QSEE_PLOT_FILE_ID = ".qsee.vis.report.png";
-
-    public static String generateQseeVisPlot(final String basePath, final String sampleId)
+    public static String generateQseeVisPlot(final String basePath, final String sampleId, final int pageNumber)
     {
-        return checkAddDirSeparator(basePath) + sampleId + QSEE_PLOT_FILE_ID;
+        return checkAddDirSeparator(basePath) + sampleId + format(".qsee.vis.report.page_%d.png", pageNumber);
     }
 
 }
