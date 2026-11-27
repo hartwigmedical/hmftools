@@ -54,6 +54,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.ExpectedCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -265,12 +266,7 @@ public class ComparConfig
 
     public String formOutputFilePrefix()
     {
-        String filePrefix = OutputDir + "compar";
-
-        if(OutputId != null)
-            filePrefix += "." + OutputId;
-
-        return filePrefix;
+        return CommonUtils.formOutputFilePrefix(OutputDir, "compar", OutputId);
     }
 
     public boolean isValid() { return mIsValid; }
