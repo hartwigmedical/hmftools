@@ -40,9 +40,12 @@ public class StandardTrinucleotideContextTest
         StandardTrinucleotideContext nonCpgContext = StandardTrinucleotideContext.fromNucleotides('C', 'T', "ACA");
         StandardTrinucleotideContext nonCtoTContext = StandardTrinucleotideContext.fromNucleotides('C', 'A', "ACG");
 
-        assertEquals("C>T CpG", forwardCpgContext.mutationString());
-        assertEquals("C>T CpG", reverseCpgContext.mutationString());
-        assertEquals("C>T other", nonCpgContext.mutationString());
+        assertEquals("C>T", forwardCpgContext.mutationString());
         assertEquals("C>A", nonCtoTContext.mutationString());
+
+        assertEquals("C>T CpG", forwardCpgContext.mutationStringSplitCpG());
+        assertEquals("C>T CpG", reverseCpgContext.mutationStringSplitCpG());
+        assertEquals("C>T other", nonCpgContext.mutationStringSplitCpG());
+        assertEquals("C>A", nonCtoTContext.mutationStringSplitCpG());
     }
 }

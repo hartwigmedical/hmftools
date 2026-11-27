@@ -712,7 +712,7 @@ plot_bqr <- function(plot_data, x, row_facet, plot_labels){
          gg_geom_boxplot +
          geom_point(aes(shape = ReadOrientation), position = gg_position_dodge, na.rm = TRUE) +
          facet_grid(
-            rows = vars(.data[[row_facet]]), cols = vars(StandardMutation), scales = "free_x", space = "free_x",
+            rows = vars(.data[[row_facet]]), cols = vars(StandardMutation), scales = "free_x",
             labeller = labeller(SampleType = sapply(SAMPLE_TYPE, `[[`, "display_name"))
          ) +
          scale_fill_manual(values = sapply(SAMPLE_TYPE, `[[`, "color"), drop = FALSE) +
@@ -778,26 +778,18 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    ## Only the highest original base quality bin is used
    plot_labels$title <- paste0(plot_labels$title, ", original base quality: ", plot_data$OriginalQualBin[1])
 
-   ## Solid lines where 5' base changes, dotted otherwise
-   context_vlines <- plot_data %>%
-      dplyr::distinct(StandardMutation, StandardTrinucContext) %>%
-      dplyr::arrange(StandardMutation, StandardTrinucContext) %>%
-      dplyr::group_by(StandardMutation) %>%
-      dplyr::mutate(
-         ContextIndex = dplyr::row_number(),
-         FivePrimeBase = substr(StandardTrinucContext, 1, 1),
-         IsSolid = FivePrimeBase != dplyr::lead(FivePrimeBase) & dplyr::n() > 4
-      ) %>%
-      dplyr::filter(ContextIndex < dplyr::n()) %>%  ## no line after last context
-      dplyr::ungroup()
-
    plot_bqr(plot_data, x = "StandardTrinucContext", row_facet = "SampleType", plot_labels = plot_labels) &
+
+      ## Solid lines where 5' base changes (every 4 contexts), dotted otherwise
       geom_vline(
-         data = context_vlines, aes(xintercept = ContextIndex + 0.5, linetype = IsSolid, colour = IsSolid),
-         linewidth = THEME_PANEL_GRID_MAJOR$linewidth
+         xintercept = c(4, 8, 12) + 0.5,
+         linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour
       ) &
-      scale_linetype_manual(values = c(`TRUE` = "solid", `FALSE` = "26"), guide = "none") &
-      scale_colour_manual(values = c(`TRUE` = THEME_PANEL_GRID_MAJOR$colour, `FALSE` = "grey80"), guide = "none") &
+      geom_vline(
+         xintercept = setdiff(1:15, c(4, 8, 12)) + 0.5,
+         linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = "grey80", linetype = "26"
+      ) &
+
       theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = BASE_SIZE*0.5))
 })
 

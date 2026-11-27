@@ -65,7 +65,12 @@ public record StandardTrinucleotideContext(
 
     public String mutationString()
     {
-        String mutation = String.format("%s>%s", Ref, Alt);
+        return String.format("%s>%s", Ref, Alt);
+    }
+
+    public String mutationStringSplitCpG()
+    {
+        String mutation = mutationString();
 
         if(Ref == 'C' && Alt == 'T')
         {

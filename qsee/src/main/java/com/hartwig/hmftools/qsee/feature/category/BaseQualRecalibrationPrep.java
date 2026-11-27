@@ -125,7 +125,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         {
             String featureName = formGroupingKey(
                     bqrRecord.ReadType().toString(),
-                    bqrRecord.StandardContext().mutationString(),
+                    bqrRecord.StandardContext().mutationStringSplitCpG(),
                     ANY,
                     bqrRecord.StandardContext().ReadOrientation().name(),
                     baseQualBinner.binRangeStringFrom(bqrRecord.OriginalQuality())
