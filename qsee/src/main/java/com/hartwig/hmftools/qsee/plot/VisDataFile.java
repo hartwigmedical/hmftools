@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.qsee.common.QseeFileCommon.MULTISAMPLE_SAMPLE
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.qsee.QseeConfig;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SampleFeatures;
 
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +30,11 @@ import org.jetbrains.annotations.Nullable;
 public class VisDataFile
 {
     private static final String COL_PLOT_METADATA = "PlotMetadata";
+
+    private static final Set<FeatureType> KEEP_NAN_FEATURE_TYPES = Set.of(
+            FeatureType.BQR_PER_ORIG_QUAL,
+            FeatureType.BQR_PER_SNV96_CONTEXT
+    );
 
     public static String generateFilename(String basePath, String sampleId, @Nullable String outputId)
     {
@@ -66,10 +73,10 @@ public class VisDataFile
             {
                 for(Feature feature : sampleFeatures.features())
                 {
-                    if(Double.isNaN(feature.value()))
-                        continue;
-
                     FeatureKey featureKey = feature.key();
+
+                    if(Double.isNaN(feature.value()) && !KEEP_NAN_FEATURE_TYPES.contains(featureKey.type()))
+                        continue;
 
                     StringJoiner line = new StringJoiner(TSV_DELIM);
                     line.add(sampleFeatures.sampleId());

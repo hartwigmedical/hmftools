@@ -667,27 +667,102 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       render_now()
 })
 
+READ_ORIENTATION_SHAPES <- c(FORWARD = 24, REVERSE = 25)
+
+plot_bqr <- function(plot_data, x, row_facet, plot_labels){
+
+   ## Sufficiently different from plot_pairwise_comparison to warrant a separate function
+
+   ## Low count features have NaN sample values. Also hide their cohort boxplots
+   for(colname in sapply(NAMED_PERCENTILES, `[[`, "name")){
+      plot_data[[colname]][is.na(plot_data$FeatureValue)] <- NA
+   }
+
+   gg_position_dodge <- position_dodge(width = 0.6)
+
+   gg_geom_boxplot <- geom_boxplot(
+      aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
+      position = gg_position_dodge, width = 0.5, stat = "identity", alpha = 0.3, na.rm = TRUE
+   )
+
+   if(is.na(COHORT_PERCENTILES_FILE)){
+      gg_geom_boxplot <- geom_blank()
+   }
+
+   ## Same y limits for all consensus types so that they can be compared
+   y_limits <- range(c(plot_data$FeatureValue, plot_data$PctMin, plot_data$PctMax), na.rm = TRUE)
+
+   read_types <- levels(plot_data$ReadType)
+
+   subplots <- lapply(seq_along(read_types), function(read_type_index){
+
+      read_type <- read_types[read_type_index]
+
+      subplot_labels <- plot_labels
+      subplot_labels$subtitle <- paste("Consensus type:", read_type)
+      if(read_type_index > 1){
+         subplot_labels$title <- NULL
+      }
+
+      ggplot(
+         plot_data[plot_data$ReadType == read_type, ],
+         aes(x = .data[[x]], y = FeatureValue, fill = SampleType, group = interaction(.data[[x]], ReadOrientation))
+      ) +
+         geom_hline(yintercept = 0, linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour) +
+         gg_geom_boxplot +
+         geom_point(aes(shape = ReadOrientation), position = gg_position_dodge, na.rm = TRUE) +
+         facet_grid(
+            rows = vars(.data[[row_facet]]), cols = vars(StandardMutation), scales = "free_x",
+            labeller = labeller(SampleType = sapply(SAMPLE_TYPE, `[[`, "display_name"))
+         ) +
+         scale_fill_manual(values = sapply(SAMPLE_TYPE, `[[`, "color"), drop = FALSE) +
+         scale_shape_manual(values = READ_ORIENTATION_SHAPES) +
+         scale_y_continuous(
+            limits = y_limits,
+            breaks = function(limits){
+               ## Drop breaks near panel edges so labels of touching panels don't overlap
+               breaks <- scales::breaks_pretty()(limits)
+               margin <- 0.1 * diff(limits)
+               breaks[breaks > limits[1] + margin & breaks < limits[2] - margin]
+            },
+            labels = function(x){ ifelse(x > 0, paste0("+",x), x) }
+         ) +
+         subplot_labels +
+         theme(
+            panel.spacing.x = unit(-0.5, "pt"),
+            panel.spacing.y = unit(-0.5, "pt"),
+            plot.subtitle = element_text(size = BASE_SIZE*0.85),
+            legend.position = "none"
+         ) +
+         render_now()
+   })
+
+   ## Height proportional to number of panel rows, so that all panels have the same height
+   row_counts <- sapply(read_types, function(read_type){
+      length(unique(plot_data[[row_facet]][plot_data$ReadType == read_type]))
+   })
+
+   patchwork::wrap_plots(subplots, ncol = 1, heights = row_counts) +
+      patchwork::plot_layout(axes = "collect_x", axis_titles = "collect")
+}
+
 PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
-   
+
    plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
-   
-   plot_labels <- labs(title = "BQR by original base quality", x = "Original base quality", y = "Phred score adjustment")
-   
+
+   plot_labels <- labs(title = "BQR by original base quality", x = "Sample type", y = "Phred score adjustment")
+
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
-   
-   plot_pairwise_comparison(plot_data, x = "OriginalQualBin", hlines = 0) +
-      facet_grid("ReadType ~ StandardMutation") +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus read type")
-      ) +
-      plot_labels + 
-      theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = BASE_SIZE*0.7),
-      ) +
-      render_now()
+
+   ## Order bins by quality, e.g. LOW (0-29) before HIGH (30+)
+   bin_lower_bounds <- as.numeric(sub(".*\\((\\d+).*", "\\1", levels(plot_data$OriginalQualBin)))
+   plot_data$OriginalQualBin <- factor(plot_data$OriginalQualBin, levels(plot_data$OriginalQualBin)[order(bin_lower_bounds)])
+
+   plot_bqr(plot_data, x = "SampleType", row_facet = "OriginalQualBin", plot_labels = plot_labels) &
+      ## Sample type is shown by color
+      theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank())
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
@@ -697,31 +772,32 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
    if(is.null(plot_data)){
-      plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
       return(plot_missing_data(plot_labels))
    }
-   
-   plot_pairwise_comparison(
-      plot_data, x = "StandardTrinucContext", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE, 
-      hlines = 0, vlines = c(4, 8, 12) + 0.5
-   ) +
-      facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus read type")
-      ) +
-      plot_labels +
-      theme(
-         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = BASE_SIZE*0.5),
-      ) +
-      render_now()
+
+   ## Only the highest original base quality bin is used
+   plot_labels$title <- paste0(plot_labels$title, ", original base quality: ", plot_data$OriginalQualBin[1])
+
+   plot_bqr(plot_data, x = "StandardTrinucContext", row_facet = "SampleType", plot_labels = plot_labels) &
+
+      ## Solid lines where 5' base changes (every 4 contexts), dotted otherwise
+      geom_vline(
+         xintercept = c(4, 8, 12) + 0.5,
+         linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour
+      ) &
+      geom_vline(
+         xintercept = setdiff(1:15, c(4, 8, 12)) + 0.5,
+         linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = "grey80", linetype = "26"
+      ) &
+
+      theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = BASE_SIZE*0.5))
 })
 
 PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
    
-   plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
+   plot_labels <- labs(title = "Microsatellite indel errors", subtitle = "Rates", x = "Repeat units", y = "Phred score")
    
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
@@ -735,7 +811,10 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       expand_limits(x = c(4, 15)) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus read type")) +
       plot_labels +
-      theme(panel.grid.major = THEME_PANEL_GRID_MAJOR) +
+      theme(
+         panel.grid.major = THEME_PANEL_GRID_MAJOR,
+         plot.subtitle = element_text(size = BASE_SIZE*0.85)
+      ) +
       render_now()
 })
 
@@ -743,27 +822,39 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
    
-   plot_labels <- labs(
-      title = "Microsatellite indel error bias",
-      x = "Repeat units",
-      y = expression(atop("Phred score diff. (del - ins)",atop("more del errors <-> more ins errors")))
-   )
-   
+   plot_labels <- labs(subtitle = "Bias", x = "Repeat units", y = "Phred score diff.")
+
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
-   
+
    plot_data$RefNumUnits <- as.numeric(as.character(plot_data$RefNumUnits))
-   
+
+   ## Explain the sign of the y-axis in the first panel column only
+   bias_direction_labels <- data.frame(
+      RepeatUnitType = factor(levels(plot_data$RepeatUnitType)[1], levels(plot_data$RepeatUnitType)),
+      y = c(Inf, -Inf),
+      vjust = c(1.5, -0.5),
+      label = c("More ins errors", "More del errors")
+   )
+
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE, hlines = 0) +
+      geom_text(
+         data = bias_direction_labels, mapping = aes(x = -Inf, y = y, vjust = vjust, label = label),
+         inherit.aes = FALSE, hjust = -0.05, size = BASE_SIZE*0.22, color = "grey40"
+      ) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_continuous(breaks = scales::breaks_width(3)) +
       expand_limits(x = c(4, 15)) +
       scale_y_continuous(
+         expand = expansion(mult = 0.12), ## Headroom for bias direction labels
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus read type")
       ) +
-      theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
+      theme(
+         panel.grid.major.x = THEME_PANEL_GRID_MAJOR,
+         plot.subtitle = element_text(size = BASE_SIZE*0.85)
+      ) +
       plot_labels +
       render_now()
 })
@@ -991,7 +1082,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
 
 PLOT_NAME_LEGEND <- "CUSTOM_LEGEND"
 
-PLOTS[[PLOT_NAME_LEGEND]] <- local({
+create_legend <- function(show_qc_status = TRUE){
    
    #' A custom legend is created for a few reasons:
    #' 
@@ -1027,7 +1118,13 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
       QcStatus = lapply(QC_STATUS, `[[`, "name") %>% unlist(use.names = FALSE),
       Color = lapply(QC_STATUS, `[[`, "color") %>% unlist(use.names = FALSE)
    )
-   
+
+   plot_data_read_orientation <- data.frame(
+      Index = 1:length(READ_ORIENTATION_SHAPES),
+      ReadOrientation = c("Forward", "Reverse"),
+      Shape = unname(READ_ORIENTATION_SHAPES[c("FORWARD", "REVERSE")])
+   )
+
    dummy_plot <- ggplot(data.frame(), aes(SampleType, QcStatus)) +
       
       ## Sample type
@@ -1041,7 +1138,17 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
          values = plot_data_sample_type %>% dplyr::pull(Color, name = SampleType),
          labels = plot_data_sample_type %>% dplyr::pull(SampleType, name = SampleType),
       ) +
-      
+
+      ## Read orientation
+      geom_point(
+         data = plot_data_read_orientation,
+         mapping = aes(x = Index, y = 3, shape = preordered_factor(ReadOrientation))
+      ) +
+      scale_shape_manual(
+         name = "Read strand",
+         values = plot_data_read_orientation %>% dplyr::pull(Shape, name = ReadOrientation)
+      ) +
+
       ## QC status
       geom_label(
          data = plot_data_qc_status, 
@@ -1056,14 +1163,10 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
       ## Set legend order
       guides(
          color = guide_legend(order = 1, override.aes = list(size = BASE_SIZE*0.5)),
-         fill  = guide_legend(order = 2, override.aes = list(size = BASE_SIZE*0.35))
-      ) +
-      
-      theme(
-         legend.position="bottom", 
-         legend.direction="vertical",
+         shape = guide_legend(order = 2, override.aes = list(size = BASE_SIZE*0.3, fill = "grey50")),
+         fill  = if(show_qc_status) guide_legend(order = 3, override.aes = list(size = BASE_SIZE*0.35)) else "none"
       )
-   
+
    legend <- local({ 
       plot_as_gtable <- dummy_plot %>% ggplot_build() %>% ggplot_gtable() 
       
@@ -1071,11 +1174,13 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
       grob_names <- sapply(grobs, function(x) x$name)
       legend_index <- which(grob_names == "guide-box")
       
-      grobs[[legend_index]] %>% patchwork::wrap_elements()
+      patchwork::wrap_elements(full = grobs[[legend_index]])
    })
    
    return(legend)
-})
+}
+
+PLOTS[[PLOT_NAME_LEGEND]] <- create_legend()
 
 REPORT_TITLE <- local({
    
@@ -1145,16 +1250,11 @@ create_report <- local({
       "E" = FEATURE_TYPE$GC_BIAS,
       "F" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ,
       "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD,
-      
-      "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL,
-      "I" = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT,
-      "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES,
-      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS,
-      
+
       "Z" = PLOT_NAME_LEGEND
    )
 
-   plots <- lapply(plot_order, function(feature_type){
+   free_plot <- function(feature_type){
 
       p <- PLOTS[[feature_type]]
 
@@ -1166,16 +1266,39 @@ create_report <- local({
       }
 
       return(p)
-   })
+   }
+
+   plots <- lapply(plot_order, free_plot)
+
+   plots[["H"]] <- PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]]
+
+   plots[["I"]] <- patchwork::wrap_plots(
+      PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]],
+      PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]],
+      ncol = 1
+   ) +
+      patchwork::plot_layout(axes = "collect_x", axis_titles = "collect")
 
    design <- "
-      AABBCCDD
-      AAEEFFGG
-      AAHHIIII
-      AAJJKKZZ
+      AABBEEDDZ
+      AACCFFGGZ
+      AAHHHIIIZ
+      AAHHHIIIZ
    "
-   
-   plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
+
+   ## Columns 5-6 are narrower to offset the BQR/MSI axis space between them, so that the simple plots have similar widths
+   page_1 <- patchwork::wrap_plots(
+      plots,
+      design = design, widths = c(1, 1, 1, 1, 0.74, 0.74, 1, 1, 0.75)
+   ) + REPORT_TITLE
+
+   page_2 <- patchwork::wrap_plots(
+      free_plot(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT),
+      create_legend(show_qc_status = FALSE),
+      nrow = 1, widths = c(1, 0.1)
+   ) + REPORT_TITLE
+
+   pages <- list(page_1, page_2)
 
    plot_width <- 17
    plot_height <- 10
@@ -1184,17 +1307,21 @@ create_report <- local({
 
    LOGGER$info("Writing PDF: %s", PLOT_PATH)
    suppressWarnings({
-      ggsave(filename = PLOT_PATH, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
+      grDevices::pdf(file = PLOT_PATH, width = plot_width, height = plot_height, useDingbats = FALSE)
+      for(page in pages) print(page)
+      invisible(grDevices::dev.off())
    })
 
    if(SINGLE_PATIENT_MODE)
    {
       ## PNGs are easier to embed in downstream reports (e.g. on a website)
-      png_path <- sub("pdf$", "png", PLOT_PATH)
-      LOGGER$info("Writing PNG: %s", png_path)
-      suppressWarnings({
-         ggsave(filename = png_path, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
-      })
+      for(page_index in seq_along(pages)){
+         png_path <- sub("pdf$", sprintf("page_%s.png", page_index), PLOT_PATH)
+         LOGGER$info("Writing PNG: %s", png_path)
+         suppressWarnings({
+            ggsave(filename = png_path, plot = pages[[page_index]], width = plot_width, height = plot_height, units = "in")
+         })
+      }
    }
 })
 
