@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShi
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
@@ -129,7 +130,8 @@ public class HomologyTest
 
         ChrBaseRegion region = new ChrBaseRegion(CHR_1, 0, 200);
         RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
-        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        RefContextConsumer refContextConsumer = new RefContextConsumer(
+                TEST_CONFIG, region, refSequence, MOCK_REF_GENOME, refContextCache, Collections.emptyList());
 
         String cigar = buildCigarString(refAlignedBases.length(), 0, softClipBases.length());
 
@@ -154,7 +156,8 @@ public class HomologyTest
         readClone = buildSamRecord(readStart, cigar, readBases);
 
         refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
-        refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        refContextConsumer = new RefContextConsumer(
+                TEST_CONFIG, region, refSequence, MOCK_REF_GENOME, refContextCache, Collections.emptyList());
         refContextConsumer.processRead(read);
         refContextConsumer.processRead(readClone);
 

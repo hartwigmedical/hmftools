@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -21,15 +22,17 @@ import htsjdk.samtools.SAMRecord;
 public class CandidateEvidence
 {
     private final SageConfig mConfig;
+    private final RefGenomeInterface mRefGenome;
     private final List<SimpleVariant> mHotspots;
     private final List<BaseRegion> mPanel;
 
     private int mTotalReadsProcessed;
 
     public CandidateEvidence(
-            final SageConfig config, final List<SimpleVariant> hotspots, final List<BaseRegion> panel)
+            final SageConfig config, final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panel)
     {
         mConfig = config;
+        mRefGenome = refGenome;
         mPanel = panel;
         mHotspots = hotspots;
 
@@ -41,7 +44,8 @@ public class CandidateEvidence
     public List<ReadContextCandidate> readBam(final SamSlicerInterface samSlicer, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
         RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
-        RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache, mHotspots);
+        RefContextConsumer refContextConsumer = new RefContextConsumer(
+                mConfig, bounds, refSequence, mRefGenome, refContextCache, mHotspots);
 
         Consumer<SAMRecord> consumer = record ->
         {
