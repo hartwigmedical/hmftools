@@ -1316,7 +1316,7 @@ create_report <- local({
    {
       ## PNGs are easier to embed in downstream reports (e.g. on a website)
       for(page_index in seq_along(pages)){
-         png_path <- sub("pdf$", sprintf("page%s.png", page_index), PLOT_PATH)
+         png_path <- sub("pdf$", sprintf("page_%s.png", page_index), PLOT_PATH)
          LOGGER$info("Writing PNG: %s", png_path)
          suppressWarnings({
             ggsave(filename = png_path, plot = pages[[page_index]], width = plot_width, height = plot_height, units = "in")
