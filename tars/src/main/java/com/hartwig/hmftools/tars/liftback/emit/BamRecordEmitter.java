@@ -1,0 +1,292 @@
+package com.hartwig.hmftools.tars.liftback.emit;
+
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getRequiredSamTag;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
+import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
+import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
+
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.tars.liftback.AlignmentKey;
+import com.hartwig.hmftools.tars.liftback.ExcludedRegions;
+import com.hartwig.hmftools.tars.liftback.GenomicAlignmentScorer;
+import com.hartwig.hmftools.tars.liftback.LiftBackStats;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
+import htsjdk.samtools.util.SequenceUtil;
+
+public final class BamRecordEmitter
+{
+    private final RefGenomeInterface mRefGenome;
+    private final ExcludedRegions mExcludedRegions;
+    private final LiftBackStats mStats;
+
+    public BamRecordEmitter(
+            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions, final LiftBackStats stats)
+    {
+        mRefGenome = refGenome;
+        mExcludedRegions = excludedRegions;
+        mStats = stats;
+    }
+
+    public void emit(
+            final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
+            final Set<Integer> absorbedSupplementaries, final boolean primaryUnmapped,
+            final LiftedMatePair matePair, final Consumer<SAMRecord> consumer)
+    {
+        if(records.isEmpty())
+        {
+            return;
+        }
+
+        SAMRecord primary = records.get(0);
+        LiftedRecord primaryResult = liftedRecords.get(0);
+        boolean finalPrimaryUnmapped = primaryUnmapped || willBeUnmapped(primary, primaryResult);
+        boolean[] willEmit = computeWillEmit(records, liftedRecords, absorbedSupplementaries, finalPrimaryUnmapped);
+
+        // Apply every final placement before building any SA tag, so SA entries take coordinates, cigar, strand, MAPQ and
+        // refreshed NM from the records that are emitted.
+        for(int i = 0; i < records.size(); ++i)
+        {
+            if(!willEmit[i])
+            {
+                continue;
+            }
+
+            SAMRecord record = records.get(i);
+            LiftedRecord result = liftedRecords.get(i);
+            boolean unmapDecided = primaryUnmapped && record == primary;
+            if(!record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag())
+            {
+                ++mStats.PrimariesSeen;
+                if(!result.hasPlacement() && !unmapDecided)
+                {
+                    ++mStats.LiftFailed;
+                }
+            }
+
+            applyResultToRecord(record, result, matePair);
+            if(!record.getReadUnmappedFlag())
+            {
+                refreshNmDropMd(record);
+            }
+        }
+
+        for(int i = 0; i < records.size(); ++i)
+        {
+            if(willEmit[i])
+            {
+                writeRecord(records, willEmit, i, primary, matePair, consumer);
+            }
+        }
+    }
+
+    private boolean[] computeWillEmit(
+            final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
+            final Set<Integer> absorbedSupplementaries, final boolean primaryUnmapped)
+    {
+        Set<AlignmentKey> emittedSupplementaries = new HashSet<>();
+        boolean[] willEmit = new boolean[records.size()];
+        for(int i = 0; i < records.size(); ++i)
+        {
+            if(absorbedSupplementaries.contains(i))
+            {
+                continue;
+            }
+
+            SAMRecord record = records.get(i);
+            willEmit[i] = !record.getSupplementaryAlignmentFlag()
+                    || keepSupplementary(record, liftedRecords.get(i), primaryUnmapped, emittedSupplementaries);
+        }
+        return willEmit;
+    }
+
+    private boolean keepSupplementary(
+            final SAMRecord record, final LiftedRecord result, final boolean primaryUnmapped,
+            final Set<AlignmentKey> emittedSupplementaries)
+    {
+        if(primaryUnmapped || !result.hasPlacement())
+        {
+            return false;
+        }
+
+        if(!emittedSupplementaries.add(result.primaryAlignment().key()))
+        {
+            return false;
+        }
+
+        int alignmentScore = getRequiredSamTag(record, ALIGNMENT_SCORE_ATTRIBUTE, SAMRecord::getIntegerAttribute);
+        if(result.primaryAlignment().genomicScore() != null)
+        {
+            alignmentScore = result.primaryAlignment().genomicScore();
+        }
+        if(alignmentScore < SUPP_AS_DROP_THRESHOLD)
+        {
+            return false;
+        }
+
+        return !excludes(result);
+    }
+
+    private static void writeRecord(
+            final List<SAMRecord> records, final boolean[] willEmit, final int recordIndex, final SAMRecord primary,
+            final LiftedMatePair matePair, final Consumer<SAMRecord> consumer)
+    {
+        SAMRecord record = records.get(recordIndex);
+        if(record.getReadUnmappedFlag())
+        {
+            matePair.patchMateFields(record);
+            if(record == primary)
+            {
+                consumer.accept(record);
+            }
+            return;
+        }
+
+        String saTag = SaTagRewriter.buildForRecord(records, willEmit, primary, recordIndex);
+        record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saTag);
+        matePair.patchMateFields(record);
+        consumer.accept(record);
+    }
+
+    static void applyResultToRecord(final SAMRecord record, final LiftedRecord result, final LiftedMatePair matePair)
+    {
+        if(!result.hasPlacement())
+        {
+            if(!record.getReadUnmappedFlag())
+            {
+                matePair.unmapRead(record);
+            }
+            return;
+        }
+
+        LiftedAlignment finalAlignment = result.primaryAlignment();
+        boolean clearStaleAlignmentScore = finalAlignment.genomicScore() == null
+                && GenomicAlignmentScorer.requiresRescore(record, result);
+        Cigar liftedCigar = CigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
+        if(result.negativeStrand() != record.getReadNegativeStrandFlag())
+        {
+            record.setReadBases(Nucleotides.reverseComplementBases(record.getReadBases()));
+            record.setBaseQualities(reverseArray(record.getBaseQualities()));
+            byte[] tpValues = record.getByteArrayAttribute(ULTIMA_TP_TAG);
+            if(tpValues != null)
+            {
+                record.setAttribute(ULTIMA_TP_TAG, reverseArray(tpValues));
+            }
+            String t0Values = record.getStringAttribute(ULTIMA_T0_TAG);
+            if(t0Values != null)
+            {
+                record.setAttribute(ULTIMA_T0_TAG, new StringBuilder(t0Values).reverse().toString());
+            }
+        }
+
+        record.setReferenceName(result.finalChromosome());
+        record.setAlignmentStart(result.finalPos());
+        record.setCigar(liftedCigar);
+        record.setReadNegativeStrandFlag(result.negativeStrand());
+        record.setMappingQuality(result.updatedMapQuality());
+        record.setAttribute(XA_ATTRIBUTE, result.xaTag());
+        if(finalAlignment.genomicScore() != null)
+        {
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, finalAlignment.genomicScore());
+        }
+        else if(clearStaleAlignmentScore)
+        {
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, null);
+        }
+        record.setAttribute(XS_ATTRIBUTE, null);
+        if(result.hasNCigar() && result.transcriptStrand() != null)
+        {
+            record.setAttribute(XS_ATTRIBUTE, result.transcriptStrand().asChar());
+        }
+    }
+
+    static boolean willBeUnmapped(final SAMRecord record, final LiftedRecord result)
+    {
+        return !result.hasPlacement() || exceedsMappingCap(record, result);
+    }
+
+    public static boolean exceedsMappingCap(final SAMRecord record, final LiftedRecord result)
+    {
+        return record.getMappingQuality() == 0 && result.numXaAlts() == 0 && result.hasPlacement()
+                && !result.primaryAlignment().fromTxContig();
+    }
+
+    public boolean excludes(final LiftedRecord result)
+    {
+        return mExcludedRegions != null && result.hasPlacement()
+                && mExcludedRegions.excludes(
+                result.finalChromosome(), result.finalPos(), result.primaryAlignment().alignedEnd());
+    }
+
+    private void refreshNmDropMd(final SAMRecord record)
+    {
+        record.setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, null);
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, computeEditDistance(record));
+    }
+
+    private int computeEditDistance(final SAMRecord record)
+    {
+        byte[] readBases = record.getReadBases();
+        int refPos = record.getAlignmentStart();
+        int readIndex = 0;
+        int editDistance = 0;
+        for(CigarElement element : record.getCigar().getCigarElements())
+        {
+            int length = element.getLength();
+            switch(element.getOperator())
+            {
+                case M:
+                case EQ:
+                case X:
+                    byte[] refBases = GenomicAlignmentScorer.referenceBases(
+                            mRefGenome, record.getReferenceName(), refPos, refPos + length - 1);
+                    for(int i = 0; i < length; ++i)
+                    {
+                        if(!SequenceUtil.basesEqual(readBases[readIndex + i], refBases[i]))
+                        {
+                            ++editDistance;
+                        }
+                    }
+                    refPos += length;
+                    readIndex += length;
+                    break;
+                case I:
+                    editDistance += length;
+                    readIndex += length;
+                    break;
+                case D:
+                    editDistance += length;
+                    refPos += length;
+                    break;
+                case N:
+                    refPos += length;
+                    break;
+                case S:
+                    readIndex += length;
+                    break;
+                case P:
+                    break;
+            }
+        }
+        return editDistance;
+    }
+}

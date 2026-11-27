@@ -1,0 +1,63 @@
+<svg viewBox="0 0 880 134" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Ultima pipeline</title>
+<desc>The Ultima CRAM of single-end reads is streamed as SAM by samtools view, keeping the tp and t0 tags, aligned by UA 4.2 against the genome plus transcriptome FASTA, lifted back to the genome by TarsApplication, duplicate-marked by REDUX with -sequencing_type ULTIMA, then ISOFOX.</desc>
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  --tx-dark:#0C447C; --tx-deep:#1C4F7C; --exon:#E6F1FB; --exon-line:#4A90C4;
+  --muted:#9B9893; --border2:#C7C5BF; --panel:#FCFCFB; --bg:#FFFFFF;
+}
+.bg      { fill:var(--bg); }
+.node    { fill:var(--panel); stroke:var(--border2); stroke-width:1.2; }
+.nodeadd { fill:var(--exon); stroke:var(--exon-line); stroke-width:1.4; }
+.nodett  { font-size:12px; font-weight:600; fill:var(--tx-dark); text-anchor:middle; }
+.nodesub { font-size:9px; fill:var(--muted); text-anchor:middle; }
+.flag    { font-family:Menlo, Consolas, monospace; font-size:8.5px; fill:var(--tx-deep); text-anchor:middle; }
+.note    { font-size:9.5px; fill:var(--muted); }
+.arrline { stroke:var(--muted); stroke-width:1.4; }
+</style>
+<defs>
+  <marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#9B9893"/>
+  </marker>
+</defs>
+<rect class="bg" x="0" y="0" width="880" height="134"/>
+
+<rect class="node" x="22" y="20" width="108" height="84" rx="8"/>
+<text class="nodett"  x="76" y="46">Ultima CRAM</text>
+<text class="nodesub" x="76" y="62">single-end reads</text>
+
+<rect class="node" x="150" y="20" width="116" height="84" rx="8"/>
+<text class="nodett"  x="208" y="46">samtools view</text>
+<text class="nodesub" x="208" y="62">CRAM to SAM</text>
+<text class="nodesub" x="208" y="74">keeps tp and t0 tags</text>
+
+<rect class="node" x="286" y="20" width="164" height="84" rx="8"/>
+<text class="nodett" x="368" y="46">UA 4.2</text>
+<text class="flag"   x="368" y="62">--soft-clipping</text>
+<text class="flag"   x="368" y="74">--min-score 19 --xa 75</text>
+<text class="flag"   x="368" y="86">--tp-output-order reference</text>
+
+<rect class="nodeadd" x="470" y="20" width="116" height="84" rx="8"/>
+<text class="nodett"  x="528" y="46">TarsApplication</text>
+<text class="nodesub" x="528" y="62">lift back to genome</text>
+
+<rect class="node" x="606" y="20" width="132" height="84" rx="8"/>
+<text class="nodett"  x="672" y="46">REDUX</text>
+<text class="flag"    x="672" y="62">-sequencing_type ULTIMA</text>
+<text class="nodesub" x="672" y="74">marks duplicates</text>
+
+<rect class="node" x="758" y="20" width="100" height="84" rx="8"/>
+<text class="nodett" x="808" y="46">ISOFOX</text>
+
+<line class="arrline" x1="130" y1="62" x2="150" y2="62" marker-end="url(#arr)"/>
+<line class="arrline" x1="266" y1="62" x2="286" y2="62" marker-end="url(#arr)"/>
+<line class="arrline" x1="450" y1="62" x2="470" y2="62" marker-end="url(#arr)"/>
+<line class="arrline" x1="586" y1="62" x2="606" y2="62" marker-end="url(#arr)"/>
+<line class="arrline" x1="738" y1="62" x2="758" y2="62" marker-end="url(#arr)"/>
+
+<text class="note" x="368" y="124" text-anchor="middle">against the genome + transcriptome FASTA</text>
+
+<rect x="752" y="114" width="20" height="12" rx="2" fill="var(--exon)" stroke="var(--exon-line)"/>
+<text class="note" x="778" y="124">added by TARS</text>
+</svg>

@@ -1,0 +1,165 @@
+package com.hartwig.hmftools.tars.liftback.emit;
+
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
+
+import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.SAMRecord;
+
+// Scoped to a single name group, so the pair is two slots rather than a keyed cache.
+public record LiftedMatePair(@Nullable LiftedRecord firstInPair, @Nullable LiftedRecord secondInPair)
+{
+    // null until the mate has been lifted: /1 is decided before /2 exists, so it sees no mate.
+    @Nullable
+    public LiftedRecord mateOf(final boolean firstOfPair)
+    {
+        return firstOfPair ? secondInPair : firstInPair;
+    }
+
+    public void unmapRead(final SAMRecord record)
+    {
+        LiftedRecord mate = record.getReadPairedFlag() ? mateOf(SamRecordUtils.firstInPair(record)) : null;
+        String originalChromosome = record.getReferenceName();
+        int originalPosition = record.getAlignmentStart();
+
+        record.setReadUnmappedFlag(true);
+        record.setMappingQuality(0);
+        record.setProperPairFlag(false);
+        record.setInferredInsertSize(0);
+        if(!record.isSecondaryOrSupplementary())
+        {
+            String chromosome = originalChromosome.replaceAll(UNMAPP_COORDS_DELIM, "");
+            record.setAttribute(UNMAP_ATTRIBUTE, chromosome + UNMAPP_COORDS_DELIM + originalPosition);
+        }
+
+        if(mate != null && mate.hasPlacement())
+        {
+            record.setReferenceName(mate.finalChromosome());
+            record.setAlignmentStart(mate.finalPos());
+            record.setMateUnmappedFlag(false);
+            record.setMateReferenceName(mate.finalChromosome());
+            record.setMateAlignmentStart(mate.finalPos());
+            record.setMateNegativeStrandFlag(mate.negativeStrand());
+            record.setAttribute(MATE_CIGAR_ATTRIBUTE, mate.finalCigar());
+        }
+        else
+        {
+            clearReadCoordinates(record);
+            if(record.getReadPairedFlag())
+            {
+                record.setMateUnmappedFlag(true);
+                clearMateCoordinates(record);
+                record.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+            }
+        }
+
+        record.setCigarString(NO_CIGAR);
+        if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
+            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
+        }
+    }
+
+    public void patchMateFields(final SAMRecord record)
+    {
+        if(!record.getReadPairedFlag())
+        {
+            return;
+        }
+
+        LiftedRecord mate = mateOf(SamRecordUtils.firstInPair(record));
+        if(mate == null)
+        {
+            throw new IllegalStateException(String.format("read %s: paired read has no mate in its group", record.getReadName()));
+        }
+
+        if(!mate.hasPlacement())
+        {
+            applyUnmappedMate(record);
+            return;
+        }
+
+        applyMappedMate(record, mate);
+    }
+
+    private static void applyUnmappedMate(final SAMRecord record)
+    {
+        record.setMateUnmappedFlag(true);
+        record.setProperPairFlag(false);
+        record.setInferredInsertSize(0);
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+
+        if(record.getReadUnmappedFlag())
+        {
+            clearReadCoordinates(record);
+            clearMateCoordinates(record);
+        }
+        else
+        {
+            record.setMateReferenceName(record.getReferenceName());
+            record.setMateAlignmentStart(record.getAlignmentStart());
+        }
+    }
+
+    private static void clearReadCoordinates(final SAMRecord record)
+    {
+        record.setAlignmentStart(NO_POSITION);
+        record.setReferenceIndex(NO_CHROMOSOME_INDEX);
+        record.setReferenceName(NO_CHROMOSOME_NAME);
+    }
+
+    private static void clearMateCoordinates(final SAMRecord record)
+    {
+        record.setMateAlignmentStart(NO_POSITION);
+        record.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
+        record.setMateReferenceName(NO_CHROMOSOME_NAME);
+    }
+
+    private static void applyMappedMate(final SAMRecord record, final LiftedRecord mate)
+    {
+        record.setMateUnmappedFlag(false);
+        record.setMateReferenceName(mate.finalChromosome());
+        record.setMateAlignmentStart(mate.finalPos());
+        record.setMateNegativeStrandFlag(mate.negativeStrand());
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, mate.finalCigar());
+
+        if(record.getReadUnmappedFlag())
+        {
+            record.setReferenceName(mate.finalChromosome());
+            record.setAlignmentStart(mate.finalPos());
+            record.setInferredInsertSize(0);
+            record.setProperPairFlag(false);
+            return;
+        }
+
+        if(!record.getReferenceName().equals(mate.finalChromosome()))
+        {
+            record.setInferredInsertSize(0);
+            record.setProperPairFlag(false);
+            return;
+        }
+
+        record.setInferredInsertSize(computeInferredInsertSize(record, mate));
+    }
+
+    // TLEN: signed distance between mates' 5' ends, +/-1 so the leftmost-5' mate is positive. Using 5' ends rather than
+    // alignment start fixes the sign for same-start pairs and the magnitude when softclips extend an end.
+    static int computeInferredInsertSize(final SAMRecord record, final LiftedRecord mate)
+    {
+        int readFivePrime = record.getReadNegativeStrandFlag() ? record.getAlignmentEnd() : record.getAlignmentStart();
+        int mateFivePrime = mate.negativeStrand() ? mate.primaryAlignment().alignedEnd() : mate.finalPos();
+
+        int adjustment = mateFivePrime >= readFivePrime ? 1 : -1;
+        return mateFivePrime - readFivePrime + adjustment;
+    }
+}

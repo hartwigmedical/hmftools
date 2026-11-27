@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.checkLeftAlignment;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
@@ -12,6 +14,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -465,5 +468,75 @@ public class CigarUtilsTest
         assertEquals(1, state.RefPosition);
         assertEquals(2, state.ReadIndex);
         assertEquals(M, state.operator());
+    }
+
+    @Test
+    public void testCigarElementLengths()
+    {
+        List<CigarElement> elements = CigarUtils.cigarFromStr("5S20M2I3D1000N10M").getCigarElements();
+        assertEquals(37, CigarUtils.cigarBaseLength(elements));
+        assertEquals(1033, CigarUtils.cigarAlignedLength(elements));
+    }
+
+    @Test
+    public void testRightSoftClipLength()
+    {
+        assertEquals(10, CigarUtils.rightSoftClipLength(CigarUtils.cigarFromStr("85M10S").getCigarElements()));
+        assertEquals(0, CigarUtils.rightSoftClipLength(CigarUtils.cigarFromStr("5S95M").getCigarElements()));
+    }
+
+    @Test
+    public void testNormalizeDropsZeroLengthAndMergesAdjacentOps()
+    {
+        assertEquals("72M2640N79M", CigarUtils.normalize(cigarFromStr("72M102N0M2538N79M")).toString());
+    }
+
+    @Test
+    public void testTerminalMatchedRunIgnoresTerminalSoftclipOnly()
+    {
+        List<CigarElement> elements = cigarElementsFromStr("5S30M10I4M6S");
+
+        assertEquals(30, CigarUtils.terminalMatchedRun(elements, false));
+        assertEquals(4, CigarUtils.terminalMatchedRun(elements, true));
+        assertEquals(0, CigarUtils.terminalMatchedRun(cigarElementsFromStr("5S2I30M"), false));
+        assertEquals(30, CigarUtils.terminalMatchedRun(cigarElementsFromStr("5S30X10I4M"), false));
+    }
+
+    @Test
+    public void testMatchOrEqualExcludesMismatchOperator()
+    {
+        assertFalse(CigarUtils.isMatchOrEqualOp(CigarOperator.X));
+    }
+
+    @Test
+    public void testDetectsIndelNextToTerminalSoftclip()
+    {
+        assertTrue(CigarUtils.indelAdjacentToTerminalSoftClip(cigarElementsFromStr("5S2I30M"), true));
+        assertTrue(CigarUtils.indelAdjacentToTerminalSoftClip(cigarElementsFromStr("30M2D5S"), false));
+        assertFalse(CigarUtils.indelAdjacentToTerminalSoftClip(cigarElementsFromStr("5S30M"), true));
+        assertFalse(CigarUtils.indelAdjacentToTerminalSoftClip(cigarElementsFromStr("30M5S"), false));
+    }
+
+    @Test
+    public void testClampReferenceOverhangIntoSoftclip()
+    {
+        assertEquals("1S9M", CigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("10M"), 1).toString());
+        assertEquals("9S78M", CigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("6M1I80M"), 8).toString());
+        assertEquals("40M4S", CigarUtils.clampTrailingReferenceToSoftClip(cigarFromStr("40M1D4M"), 5).toString());
+    }
+
+    @Test
+    public void testClampReturnsNullWhenOverhangCannotLeaveValidAlignedStart()
+    {
+        assertNull(CigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("4M10S"), 6));
+    }
+
+    @Test
+    public void testClampAbsorbsIndelLeftAtTheNewEdge()
+    {
+        assertEquals("3S80M", CigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("3M1D80M"), 3).toString());
+        assertEquals("5S80M", CigarUtils.clampLeadingReferenceToSoftClip(cigarFromStr("3M2I80M"), 3).toString());
+        assertEquals("80M3S", CigarUtils.clampTrailingReferenceToSoftClip(cigarFromStr("80M1D3M"), 3).toString());
+        assertEquals("80M5S", CigarUtils.clampTrailingReferenceToSoftClip(cigarFromStr("80M2I3M"), 3).toString());
     }
 }
